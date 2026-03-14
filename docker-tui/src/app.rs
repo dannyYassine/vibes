@@ -1,9 +1,12 @@
 use crate::docker::{ContainerStats, DockerClient};
 use anyhow::{Context, Result};
 use serde::Deserialize;
-use std::{collections::{HashMap, VecDeque}, fs};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    fs,
+};
 
-const HISTORY_LEN: usize = 60; // 60 points × 2s = 2 min window
+const HISTORY_LEN: usize = 60;
 
 #[derive(Debug, Deserialize)]
 struct ComposeFile {
@@ -14,33 +17,68 @@ struct ComposeFile {
 pub struct ContainerHistory {
     pub cpu: VecDeque<f64>,
     pub mem: VecDeque<f64>,
+    pub net_rx_rate: VecDeque<f64>,
+    pub net_tx_rate: VecDeque<f64>,
+    pub disk_read_rate: VecDeque<f64>,
+    pub disk_write_rate: VecDeque<f64>,
+    prev_net_rx: Option<u64>,
+    prev_net_tx: Option<u64>,
+    prev_disk_read: Option<u64>,
+    prev_disk_write: Option<u64>,
 }
 
 impl ContainerHistory {
-    fn push_cpu(&mut self, v: f64) {
-        if self.cpu.len() >= HISTORY_LEN {
-            self.cpu.pop_front();
+    fn push(deque: &mut VecDeque<f64>, v: f64) {
+        if deque.len() >= HISTORY_LEN {
+            deque.pop_front();
         }
-        self.cpu.push_back(v);
+        deque.push_back(v);
     }
 
-    fn push_mem(&mut self, v: f64) {
-        if self.mem.len() >= HISTORY_LEN {
-            self.mem.pop_front();
-        }
-        self.mem.push_back(v);
+    fn record(&mut self, stats: &ContainerStats, tick_secs: f64) {
+        Self::push(&mut self.cpu, stats.cpu_percent);
+        Self::push(&mut self.mem, stats.mem_percent());
+
+        let rx_rate = self.prev_net_rx.map_or(0.0, |prev| {
+            stats.net_rx.saturating_sub(prev) as f64 / tick_secs
+        });
+        let tx_rate = self.prev_net_tx.map_or(0.0, |prev| {
+            stats.net_tx.saturating_sub(prev) as f64 / tick_secs
+        });
+        Self::push(&mut self.net_rx_rate, rx_rate);
+        Self::push(&mut self.net_tx_rate, tx_rate);
+        self.prev_net_rx = Some(stats.net_rx);
+        self.prev_net_tx = Some(stats.net_tx);
+
+        let dr_rate = self.prev_disk_read.map_or(0.0, |prev| {
+            stats.block_read.saturating_sub(prev) as f64 / tick_secs
+        });
+        let dw_rate = self.prev_disk_write.map_or(0.0, |prev| {
+            stats.block_write.saturating_sub(prev) as f64 / tick_secs
+        });
+        Self::push(&mut self.disk_read_rate, dr_rate);
+        Self::push(&mut self.disk_write_rate, dw_rate);
+        self.prev_disk_read = Some(stats.block_read);
+        self.prev_disk_write = Some(stats.block_write);
     }
 
-    pub fn cpu_data(&self) -> Vec<(f64, f64)> {
-        self.cpu
-            .iter()
-            .enumerate()
-            .map(|(i, &v)| (i as f64, v))
-            .collect()
+    fn repeat_last(&mut self) {
+        let cpu = self.cpu.back().copied().unwrap_or(0.0);
+        let mem = self.mem.back().copied().unwrap_or(0.0);
+        let nrx = self.net_rx_rate.back().copied().unwrap_or(0.0);
+        let ntx = self.net_tx_rate.back().copied().unwrap_or(0.0);
+        let dr = self.disk_read_rate.back().copied().unwrap_or(0.0);
+        let dw = self.disk_write_rate.back().copied().unwrap_or(0.0);
+        Self::push(&mut self.cpu, cpu);
+        Self::push(&mut self.mem, mem);
+        Self::push(&mut self.net_rx_rate, nrx);
+        Self::push(&mut self.net_tx_rate, ntx);
+        Self::push(&mut self.disk_read_rate, dr);
+        Self::push(&mut self.disk_write_rate, dw);
     }
 
-    pub fn mem_data(&self) -> Vec<(f64, f64)> {
-        self.mem
+    pub fn indexed(deque: &VecDeque<f64>) -> Vec<(f64, f64)> {
+        deque
             .iter()
             .enumerate()
             .map(|(i, &v)| (i as f64, v))
@@ -54,13 +92,14 @@ pub struct App {
     pub history: HashMap<String, ContainerHistory>,
     pub selected: usize,
     pub error: Option<String>,
+    pub tick_secs: f64,
     client: DockerClient,
     service_names: Vec<String>,
     known_containers: Vec<(String, String)>,
 }
 
 impl App {
-    pub async fn new(compose_file: &str) -> Result<Self> {
+    pub async fn new(compose_file: &str, tick_secs: f64) -> Result<Self> {
         let client = DockerClient::new().context("Failed to connect to Docker socket")?;
 
         let (title, service_names) = match fs::read_to_string(compose_file) {
@@ -81,7 +120,6 @@ impl App {
             .containers_for_services(&service_names)
             .await
             .context("Failed to list containers (is Docker running?)")?;
-        let containers = client.fetch_stats(&known_containers).await;
 
         let mut app = Self {
             title,
@@ -89,21 +127,36 @@ impl App {
             history: HashMap::new(),
             selected: 0,
             error: None,
+            tick_secs,
             client,
             service_names,
             known_containers,
         };
 
+        // Start background streaming tasks
+        app.client.ensure_streams(&app.known_containers);
+
+        // Give streams a moment to populate the cache
+        tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+
+        let containers = app.client.read_stats(&app.known_containers);
         app.record_history(&containers);
         app.containers = containers;
         Ok(app)
     }
 
     pub async fn refresh(&mut self) {
-        match self.client.containers_for_services(&self.service_names).await {
+        // Re-discover containers (handles starts/stops)
+        match self
+            .client
+            .containers_for_services(&self.service_names)
+            .await
+        {
             Ok(discovered) => {
                 self.known_containers = discovered;
-                let containers = self.client.fetch_stats(&self.known_containers).await;
+                self.client.ensure_streams(&self.known_containers);
+
+                let containers = self.client.read_stats(&self.known_containers);
                 self.record_history(&containers);
                 self.containers = containers;
                 self.error = None;
@@ -119,24 +172,17 @@ impl App {
     }
 
     fn record_history(&mut self, containers: &[ContainerStats]) {
-        // Record new data points for containers that returned stats
+        let returned: HashSet<&str> = containers.iter().map(|c| c.name.as_str()).collect();
+
         for c in containers {
             let h = self.history.entry(c.name.clone()).or_default();
-            h.push_cpu(c.cpu_percent);
-            h.push_mem(c.mem_percent());
+            h.record(c, self.tick_secs);
         }
 
-        // For known containers that didn't return stats this tick,
-        // repeat the last value to prevent gaps in the chart line.
-        let returned: std::collections::HashSet<&str> =
-            containers.iter().map(|c| c.name.as_str()).collect();
         for (_, name) in &self.known_containers {
             if !returned.contains(name.as_str()) {
                 if let Some(h) = self.history.get_mut(name) {
-                    let last_cpu = h.cpu.back().copied().unwrap_or(0.0);
-                    let last_mem = h.mem.back().copied().unwrap_or(0.0);
-                    h.push_cpu(last_cpu);
-                    h.push_mem(last_mem);
+                    h.repeat_last();
                 }
             }
         }
@@ -152,20 +198,18 @@ impl App {
     }
 
     pub fn next(&mut self) {
-        if self.containers.is_empty() {
-            return;
+        if !self.containers.is_empty() {
+            self.selected = (self.selected + 1) % self.containers.len();
         }
-        self.selected = (self.selected + 1) % self.containers.len();
     }
 
     pub fn previous(&mut self) {
-        if self.containers.is_empty() {
-            return;
-        }
-        if self.selected == 0 {
-            self.selected = self.containers.len() - 1;
-        } else {
-            self.selected -= 1;
+        if !self.containers.is_empty() {
+            if self.selected == 0 {
+                self.selected = self.containers.len() - 1;
+            } else {
+                self.selected -= 1;
+            }
         }
     }
 }

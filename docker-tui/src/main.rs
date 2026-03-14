@@ -15,7 +15,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-const TICK_RATE: Duration = Duration::from_millis(3000);
+const TICK_RATE: Duration = Duration::from_millis(2000);
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
         .unwrap_or_else(|| "docker-compose.yml".to_string());
 
     // Init Docker BEFORE touching the terminal so errors print cleanly
-    let mut app = App::new(&compose_file)
+    let mut app = App::new(&compose_file, TICK_RATE.as_secs_f64())
         .await
         .context("Failed to initialise Docker client")?;
 

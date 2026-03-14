@@ -3,11 +3,15 @@ use bollard::{
     container::{ListContainersOptions, MemoryStatsStats, StatsOptions},
     Docker, API_DEFAULT_VERSION,
 };
-use futures_util::{future, StreamExt};
-use std::path::Path;
+use futures_util::StreamExt;
+use std::{
+    collections::HashMap,
+    path::Path,
+    sync::{Arc, Mutex},
+};
+use tokio::task::JoinHandle;
 
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[derive(Debug, Clone, Default)]
 pub struct ContainerStats {
     pub id: String,
     pub name: String,
@@ -56,14 +60,24 @@ fn connect() -> Result<Docker> {
     )
 }
 
+/// Shared map of container name → latest stats, updated continuously by background tasks.
+pub type StatsCache = Arc<Mutex<HashMap<String, ContainerStats>>>;
+
 pub struct DockerClient {
     docker: Docker,
+    cache: StatsCache,
+    /// Background stream tasks keyed by container ID.
+    streams: HashMap<String, JoinHandle<()>>,
 }
 
 impl DockerClient {
     pub fn new() -> Result<Self> {
         let docker = connect()?;
-        Ok(Self { docker })
+        Ok(Self {
+            docker,
+            cache: Arc::new(Mutex::new(HashMap::new())),
+            streams: HashMap::new(),
+        })
     }
 
     pub async fn containers_for_services(
@@ -95,110 +109,139 @@ impl DockerClient {
         Ok(result)
     }
 
-    /// Fetch stats for all containers in parallel.
-    pub async fn fetch_stats(&self, containers: &[(String, String)]) -> Vec<ContainerStats> {
-        let futs = containers
-            .iter()
-            .map(|(id, name)| self.fetch_single_stats(id, name));
+    /// Ensure a background streaming task exists for each container.
+    /// Spawns new tasks for containers we haven't seen, cleans up stale ones.
+    pub fn ensure_streams(&mut self, containers: &[(String, String)]) {
+        // Remove streams for containers that are gone
+        let active_ids: std::collections::HashSet<&str> =
+            containers.iter().map(|(id, _)| id.as_str()).collect();
+        self.streams.retain(|id, handle| {
+            if !active_ids.contains(id.as_str()) {
+                handle.abort();
+                false
+            } else {
+                true
+            }
+        });
 
-        future::join_all(futs)
-            .await
-            .into_iter()
-            .filter_map(|r| r.ok())
-            .collect()
+        // Start streams for new containers
+        for (id, name) in containers {
+            if self.streams.contains_key(id) {
+                continue;
+            }
+
+            let docker = self.docker.clone();
+            let cache = self.cache.clone();
+            let stream_id = id.clone();
+            let stream_name = name.clone();
+
+            let handle = tokio::spawn(async move {
+                stream_stats(docker, cache, stream_id, stream_name).await;
+            });
+
+            self.streams.insert(id.clone(), handle);
+        }
     }
 
-    async fn fetch_single_stats(&self, id: &str, name: &str) -> Result<ContainerStats> {
-        // stream=false + one_shot=false: Docker waits for two internal readings (~1s)
-        // and returns the delta — this is how `docker stats --no-stream` computes CPU%.
+    /// Read the latest cached stats for the given containers.
+    pub fn read_stats(&self, containers: &[(String, String)]) -> Vec<ContainerStats> {
+        let cache = self.cache.lock().unwrap();
+        containers
+            .iter()
+            .filter_map(|(_, name)| cache.get(name).cloned())
+            .collect()
+    }
+}
+
+/// Long-running task: opens a streaming connection to Docker for one container
+/// and continuously updates the shared cache with the latest stats.
+async fn stream_stats(docker: Docker, cache: StatsCache, id: String, name: String) {
+    loop {
         let options = StatsOptions {
-            stream: false,
+            stream: true,
             one_shot: false,
         };
 
-        let mut stream = self.docker.stats(id, Some(options));
-        let raw = stream
-            .next()
-            .await
-            .ok_or_else(|| anyhow::anyhow!("no stats"))??;
+        let mut stream = docker.stats(&id, Some(options));
 
-        // CPU %
-        let cpu_delta = raw
-            .cpu_stats
-            .cpu_usage
-            .total_usage
-            .saturating_sub(raw.precpu_stats.cpu_usage.total_usage);
-        let system_delta = raw
-            .cpu_stats
-            .system_cpu_usage
-            .unwrap_or(0)
-            .saturating_sub(raw.precpu_stats.system_cpu_usage.unwrap_or(0));
-        let num_cpus = raw.cpu_stats.online_cpus.unwrap_or(1) as f64;
-        let cpu_percent = if system_delta > 0 {
-            (cpu_delta as f64 / system_delta as f64) * num_cpus * 100.0
-        } else {
-            0.0
-        };
+        while let Some(Ok(raw)) = stream.next().await {
+            // CPU %
+            let cpu_delta = raw
+                .cpu_stats
+                .cpu_usage
+                .total_usage
+                .saturating_sub(raw.precpu_stats.cpu_usage.total_usage);
+            let system_delta = raw
+                .cpu_stats
+                .system_cpu_usage
+                .unwrap_or(0)
+                .saturating_sub(raw.precpu_stats.system_cpu_usage.unwrap_or(0));
+            let num_cpus = raw.cpu_stats.online_cpus.unwrap_or(1) as f64;
+            let cpu_percent = if system_delta > 0 && cpu_delta > 0 {
+                (cpu_delta as f64 / system_delta as f64) * num_cpus * 100.0
+            } else {
+                0.0
+            };
 
-        // Memory
-        let mem_stats = &raw.memory_stats;
-        let cache = mem_stats
-            .stats
-            .as_ref()
-            .map(|s| match s {
-                MemoryStatsStats::V1(v1) => v1.cache,
-                MemoryStatsStats::V2(_) => 0,
-            })
-            .unwrap_or(0);
-        let mem_usage = mem_stats.usage.unwrap_or(0).saturating_sub(cache);
-        let mem_limit = mem_stats.limit.unwrap_or(0);
-
-        // Network I/O
-        let (net_rx, net_tx) = raw
-            .networks
-            .as_ref()
-            .map(|nets| {
-                nets.values()
-                    .fold((0u64, 0u64), |(rx, tx), n| (rx + n.rx_bytes, tx + n.tx_bytes))
-            })
-            .unwrap_or((0, 0));
-
-        // Block I/O
-        let (block_read, block_write) = raw
-            .blkio_stats
-            .io_service_bytes_recursive
-            .as_deref()
-            .map(|entries| {
-                entries.iter().fold((0u64, 0u64), |(r, w), e| {
-                    match e.op.to_lowercase().as_str() {
-                        "read" => (r + e.value, w),
-                        "write" => (r, w + e.value),
-                        _ => (r, w),
-                    }
+            // Memory
+            let mem_stats = &raw.memory_stats;
+            let cache_bytes = mem_stats
+                .stats
+                .as_ref()
+                .map(|s| match s {
+                    MemoryStatsStats::V1(v1) => v1.cache,
+                    MemoryStatsStats::V2(_) => 0,
                 })
-            })
-            .unwrap_or((0, 0));
+                .unwrap_or(0);
+            let mem_usage = mem_stats.usage.unwrap_or(0).saturating_sub(cache_bytes);
+            let mem_limit = mem_stats.limit.unwrap_or(0);
 
-        let inspect = self.docker.inspect_container(id, None).await;
-        let status = inspect
-            .ok()
-            .and_then(|i| i.state)
-            .and_then(|s| s.status)
-            .map(|s| format!("{s:?}"))
-            .unwrap_or_else(|| "running".to_string());
+            // Network I/O
+            let (net_rx, net_tx) = raw
+                .networks
+                .as_ref()
+                .map(|nets| {
+                    nets.values()
+                        .fold((0u64, 0u64), |(rx, tx), n| (rx + n.rx_bytes, tx + n.tx_bytes))
+                })
+                .unwrap_or((0, 0));
 
-        Ok(ContainerStats {
-            id: id.to_string(),
-            name: name.to_string(),
-            status,
-            cpu_percent,
-            mem_usage,
-            mem_limit,
-            net_rx,
-            net_tx,
-            block_read,
-            block_write,
-        })
+            // Block I/O
+            let (block_read, block_write) = raw
+                .blkio_stats
+                .io_service_bytes_recursive
+                .as_deref()
+                .map(|entries| {
+                    entries.iter().fold((0u64, 0u64), |(r, w), e| {
+                        match e.op.to_lowercase().as_str() {
+                            "read" => (r + e.value, w),
+                            "write" => (r, w + e.value),
+                            _ => (r, w),
+                        }
+                    })
+                })
+                .unwrap_or((0, 0));
+
+            let stats = ContainerStats {
+                id: id.clone(),
+                name: name.clone(),
+                status: "RUNNING".to_string(),
+                cpu_percent,
+                mem_usage,
+                mem_limit,
+                net_rx,
+                net_tx,
+                block_read,
+                block_write,
+            };
+
+            if let Ok(mut map) = cache.lock() {
+                map.insert(name.clone(), stats);
+            }
+        }
+
+        // Stream ended (container stopped?) — wait a bit before retrying
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
     }
 }
 

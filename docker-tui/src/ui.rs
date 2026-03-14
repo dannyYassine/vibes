@@ -1,4 +1,7 @@
-use crate::{app::App, docker::format_bytes};
+use crate::{
+    app::{App, ContainerHistory},
+    docker::format_bytes,
+};
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
@@ -10,6 +13,7 @@ use ratatui::{
     Frame,
 };
 
+
 pub fn draw(f: &mut Frame, app: &App) {
     let area = f.area();
 
@@ -17,8 +21,8 @@ pub fn draw(f: &mut Frame, app: &App) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3),  // header
-            Constraint::Min(8),     // table
-            Constraint::Length(16), // charts
+            Constraint::Min(6),    // table
+            Constraint::Length(24), // 2×2 chart grid (two rows of 12)
             Constraint::Length(3),  // footer
         ])
         .split(area);
@@ -75,7 +79,7 @@ fn draw_table(f: &mut Frame, area: Rect, app: &App) {
                 Cell::from(truncate(&c.name, 30)).style(base_style),
                 Cell::from(c.status.clone()).style(status_style(&c.status, is_selected)),
                 Cell::from(format!("{:.2}%", c.cpu_percent))
-                    .style(cpu_color(c.cpu_percent, is_selected)),
+                    .style(color_for(c.cpu_percent, 50.0, 80.0, is_selected)),
                 Cell::from(format!(
                     "{} / {}",
                     format_bytes(c.mem_usage),
@@ -83,7 +87,7 @@ fn draw_table(f: &mut Frame, area: Rect, app: &App) {
                 ))
                 .style(base_style),
                 Cell::from(format!("{:.2}%", c.mem_percent()))
-                    .style(mem_color(c.mem_percent(), is_selected)),
+                    .style(color_for(c.mem_percent(), 60.0, 80.0, is_selected)),
                 Cell::from(net_io).style(base_style),
                 Cell::from(block_io).style(base_style),
             ])
@@ -134,100 +138,198 @@ fn draw_table(f: &mut Frame, area: Rect, app: &App) {
 }
 
 fn draw_charts(f: &mut Frame, area: Rect, app: &App) {
-    let halves = Layout::default()
-        .direction(Direction::Horizontal)
+    let (container, hist) = match (app.selected_container(), app.selected_history()) {
+        (Some(c), Some(h)) => (c, h),
+        _ => return,
+    };
+    let name = &container.name;
+
+    // 2×2 grid
+    let rows = Layout::default()
+        .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(area);
+    let top = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(rows[0]);
+    let bot = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(rows[1]);
 
-    let (container_name, cpu_data, mem_data, cpu_now, mem_now) =
-        if let (Some(c), Some(h)) = (app.selected_container(), app.selected_history()) {
-            (
-                c.name.clone(),
-                h.cpu_data(),
-                h.mem_data(),
-                c.cpu_percent,
-                c.mem_percent(),
-            )
-        } else {
-            return;
-        };
+    // CPU chart (percent)
+    let cpu_data = ContainerHistory::indexed(&hist.cpu);
+    draw_percent_chart(
+        f,
+        top[0],
+        &format!(" CPU — {name} "),
+        &cpu_data,
+        container.cpu_percent,
+        "CPU",
+        Color::Green,
+        app.tick_secs,
+    );
 
-    // x-axis spans the actual number of collected points so the line fills the chart
-    let x_max = (cpu_data.len().max(2) - 1) as f64;
+    // Memory chart (percent)
+    let mem_data = ContainerHistory::indexed(&hist.mem);
+    draw_percent_chart(
+        f,
+        top[1],
+        &format!(" Memory — {name} "),
+        &mem_data,
+        container.mem_percent(),
+        "MEM",
+        Color::Cyan,
+        app.tick_secs,
+    );
 
-    // y-axis: auto-scale based on the recent peak (last 10 points) so the axis
-    // adapts quickly after spikes pass, rather than staying at 100% for 2 minutes.
-    let recent_peak = |data: &[(f64, f64)]| -> f64 {
-        let start = data.len().saturating_sub(10);
-        data[start..].iter().map(|(_, v)| *v).fold(0f64, f64::max)
-    };
-    let cpu_peak = recent_peak(&cpu_data);
-    let mem_peak = recent_peak(&mem_data);
-    let cpu_ceil = (cpu_peak * 1.4).max(5.0).min(100.0);
-    let mem_ceil = (mem_peak * 1.4).max(5.0).min(100.0);
+    // Network I/O chart (bytes/s, two lines: rx + tx)
+    let rx_data = ContainerHistory::indexed(&hist.net_rx_rate);
+    let tx_data = ContainerHistory::indexed(&hist.net_tx_rate);
+    draw_rate_chart(
+        f,
+        bot[0],
+        &format!(" Network — {name} "),
+        &rx_data,
+        &tx_data,
+        "RX",
+        "TX",
+        Color::Magenta,
+        Color::Yellow,
+        app.tick_secs,
+    );
 
-    let cpu_mid = format!("{:.0}%", cpu_ceil / 2.0);
-    let cpu_top = format!("{:.0}%", cpu_ceil);
-    let mem_mid = format!("{:.0}%", mem_ceil / 2.0);
-    let mem_top = format!("{:.0}%", mem_ceil);
+    // Disk I/O chart (bytes/s, two lines: read + write)
+    let dr_data = ContainerHistory::indexed(&hist.disk_read_rate);
+    let dw_data = ContainerHistory::indexed(&hist.disk_write_rate);
+    draw_rate_chart(
+        f,
+        bot[1],
+        &format!(" Disk — {name} "),
+        &dr_data,
+        &dw_data,
+        "Read",
+        "Write",
+        Color::Blue,
+        Color::Red,
+        app.tick_secs,
+    );
+}
 
-    // CPU chart
-    let cpu_dataset = Dataset::default()
-        .name(format!("CPU  {cpu_now:.1}%"))
+/// Draws a single-line chart scaled as a percentage (CPU, MEM).
+fn draw_percent_chart(
+    f: &mut Frame,
+    area: Rect,
+    title: &str,
+    data: &[(f64, f64)],
+    current: f64,
+    label: &str,
+    color: Color,
+    tick_secs: f64,
+) {
+    if data.is_empty() {
+        return;
+    }
+    let x_max = (data.len().max(2) - 1) as f64;
+    let peak = recent_peak(data, 10);
+    let ceil = (peak * 1.4).max(5.0).min(100.0);
+    let mid = format!("{:.0}%", ceil / 2.0);
+    let top = format!("{:.0}%", ceil);
+
+    let dataset = Dataset::default()
+        .name(format!("{label}  {current:.1}%"))
         .marker(symbols::Marker::Braille)
         .graph_type(GraphType::Line)
-        .style(Style::default().fg(cpu_fg(cpu_now)))
-        .data(&cpu_data);
+        .style(Style::default().fg(color))
+        .data(data);
 
-    let cpu_chart = Chart::new(vec![cpu_dataset])
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!(" CPU — {container_name} ")),
-        )
+    let chart = Chart::new(vec![dataset])
+        .block(Block::default().borders(Borders::ALL).title(title))
         .x_axis(
             Axis::default()
                 .style(Style::default().fg(Color::DarkGray))
                 .bounds([0.0, x_max])
-                .labels(x_labels(cpu_data.len())),
+                .labels(x_labels(data.len(), tick_secs)),
         )
         .y_axis(
             Axis::default()
                 .style(Style::default().fg(Color::DarkGray))
-                .bounds([0.0, cpu_ceil])
-                .labels(["0%", &cpu_mid, &cpu_top].map(Span::raw)),
+                .bounds([0.0, ceil])
+                .labels(["0%", &mid, &top].map(Span::raw)),
         );
 
-    f.render_widget(cpu_chart, halves[0]);
+    f.render_widget(chart, area);
 
-    // Memory chart
-    let mem_dataset = Dataset::default()
-        .name(format!("MEM  {mem_now:.1}%"))
+    // Current value badge in top-right
+    let badge_text = format!(" {current:.1}% ");
+    draw_value_badge(f, area, &badge_text, color);
+}
+
+/// Draws a dual-line chart scaled in bytes/s (Network, Disk).
+fn draw_rate_chart(
+    f: &mut Frame,
+    area: Rect,
+    title: &str,
+    line1: &[(f64, f64)],
+    line2: &[(f64, f64)],
+    label1: &str,
+    label2: &str,
+    color1: Color,
+    color2: Color,
+    tick_secs: f64,
+) {
+    if line1.is_empty() {
+        return;
+    }
+    let x_max = (line1.len().max(2) - 1) as f64;
+
+    let peak1 = recent_peak(line1, 10);
+    let peak2 = recent_peak(line2, 10);
+    let peak = peak1.max(peak2);
+    let ceil = if peak < 1.0 { 1024.0 } else { peak * 1.4 }; // min 1 KB/s
+
+    let now1 = line1.last().map(|(_, v)| *v).unwrap_or(0.0);
+    let now2 = line2.last().map(|(_, v)| *v).unwrap_or(0.0);
+
+    let mid_label = format_rate(ceil / 2.0);
+    let top_label = format_rate(ceil);
+
+    let ds1 = Dataset::default()
+        .name(format!("{label1} {}/s", format_rate(now1)))
         .marker(symbols::Marker::Braille)
         .graph_type(GraphType::Line)
-        .style(Style::default().fg(mem_fg(mem_now)))
-        .data(&mem_data);
+        .style(Style::default().fg(color1))
+        .data(line1);
 
-    let mem_chart = Chart::new(vec![mem_dataset])
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!(" Memory — {container_name} ")),
-        )
+    let ds2 = Dataset::default()
+        .name(format!("{label2} {}/s", format_rate(now2)))
+        .marker(symbols::Marker::Braille)
+        .graph_type(GraphType::Line)
+        .style(Style::default().fg(color2))
+        .data(line2);
+
+    let chart = Chart::new(vec![ds1, ds2])
+        .block(Block::default().borders(Borders::ALL).title(title))
         .x_axis(
             Axis::default()
                 .style(Style::default().fg(Color::DarkGray))
                 .bounds([0.0, x_max])
-                .labels(x_labels(mem_data.len())),
+                .labels(x_labels(line1.len(), tick_secs)),
         )
         .y_axis(
             Axis::default()
                 .style(Style::default().fg(Color::DarkGray))
-                .bounds([0.0, mem_ceil])
-                .labels(["0%", &mem_mid, &mem_top].map(Span::raw)),
+                .bounds([0.0, ceil])
+                .labels(["0", &mid_label, &top_label].map(Span::raw)),
         );
 
-    f.render_widget(mem_chart, halves[1]);
+    f.render_widget(chart, area);
+
+    // Current values badge in top-right
+    let badge_text = format!(" {label1} {}/s | {label2} {}/s ", format_rate(now1), format_rate(now2));
+    // Use the first line's color for the badge
+    draw_value_badge(f, area, &badge_text, color1);
 }
 
 fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
@@ -247,7 +349,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
             Span::raw("down  "),
             Span::styled("q ", Style::default().fg(Color::Cyan)),
             Span::raw("quit  "),
-            Span::styled("auto-refresh: 3s", Style::default().fg(Color::DarkGray)),
+            Span::styled("auto-refresh: 2s", Style::default().fg(Color::DarkGray)),
         ])
     };
 
@@ -257,33 +359,79 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
     );
 }
 
-fn cpu_fg(percent: f64) -> Color {
-    if percent >= 80.0 {
+/// Renders a small bordered box with the current value in the top-right of the chart area.
+fn draw_value_badge(f: &mut Frame, chart_area: Rect, text: &str, fg: Color) {
+    let w = text.len() as u16 + 2; // +2 for border
+    let h = 3u16;
+    // Position: inside chart border, top-right corner
+    if chart_area.width < w + 2 || chart_area.height < h + 1 {
+        return;
+    }
+    let badge_area = Rect {
+        x: chart_area.x + chart_area.width - w - 1,
+        y: chart_area.y + 1,
+        width: w,
+        height: h,
+    };
+    let badge = Paragraph::new(text)
+        .style(
+            Style::default()
+                .fg(fg)
+                .add_modifier(Modifier::BOLD),
+        )
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::DarkGray)),
+        );
+    f.render_widget(badge, badge_area);
+}
+
+// --- helpers ---
+
+fn recent_peak(data: &[(f64, f64)], window: usize) -> f64 {
+    let start = data.len().saturating_sub(window);
+    data[start..].iter().map(|(_, v)| *v).fold(0f64, f64::max)
+}
+
+fn format_rate(bytes_per_sec: f64) -> String {
+    const KB: f64 = 1024.0;
+    const MB: f64 = KB * 1024.0;
+    const GB: f64 = MB * 1024.0;
+
+    if bytes_per_sec >= GB {
+        format!("{:.1}GB", bytes_per_sec / GB)
+    } else if bytes_per_sec >= MB {
+        format!("{:.1}MB", bytes_per_sec / MB)
+    } else if bytes_per_sec >= KB {
+        format!("{:.1}KB", bytes_per_sec / KB)
+    } else {
+        format!("{:.0}B", bytes_per_sec)
+    }
+}
+
+fn x_labels(n: usize, tick_secs: f64) -> [Span<'static>; 3] {
+    let secs = (n as f64 * tick_secs) as u64;
+    let mid = secs / 2;
+    let fmt = |s: u64| -> String {
+        if s >= 60 {
+            format!("{}m ago", s / 60)
+        } else {
+            format!("{s}s ago")
+        }
+    };
+    [Span::raw(fmt(secs)), Span::raw(fmt(mid)), Span::raw("now")]
+}
+
+fn color_for(val: f64, warn: f64, crit: f64, selected: bool) -> Style {
+    let fg = if val >= crit {
         Color::Red
-    } else if percent >= 50.0 {
+    } else if val >= warn {
         Color::Yellow
     } else {
         Color::Green
-    }
-}
-
-fn mem_fg(percent: f64) -> Color {
-    if percent >= 80.0 {
-        Color::Red
-    } else if percent >= 60.0 {
-        Color::Yellow
-    } else {
-        Color::Cyan
-    }
-}
-
-fn cpu_color(percent: f64, selected: bool) -> Style {
-    let s = Style::default().fg(cpu_fg(percent));
-    if selected { s.bg(Color::DarkGray) } else { s }
-}
-
-fn mem_color(percent: f64, selected: bool) -> Style {
-    let s = Style::default().fg(mem_fg(percent));
+    };
+    let s = Style::default().fg(fg);
     if selected { s.bg(Color::DarkGray) } else { s }
 }
 
@@ -298,22 +446,6 @@ fn status_style(status: &str, selected: bool) -> Style {
     };
     let s = Style::default().fg(fg);
     if selected { s.bg(Color::DarkGray) } else { s }
-}
-
-fn x_labels(n: usize) -> [Span<'static>; 3] {
-    let secs = n as u64 * 3; // 3s tick rate
-    let mid = secs / 2;
-    let oldest = if secs >= 60 {
-        format!("{}m ago", secs / 60)
-    } else {
-        format!("{secs}s ago")
-    };
-    let midlabel = if mid >= 60 {
-        format!("{}m ago", mid / 60)
-    } else {
-        format!("{mid}s ago")
-    };
-    [Span::raw(oldest), Span::raw(midlabel), Span::raw("now")]
 }
 
 fn truncate(s: &str, max: usize) -> String {
