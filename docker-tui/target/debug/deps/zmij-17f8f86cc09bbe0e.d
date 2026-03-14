@@ -1,8 +1,0 @@
-/Users/dannyyassine/dev/vibes/docker-tui/target/debug/deps/zmij-17f8f86cc09bbe0e.d: /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zmij-1.0.21/src/lib.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zmij-1.0.21/src/traits.rs
-
-/Users/dannyyassine/dev/vibes/docker-tui/target/debug/deps/libzmij-17f8f86cc09bbe0e.rlib: /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zmij-1.0.21/src/lib.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zmij-1.0.21/src/traits.rs
-
-/Users/dannyyassine/dev/vibes/docker-tui/target/debug/deps/libzmij-17f8f86cc09bbe0e.rmeta: /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zmij-1.0.21/src/lib.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zmij-1.0.21/src/traits.rs
-
-/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zmij-1.0.21/src/lib.rs:
-/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zmij-1.0.21/src/traits.rs:
