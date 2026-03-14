@@ -1,0 +1,14 @@
+/Users/dannyyassine/dev/vibes/docker-tui/target/debug/deps/thiserror-4cc3926b87299a47.d: /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/dannyyassine/dev/vibes/docker-tui/target/debug/build/thiserror-c60931e4e8dce25d/out/private.rs
+
+/Users/dannyyassine/dev/vibes/docker-tui/target/debug/deps/libthiserror-4cc3926b87299a47.rlib: /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/dannyyassine/dev/vibes/docker-tui/target/debug/build/thiserror-c60931e4e8dce25d/out/private.rs
+
+/Users/dannyyassine/dev/vibes/docker-tui/target/debug/deps/libthiserror-4cc3926b87299a47.rmeta: /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/dannyyassine/dev/vibes/docker-tui/target/debug/build/thiserror-c60931e4e8dce25d/out/private.rs
+
+/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs:
+/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs:
+/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs:
+/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs:
+/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs:
+/Users/dannyyassine/dev/vibes/docker-tui/target/debug/build/thiserror-c60931e4e8dce25d/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/dannyyassine/dev/vibes/docker-tui/target/debug/build/thiserror-c60931e4e8dce25d/out
