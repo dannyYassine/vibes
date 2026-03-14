@@ -2,7 +2,7 @@
 
 A terminal UI for monitoring Docker Compose containers in real time. Built with Rust, [ratatui](https://github.com/ratatui/ratatui), and [bollard](https://github.com/fussybeaver/bollard).
 
-![docker-tui screenshot](Screenshot%202026-03-14%20at%205.44.46%20PM.png)
+![docker-tui screenshot](tui.png)
 
 ## Features
 
