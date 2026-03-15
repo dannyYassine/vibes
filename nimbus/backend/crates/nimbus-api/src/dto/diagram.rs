@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use uuid::Uuid;
+
 use nimbus_domain::entities::diagram::Viewport;
 use nimbus_domain::entities::edge::Edge;
 use nimbus_domain::entities::node::Node;
@@ -9,6 +11,13 @@ use nimbus_domain::entities::node::Node;
 pub struct CreateDiagramRequest {
     pub name: String,
     pub description: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GenerateDiagramRequest {
+    pub prompt: String,
+    pub existing_diagram_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -3,6 +3,8 @@ pub struct AppConfig {
     pub host: String,
     pub port: u16,
     pub cors_origin: String,
+    pub anthropic_api_key: String,
+    pub anthropic_model: String,
 }
 
 impl AppConfig {
@@ -17,6 +19,10 @@ impl AppConfig {
                 .unwrap_or(8080),
             cors_origin: std::env::var("CORS_ORIGIN")
                 .unwrap_or_else(|_| "http://localhost:4200".into()),
+            anthropic_api_key: std::env::var("ANTHROPIC_API_KEY")
+                .unwrap_or_default(),
+            anthropic_model: std::env::var("ANTHROPIC_MODEL")
+                .unwrap_or_else(|_| "claude-sonnet-4-20250514".into()),
         }
     }
 

@@ -6,3 +6,9 @@ edition = "2021"
 [dependencies]
 nimbus-domain = { path = "../nimbus-domain" }
 uuid = { workspace = true }
+nimbus-shared = { path = "../nimbus-shared" }
+async-trait = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+futures-util = { workspace = true }
+tracing = { workspace = true }

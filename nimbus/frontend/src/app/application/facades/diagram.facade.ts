@@ -93,6 +93,12 @@ export class DiagramFacade {
     }
   }
 
+  loadDiagramFromData(diagram: Diagram): void {
+    this.diagramState.load(diagram);
+    this.diagramSubject.next(diagram);
+    this.isDirty$.next(false);
+  }
+
   async save(): Promise<void> {
     const diagram = this.diagramState.getDiagram();
     if (diagram) {

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::Router;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
@@ -14,6 +14,10 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route(
             "/api/diagrams",
             get(handlers::diagram::list_diagrams).post(handlers::diagram::create_diagram),
+        )
+        .route(
+            "/api/diagrams/generate",
+            post(handlers::diagram::generate_diagram),
         )
         .route(
             "/api/diagrams/{id}",

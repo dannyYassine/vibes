@@ -1,6 +1,6 @@
 # Nimbus — Progress Tracker
 
-## Current Phase: Phase 1, Week 2
+## Current Phase: Phase 2, Week 3
 
 ---
 
@@ -82,19 +82,19 @@
 ## Phase 2, Week 3: AI Generation Core
 
 **Backend:**
-- [ ] Implement `ClaudeAiProvider` in `nimbus-infra` (impl AiProvider, reqwest client)
-- [ ] Write system prompt: JSON schema, generic component taxonomy, system design concepts, examples (nimbus-infra/src/ai/prompts/)
-- [ ] Implement `generate_diagram()` — single-shot (non-streaming) first
-- [ ] Implement `parser.rs` — parse Claude's JSON response into domain models
-- [ ] Implement validation layer — validate AI output against generic component rules
-- [ ] Implement basic auto-layout: topological sort + grid placement (nimbus-domain/src/services/layout_service.rs)
-- [ ] Implement use case: `GenerateDiagram` (nimbus-app)
-- [ ] Wire to `POST /api/diagrams/generate` endpoint (non-streaming)
+- [x] Implement `ClaudeAiProvider` in `nimbus-infra` (impl AiProvider, reqwest client)
+- [x] Write system prompt: JSON schema, generic component taxonomy, system design concepts, examples (nimbus-infra/src/ai/prompts/)
+- [x] Implement `generate_diagram()` — single-shot (non-streaming) first
+- [x] Implement `parser.rs` — parse Claude's JSON response into domain models
+- [x] Implement validation layer — validate AI output against generic component rules
+- [x] Implement basic auto-layout: topological sort + grid placement (nimbus-domain/src/services/layout_service.rs)
+- [x] Implement use case: `GenerateDiagram` (nimbus-app)
+- [x] Wire to `POST /api/diagrams/generate` endpoint (non-streaming)
 
 **Frontend:**
-- [ ] Build `ChatComponent` — text input + message display
-- [ ] Create `AiFacade` — send prompt, receive diagram
-- [ ] Wire: load AI-generated diagram into `DiagramFacade` and render on canvas
+- [x] Build `ChatComponent` — text input + message display
+- [x] Create `AiFacade` — send prompt, receive diagram
+- [x] Wire: load AI-generated diagram into `DiagramFacade` and render on canvas
 
 ---
 

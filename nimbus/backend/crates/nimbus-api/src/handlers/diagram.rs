@@ -8,7 +8,7 @@ use uuid::Uuid;
 use nimbus_app::use_cases::update_diagram::UpdateDiagramInput;
 use nimbus_domain::entities::diagram::{Diagram, DiagramListItem};
 
-use crate::dto::diagram::{CreateDiagramRequest, UpdateDiagramRequest};
+use crate::dto::diagram::{CreateDiagramRequest, GenerateDiagramRequest, UpdateDiagramRequest};
 use crate::middleware::error_handler::AppError;
 use crate::state::AppState;
 
@@ -60,4 +60,12 @@ pub async fn delete_diagram(
 ) -> Result<StatusCode, AppError> {
     state.delete_diagram.execute(id).await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn generate_diagram(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<GenerateDiagramRequest>,
+) -> Result<(StatusCode, Json<Diagram>), AppError> {
+    let diagram = state.generate_diagram.execute(&req.prompt).await?;
+    Ok((StatusCode::CREATED, Json(diagram)))
 }
