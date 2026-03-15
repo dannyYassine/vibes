@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 nimbus-domain = { path = "../nimbus-domain" }
+uuid = { workspace = true }

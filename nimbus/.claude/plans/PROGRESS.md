@@ -61,20 +61,20 @@
 - [ ] Wire canvas to `DiagramFacade` (render from state, update state on interactions)
 
 **Backend:**
-- [ ] Define DTOs: `CreateDiagramRequest`, `UpdateDiagramRequest`, `DiagramListItem` (nimbus-api/src/dto/)
-- [ ] Implement handler: `POST /api/diagrams` (nimbus-api/src/handlers/diagrams.rs)
-- [ ] Implement handler: `GET /api/diagrams` (list)
-- [ ] Implement handler: `GET /api/diagrams/:id`
-- [ ] Implement handler: `PATCH /api/diagrams/:id`
-- [ ] Implement handler: `DELETE /api/diagrams/:id`
-- [ ] Implement use case: `CreateDiagram` (nimbus-app/src/use_cases/create_diagram.rs)
-- [ ] Implement use case: `GetDiagram`
-- [ ] Implement use case: `UpdateDiagram`
-- [ ] Implement use case: `DeleteDiagram`
-- [ ] Implement use case: `ListDiagrams`
-- [ ] Wire use cases to Axum handlers via AppState
-- [ ] Compose router in routes.rs
-- [ ] Add request validation and DTO mapping
+- [x] Define DTOs: `CreateDiagramRequest`, `UpdateDiagramRequest`, `DiagramListItem` (nimbus-api/src/dto/)
+- [x] Implement handler: `POST /api/diagrams` (nimbus-api/src/handlers/diagrams.rs)
+- [x] Implement handler: `GET /api/diagrams` (list)
+- [x] Implement handler: `GET /api/diagrams/:id`
+- [x] Implement handler: `PATCH /api/diagrams/:id`
+- [x] Implement handler: `DELETE /api/diagrams/:id`
+- [x] Implement use case: `CreateDiagram` (nimbus-app/src/use_cases/create_diagram.rs)
+- [x] Implement use case: `GetDiagram`
+- [x] Implement use case: `UpdateDiagram`
+- [x] Implement use case: `DeleteDiagram`
+- [x] Implement use case: `ListDiagrams`
+- [x] Wire use cases to Axum handlers via AppState
+- [x] Compose router in routes.rs
+- [x] Add request validation and DTO mapping
 - [ ] Verify: end-to-end POST/GET diagram works
 
 ---

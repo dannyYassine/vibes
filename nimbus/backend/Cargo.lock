@@ -930,6 +930,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]
@@ -937,6 +938,7 @@ name = "nimbus-app"
 version = "0.1.0"
 dependencies = [
  "nimbus-domain",
+ "uuid",
 ]
 
 [[package]]
