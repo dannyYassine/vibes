@@ -1,0 +1,1 @@
+/Users/dannyyassine/dev/vibes/nimbus/backend/target/debug/libnimbus_shared.rlib: /Users/dannyyassine/dev/vibes/nimbus/backend/crates/nimbus-shared/src/events.rs /Users/dannyyassine/dev/vibes/nimbus/backend/crates/nimbus-shared/src/lib.rs

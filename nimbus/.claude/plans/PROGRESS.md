@@ -7,25 +7,25 @@
 ## Phase 1, Week 1: Backend Scaffolding & Core Models
 
 **Backend:**
-- [ ] Initialize Cargo workspace with five crates (`nimbus-api`, `nimbus-app`, `nimbus-domain`, `nimbus-infra`, `nimbus-shared`)
-- [ ] Define domain entity: `Diagram` (nimbus-domain/src/entities/diagram.rs)
-- [ ] Define domain entity: `Node`, `NodeType`, `Position`, `Size`, `NodeProperties` (nimbus-domain/src/entities/node.rs)
-- [ ] Define domain entity: `Edge`, `EdgeType`, `EdgeProperties` (nimbus-domain/src/entities/edge.rs)
-- [ ] Define domain entity: `CloudServiceMapping` (nimbus-domain/src/entities/cloud_catalog.rs)
-- [ ] Define domain entity: `DockerServiceMapping` (nimbus-domain/src/entities/docker_catalog.rs)
-- [ ] Define port trait: `DiagramRepository` (nimbus-domain/src/ports/diagram_repository.rs)
-- [ ] Define port trait: `AiProvider` (nimbus-domain/src/ports/ai_provider.rs)
-- [ ] Define domain errors (nimbus-domain/src/errors.rs)
-- [ ] Set up Axum server with health check endpoint in `nimbus-api`
-- [ ] Configure CORS (tower-http), logging (tracing), and error handling middleware
-- [ ] Set up PostgreSQL with Docker Compose (docker-compose.yml)
-- [ ] Write initial SQL migration (migrations/001_initial.sql)
-- [ ] Implement `PostgresDiagramRepo` in `nimbus-infra` (impl DiagramRepository)
-- [ ] Set up connection pool in `nimbus-infra` (persistence/pool.rs)
-- [ ] Wire dependency injection in `main.rs` (Arc<dyn Trait> → concrete impls)
-- [ ] Define `AppConfig` (nimbus-api/src/config.rs)
-- [ ] Define `AppState` (nimbus-api/src/state.rs)
-- [ ] Verify: `cargo build` succeeds for all crates
+- [x] Initialize Cargo workspace with five crates (`nimbus-api`, `nimbus-app`, `nimbus-domain`, `nimbus-infra`, `nimbus-shared`)
+- [x] Define domain entity: `Diagram` (nimbus-domain/src/entities/diagram.rs)
+- [x] Define domain entity: `Node`, `NodeType`, `Position`, `Size`, `NodeProperties` (nimbus-domain/src/entities/node.rs)
+- [x] Define domain entity: `Edge`, `EdgeType`, `EdgeProperties` (nimbus-domain/src/entities/edge.rs)
+- [x] Define domain entity: `CloudServiceMapping` (nimbus-domain/src/entities/cloud_catalog.rs)
+- [x] Define domain entity: `DockerServiceMapping` (nimbus-domain/src/entities/docker_catalog.rs)
+- [x] Define port trait: `DiagramRepository` (nimbus-domain/src/ports/diagram_repository.rs)
+- [x] Define port trait: `AiProvider` (nimbus-domain/src/ports/ai_provider.rs)
+- [x] Define domain errors (nimbus-domain/src/errors.rs)
+- [x] Set up Axum server with health check endpoint in `nimbus-api`
+- [x] Configure CORS (tower-http), logging (tracing), and error handling middleware
+- [x] Set up PostgreSQL with Docker Compose (docker-compose.yml)
+- [x] Write initial SQL migration (migrations/001_initial.sql)
+- [x] Implement `PostgresDiagramRepo` in `nimbus-infra` (impl DiagramRepository)
+- [x] Set up connection pool in `nimbus-infra` (persistence/pool.rs)
+- [x] Wire dependency injection in `main.rs` (Arc<dyn Trait> → concrete impls)
+- [x] Define `AppConfig` (nimbus-api/src/config.rs)
+- [x] Define `AppState` (nimbus-api/src/state.rs)
+- [x] Verify: `cargo build` succeeds for all crates
 
 **Frontend:**
 - [ ] Initialize Angular project with standalone components

@@ -1,0 +1,20 @@
+[package]
+name = "nimbus-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nimbus-domain = { path = "../nimbus-domain" }
+nimbus-app = { path = "../nimbus-app" }
+nimbus-infra = { path = "../nimbus-infra" }
+nimbus-shared = { path = "../nimbus-shared" }
+axum = "0.8"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+dotenvy = "0.15"
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "migrate"] }

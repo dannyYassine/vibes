@@ -1,0 +1,14 @@
+/Users/dannyyassine/dev/vibes/nimbus/backend/target/debug/deps/serde-60eca7c68f70af00.d: /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/dannyyassine/dev/vibes/nimbus/backend/target/debug/build/serde-c0c83e196afbc015/out/private.rs
+
+/Users/dannyyassine/dev/vibes/nimbus/backend/target/debug/deps/libserde-60eca7c68f70af00.rlib: /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/dannyyassine/dev/vibes/nimbus/backend/target/debug/build/serde-c0c83e196afbc015/out/private.rs
+
+/Users/dannyyassine/dev/vibes/nimbus/backend/target/debug/deps/libserde-60eca7c68f70af00.rmeta: /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/dannyyassine/dev/vibes/nimbus/backend/target/debug/build/serde-c0c83e196afbc015/out/private.rs
+
+/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/dannyyassine/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/dannyyassine/dev/vibes/nimbus/backend/target/debug/build/serde-c0c83e196afbc015/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/dannyyassine/dev/vibes/nimbus/backend/target/debug/build/serde-c0c83e196afbc015/out

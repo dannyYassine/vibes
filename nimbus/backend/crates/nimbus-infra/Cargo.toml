@@ -1,0 +1,13 @@
+[package]
+name = "nimbus-infra"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nimbus-domain = { path = "../nimbus-domain" }
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "uuid", "chrono", "json"] }
+async-trait = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
