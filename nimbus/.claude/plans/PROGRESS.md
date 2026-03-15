@@ -1,6 +1,6 @@
 # Nimbus — Progress Tracker
 
-## Current Phase: Phase 1, Week 1
+## Current Phase: Phase 1, Week 2
 
 ---
 
@@ -28,18 +28,23 @@
 - [x] Verify: `cargo build` succeeds for all crates
 
 **Frontend:**
-- [ ] Initialize Angular project with standalone components
-- [ ] Set up routing (`/diagrams`, `/diagrams/:id`)
-- [ ] Create domain models: `Diagram`, `DiagramNode`, `DiagramEdge`, `NodeType`, `EdgeType` (domain/models/)
-- [ ] Create domain interfaces: `DiagramRepository`, `AiProvider`, `TranslationProvider` (domain/interfaces/)
-- [ ] Create domain state: `DiagramState`, `SelectionState`, `UndoRedoManager` (domain/state/)
-- [ ] Create infrastructure: `ApiGateway` impl DiagramRepository (infrastructure/gateways/)
-- [ ] Create infrastructure: DI token wiring
-- [ ] Create application: `DiagramFacade` with BehaviorSubjects (application/facades/)
-- [ ] Create application: `DiagramMapper`, `NodeMapper` (application/mappers/)
-- [ ] Create presentation: basic layout shell — toolbar, canvas area, sidebar panel
-- [ ] Set up environment files (environments/)
-- [ ] Verify: `ng build` succeeds
+- [x] Initialize Angular 19 project with standalone components (Jest replacing Karma)
+- [x] Set up routing (`/diagrams`, `/diagrams/:id`) with lazy-loaded components
+- [x] Create domain models: `Diagram`, `DiagramNode`, `DiagramEdge`, `NodeType`, `EdgeType` (domain/models/)
+- [x] Create domain interfaces: `DiagramRepository`, `AiProvider`, `TranslationProvider` (domain/interfaces/)
+- [x] Create domain state: `DiagramState`, `SelectionState`, `UndoRedoManager` (domain/state/)
+- [x] Create infrastructure: `ApiGateway` impl DiagramRepository (infrastructure/gateways/)
+- [x] Create infrastructure: DI token wiring (`DIAGRAM_REPOSITORY`, `AI_PROVIDER`, `TRANSLATION_PROVIDER`)
+- [x] Create infrastructure: `errorInterceptor` HttpInterceptorFn (infrastructure/interceptors/)
+- [x] Create application: `DiagramFacade` with BehaviorSubjects (application/facades/)
+- [x] Create application: `DiagramMapper`, `NodeMapper` (application/mappers/)
+- [x] Create presentation: basic layout shell — toolbar, canvas area, sidebar panel
+- [x] Create presentation: `DiagramListComponent` route, `EditorComponent` route
+- [x] Set up environment files (environments/) with apiBaseUrl localhost:8080
+- [x] Update angular.json with production fileReplacements for environment
+- [x] Global styles: CSS reset, dark theme (Catppuccin Mocha)
+- [x] Verify: `ng build` succeeds with zero errors
+- [x] Verify: `ng serve` renders at http://localhost:4200
 
 ---
 
