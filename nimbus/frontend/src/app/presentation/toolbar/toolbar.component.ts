@@ -1,7 +1,9 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { DiagramFacade } from '../../application/facades/diagram.facade';
 import { ValidationFacade } from '../../application/facades/validation.facade';
+import { ExportFacade } from '../../application/facades/export.facade';
 
 @Component({
   selector: 'app-toolbar',
@@ -20,6 +22,10 @@ import { ValidationFacade } from '../../application/facades/validation.facade';
         <button (click)="facade.redo()">Redo</button>
         <button class="validate-btn" (click)="onValidate()" [disabled]="!(facade.diagram$ | async)">Validate</button>
         <button (click)="facade.save()">Save</button>
+        <button (click)="exportPngRequested.emit()" [disabled]="!(facade.diagram$ | async)">Export PNG</button>
+        <button (click)="onExportJson()" [disabled]="!(facade.diagram$ | async)">Export JSON</button>
+        <button (click)="fileInput.click()">Import JSON</button>
+        <input #fileInput type="file" accept=".json" style="display:none" (change)="onImportFile($event)" />
       </div>
     </div>
   `,
@@ -65,10 +71,14 @@ import { ValidationFacade } from '../../application/facades/validation.facade';
 })
 export class ToolbarComponent {
   @Output() libraryToggled = new EventEmitter<void>();
+  @Output() exportPngRequested = new EventEmitter<void>();
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   constructor(
     public facade: DiagramFacade,
     private validationFacade: ValidationFacade,
+    private exportFacade: ExportFacade,
+    private router: Router,
   ) {}
 
   onValidate(): void {
@@ -76,5 +86,33 @@ export class ToolbarComponent {
     if (id) {
       this.validationFacade.validate(id);
     }
+  }
+
+  onExportJson(): void {
+    const diagram = this.facade.getCurrentDiagram();
+    if (diagram) {
+      this.exportFacade.exportJson(diagram);
+    }
+  }
+
+  async onImportFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const parsed = await this.exportFacade.importJson(file);
+      const created = await this.facade.createDiagram(parsed.name);
+      await this.facade.updateDiagramRemote(created.id, {
+        nodes: parsed.nodes,
+        edges: parsed.edges,
+        viewport: parsed.viewport,
+      });
+      this.router.navigate(['/diagrams', created.id]);
+    } catch (e) {
+      console.error('Import failed:', e);
+    }
+
+    input.value = '';
   }
 }

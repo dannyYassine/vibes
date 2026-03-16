@@ -19,6 +19,9 @@ use nimbus_domain::entities::node::Node;
 use nimbus_domain::entities::validation::ValidationResult;
 use nimbus_shared::events::GenerateEvent;
 
+use axum::http::header;
+use axum::response::IntoResponse;
+
 use crate::dto::diagram::{
     AddEdgeRequest, AddNodeRequest, CreateDiagramRequest, FixDiagramRequest,
     GenerateDiagramRequest, ModifyDiagramRequest, PatchEdgeRequest, PatchNodeRequest,
@@ -75,6 +78,24 @@ pub async fn delete_diagram(
 ) -> Result<StatusCode, AppError> {
     state.delete_diagram.execute(id).await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn export_diagram_json(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, AppError> {
+    let diagram = state.export_diagram_json.execute(id).await?;
+    let json = serde_json::to_string_pretty(&diagram)
+        .map_err(|e| AppError(nimbus_domain::errors::DomainError::PersistenceError(e.to_string())))?;
+    let filename = format!("{}.json", diagram.name);
+    Ok((
+        StatusCode::OK,
+        [
+            (header::CONTENT_TYPE, "application/json".to_string()),
+            (header::CONTENT_DISPOSITION, format!("attachment; filename=\"{filename}\"")),
+        ],
+        json,
+    ))
 }
 
 fn stream_to_sse(

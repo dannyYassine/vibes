@@ -1,6 +1,6 @@
 # Nimbus — Progress Tracker
 
-## Current Phase: Phase 3, Week 5
+## Current Phase: Phase 3, Week 6
 
 ---
 
@@ -152,18 +152,18 @@
 ## Phase 3, Week 6: Persistence & Export
 
 **Frontend:**
-- [ ] Implement auto-save (debounced 2s after last change)
-- [ ] Implement `DiagramListComponent` — list page with load/delete
-- [ ] Implement PNG export (canvas.toDataURL)
-- [ ] Implement JSON export (download diagram as .json)
-- [ ] Implement JSON import (upload .json → load diagram)
-- [ ] Save/restore viewport position per diagram
+- [x] Implement auto-save (debounced 2s after last change)
+- [x] Implement `DiagramListComponent` — list page with load/delete
+- [x] Implement PNG export (canvas.toDataURL)
+- [x] Implement JSON export (download diagram as .json)
+- [x] Implement JSON import (upload .json → load diagram)
+- [x] Save/restore viewport position per diagram
 
 **Backend:**
-- [ ] Implement diagram list endpoint with metadata (node count, updated_at)
-- [ ] Implement `GET /api/diagrams/:id/export/json` endpoint
-- [ ] Add database indexes for query performance
-- [ ] Implement `ExportFacade` on frontend
+- [x] Implement diagram list endpoint with metadata (node count, updated_at)
+- [x] Implement `GET /api/diagrams/:id/export/json` endpoint
+- [x] Add database indexes for query performance
+- [x] Implement `ExportFacade` on frontend
 
 ---
 

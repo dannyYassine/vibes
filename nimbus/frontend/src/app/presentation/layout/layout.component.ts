@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ToolbarComponent } from '../toolbar/toolbar.component';
 import { CanvasComponent } from '../canvas/canvas.component';
 import { PropertiesPanelComponent } from '../properties-panel/properties-panel.component';
 import { ChatComponent } from '../chat/chat.component';
 import { ValidationPanelComponent } from '../validation/validation-panel.component';
 import { ServiceLibraryComponent } from '../service-library/service-library.component';
+import { ExportFacade } from '../../application/facades/export.facade';
+import { DiagramFacade } from '../../application/facades/diagram.facade';
 
 @Component({
   selector: 'app-layout',
@@ -12,7 +14,7 @@ import { ServiceLibraryComponent } from '../service-library/service-library.comp
   imports: [ToolbarComponent, CanvasComponent, PropertiesPanelComponent, ChatComponent, ValidationPanelComponent, ServiceLibraryComponent],
   template: `
     <div class="layout">
-      <app-toolbar (libraryToggled)="libraryVisible = !libraryVisible" />
+      <app-toolbar (libraryToggled)="libraryVisible = !libraryVisible" (exportPngRequested)="onExportPng()" />
       <div class="main" [style.grid-template-columns]="libraryVisible ? '220px 1fr 300px' : '1fr 300px'">
         <app-service-library [visible]="libraryVisible" />
         <app-canvas class="canvas-area" />
@@ -54,5 +56,18 @@ import { ServiceLibraryComponent } from '../service-library/service-library.comp
   `],
 })
 export class LayoutComponent {
+  @ViewChild(CanvasComponent) canvasComponent!: CanvasComponent;
   libraryVisible = false;
+
+  constructor(
+    private exportFacade: ExportFacade,
+    private diagramFacade: DiagramFacade,
+  ) {}
+
+  onExportPng(): void {
+    const diagram = this.diagramFacade.getCurrentDiagram();
+    if (this.canvasComponent && diagram) {
+      this.exportFacade.exportPng(this.canvasComponent.getCanvasElement(), diagram.name);
+    }
+  }
 }

@@ -131,6 +131,12 @@ export class DiagramState {
     return this.diagram;
   }
 
+  setViewport(viewport: { x: number; y: number; zoom: number }): void {
+    if (this.diagram) {
+      this.diagram = { ...this.diagram, viewport };
+    }
+  }
+
   undo(): Diagram | null {
     if (!this.diagram) return null;
     const prev = this.undoRedo.undo(this.diagram);

@@ -9,6 +9,7 @@ use nimbus_app::use_cases::add_diagram_edge::AddDiagramEdge;
 use nimbus_app::use_cases::add_diagram_node::AddDiagramNode;
 use nimbus_app::use_cases::create_diagram::CreateDiagram;
 use nimbus_app::use_cases::delete_diagram::DeleteDiagram;
+use nimbus_app::use_cases::export_diagram_json::ExportDiagramJson;
 use nimbus_app::use_cases::delete_diagram_edge::DeleteDiagramEdge;
 use nimbus_app::use_cases::delete_diagram_node::DeleteDiagramNode;
 use nimbus_app::use_cases::fix_diagram::FixDiagram;
@@ -56,6 +57,7 @@ async fn main() {
         list_diagrams: ListDiagrams::new(diagram_repo.clone()),
         update_diagram: UpdateDiagram::new(diagram_repo.clone()),
         delete_diagram: DeleteDiagram::new(diagram_repo.clone()),
+        export_diagram_json: ExportDiagramJson::new(diagram_repo.clone()),
         generate_diagram: GenerateDiagram::new(ai_provider.clone(), diagram_repo.clone()),
         modify_diagram: ModifyDiagram::new(ai_provider.clone(), diagram_repo.clone()),
         validate_diagram: ValidateDiagram::new(diagram_repo.clone()),

@@ -57,6 +57,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.engine.onUndo = () => this.facade.undo();
     this.engine.onRedo = () => this.facade.redo();
     this.engine.onSave = () => this.facade.save();
+    this.engine.onViewportChanged = (vp) => this.facade.updateViewport(vp);
 
     // Edge creation
     this.engine.onEdgeCreated = (sourceId, targetId) => {
@@ -157,6 +158,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.facade.clearSelection();
     this.pendingDeleteNodeIds = [];
     this.pendingDeleteEdgeIds = [];
+  }
+
+  getCanvasElement(): HTMLCanvasElement {
+    return this.canvasRef.nativeElement;
   }
 
   onDragOver(event: DragEvent): void {

@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { Diagram } from '../../domain/models/diagram.model';
+import { BehaviorSubject, Subject, Subscription, from } from 'rxjs';
+import { debounceTime, filter, exhaustMap } from 'rxjs/operators';
+import { Diagram, Viewport } from '../../domain/models/diagram.model';
 import { DiagramNode, Position } from '../../domain/models/node.model';
 import { DiagramEdge } from '../../domain/models/edge.model';
 import { DiagramRepository } from '../../domain/interfaces/diagram-repository.interface';
@@ -24,9 +25,19 @@ export class DiagramFacade {
   private diagramState = new DiagramState();
   private selectionState = new SelectionState();
 
+  private autoSave$ = new Subject<void>();
+  private autoSaveSub: Subscription;
+  private isSaving = false;
+
   constructor(
     @Inject(DIAGRAM_REPOSITORY) private repo: DiagramRepository,
-  ) {}
+  ) {
+    this.autoSaveSub = this.autoSave$.pipe(
+      debounceTime(2000),
+      filter(() => this.isDirty$.value && !this.isSaving),
+      exhaustMap(() => from(this.save())),
+    ).subscribe();
+  }
 
   getCurrentDiagramId(): string | null {
     const diagram = this.diagramState.getDiagram();
@@ -52,34 +63,45 @@ export class DiagramFacade {
     this.diagramState.endBatch();
   }
 
+  private markDirty(): void {
+    this.isDirty$.next(true);
+    this.autoSave$.next();
+  }
+
+  updateViewport(viewport: Viewport): void {
+    this.diagramState.setViewport(viewport);
+    this.diagramSubject.next(this.diagramState.getDiagram());
+    this.markDirty();
+  }
+
   addNode(node: DiagramNode): void {
     const updated = this.diagramState.addNode(node);
     this.diagramSubject.next(updated);
-    this.isDirty$.next(true);
+    this.markDirty();
   }
 
   updateNode(id: string, changes: Partial<DiagramNode>): void {
     const updated = this.diagramState.updateNode(id, changes);
     this.diagramSubject.next(updated);
-    this.isDirty$.next(true);
+    this.markDirty();
   }
 
   moveNode(id: string, position: Position): void {
     const updated = this.diagramState.moveNode(id, position);
     this.diagramSubject.next(updated);
-    this.isDirty$.next(true);
+    this.markDirty();
   }
 
   removeNode(id: string): void {
     const updated = this.diagramState.removeNode(id);
     this.diagramSubject.next(updated);
-    this.isDirty$.next(true);
+    this.markDirty();
   }
 
   addEdge(edge: DiagramEdge): void {
     const updated = this.diagramState.addEdge(edge);
     this.diagramSubject.next(updated);
-    this.isDirty$.next(true);
+    this.markDirty();
   }
 
   updateEdge(id: string, changes: Partial<DiagramEdge>): void {
@@ -89,13 +111,13 @@ export class DiagramFacade {
     if (!edge) return;
     const updated = this.diagramState.updateEdge(id, changes);
     this.diagramSubject.next(updated);
-    this.isDirty$.next(true);
+    this.markDirty();
   }
 
   removeEdge(id: string): void {
     const updated = this.diagramState.removeEdge(id);
     this.diagramSubject.next(updated);
-    this.isDirty$.next(true);
+    this.markDirty();
   }
 
   selectNodes(ids: string[]): void {
@@ -123,7 +145,7 @@ export class DiagramFacade {
     const diagram = this.diagramState.undo();
     if (diagram) {
       this.diagramSubject.next(diagram);
-      this.isDirty$.next(true);
+      this.markDirty();
     }
   }
 
@@ -131,8 +153,20 @@ export class DiagramFacade {
     const diagram = this.diagramState.redo();
     if (diagram) {
       this.diagramSubject.next(diagram);
-      this.isDirty$.next(true);
+      this.markDirty();
     }
+  }
+
+  getCurrentDiagram(): Diagram | null {
+    return this.diagramState.getDiagram();
+  }
+
+  async createDiagram(name: string): Promise<Diagram> {
+    return this.repo.create(name);
+  }
+
+  async updateDiagramRemote(id: string, changes: Partial<Diagram>): Promise<Diagram> {
+    return this.repo.update(id, changes);
   }
 
   loadDiagramFromData(diagram: Diagram): void {
@@ -142,10 +176,24 @@ export class DiagramFacade {
   }
 
   async save(): Promise<void> {
+    if (this.isSaving) return;
     const diagram = this.diagramState.getDiagram();
-    if (diagram) {
+    if (!diagram) return;
+    this.isSaving = true;
+    try {
       await this.repo.update(diagram.id, diagram);
       this.isDirty$.next(false);
+    } catch {
+      // Keep dirty on failure so auto-save retries
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
+  destroy(): void {
+    this.autoSaveSub.unsubscribe();
+    if (this.isDirty$.value && !this.isSaving) {
+      this.save();
     }
   }
 }

@@ -4,6 +4,7 @@ use nimbus_app::use_cases::add_diagram_edge::AddDiagramEdge;
 use nimbus_app::use_cases::add_diagram_node::AddDiagramNode;
 use nimbus_app::use_cases::create_diagram::CreateDiagram;
 use nimbus_app::use_cases::delete_diagram::DeleteDiagram;
+use nimbus_app::use_cases::export_diagram_json::ExportDiagramJson;
 use nimbus_app::use_cases::delete_diagram_edge::DeleteDiagramEdge;
 use nimbus_app::use_cases::delete_diagram_node::DeleteDiagramNode;
 use nimbus_app::use_cases::fix_diagram::FixDiagram;
@@ -24,6 +25,7 @@ pub struct AppState {
     pub list_diagrams: ListDiagrams,
     pub update_diagram: UpdateDiagram,
     pub delete_diagram: DeleteDiagram,
+    pub export_diagram_json: ExportDiagramJson,
     pub generate_diagram: GenerateDiagram,
     pub modify_diagram: ModifyDiagram,
     pub validate_diagram: ValidateDiagram,

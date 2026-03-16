@@ -46,6 +46,7 @@ export class CanvasEngine implements CanvasContext {
   onSave: (() => void) | null = null;
   onEdgeCreated: ((sourceId: string, targetId: string) => void) | null = null;
   onEdgeSelectionChanged: ((ids: string[]) => void) | null = null;
+  onViewportChanged: ((viewport: ViewportState) => void) | null = null;
 
   // Bound event listeners for cleanup
   private boundWheel: (e: WheelEvent) => void;
@@ -107,6 +108,7 @@ export class CanvasEngine implements CanvasContext {
     } else {
       this.nodes = diagram.nodes;
       this.edges = diagram.edges;
+      this.viewport = { x: diagram.viewport.x, y: diagram.viewport.y, zoom: diagram.viewport.zoom };
     }
     this.requestRender();
   }
@@ -204,6 +206,7 @@ export class CanvasEngine implements CanvasContext {
 
   private handleWheel(event: WheelEvent): void {
     this.zoomHandler.onWheel(event);
+    this.onViewportChanged?.({ ...this.viewport });
   }
 
   private handleMouseDown(event: MouseEvent): void {
@@ -254,6 +257,9 @@ export class CanvasEngine implements CanvasContext {
 
     if (this.dragHandler.isDragging) {
       this.dragHandler.onMouseMove(event);
+      if (this.dragHandler.currentMode === 'pan') {
+        this.onViewportChanged?.({ ...this.viewport });
+      }
       this.updateCursorForMode();
       return;
     }

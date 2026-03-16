@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { LayoutComponent } from '../layout/layout.component';
 import { DiagramFacade } from '../../application/facades/diagram.facade';
@@ -9,7 +9,7 @@ import { DiagramFacade } from '../../application/facades/diagram.facade';
   imports: [LayoutComponent],
   template: `<app-layout />`,
 })
-export default class EditorComponent implements OnInit {
+export default class EditorComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private facade: DiagramFacade,
@@ -20,5 +20,9 @@ export default class EditorComponent implements OnInit {
     if (id) {
       this.facade.loadDiagram(id);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.facade.destroy();
   }
 }
