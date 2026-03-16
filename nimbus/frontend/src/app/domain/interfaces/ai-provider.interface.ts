@@ -6,4 +6,5 @@ export interface GenerateEvent {
 export interface AiProvider {
   generate(prompt: string): AsyncIterable<GenerateEvent>;
   modify(diagramId: string, prompt: string, selectedNodeIds: string[]): AsyncIterable<GenerateEvent>;
+  fix(diagramId: string, warningId: string, rule: string, message: string): AsyncIterable<GenerateEvent>;
 }

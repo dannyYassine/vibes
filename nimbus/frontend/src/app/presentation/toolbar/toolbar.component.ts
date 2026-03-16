@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { DiagramFacade } from '../../application/facades/diagram.facade';
+import { ValidationFacade } from '../../application/facades/validation.facade';
 
 @Component({
   selector: 'app-toolbar',
@@ -16,6 +17,7 @@ import { DiagramFacade } from '../../application/facades/diagram.facade';
       <div class="toolbar-actions">
         <button (click)="facade.undo()">Undo</button>
         <button (click)="facade.redo()">Redo</button>
+        <button class="validate-btn" (click)="onValidate()" [disabled]="!(facade.diagram$ | async)">Validate</button>
         <button (click)="facade.save()">Save</button>
       </div>
     </div>
@@ -42,9 +44,27 @@ import { DiagramFacade } from '../../application/facades/diagram.facade';
       cursor: pointer;
       font-size: 13px;
     }
-    button:hover { background: #45475a; }
+    button:hover:not(:disabled) { background: #45475a; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .validate-btn {
+      border-color: #a6e3a1;
+      color: #a6e3a1;
+    }
+    .validate-btn:hover:not(:disabled) {
+      background: rgba(166, 227, 161, 0.15);
+    }
   `],
 })
 export class ToolbarComponent {
-  constructor(public facade: DiagramFacade) {}
+  constructor(
+    public facade: DiagramFacade,
+    private validationFacade: ValidationFacade,
+  ) {}
+
+  onValidate(): void {
+    const id = this.facade.getCurrentDiagramId();
+    if (id) {
+      this.validationFacade.validate(id);
+    }
+  }
 }

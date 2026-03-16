@@ -25,10 +25,28 @@ export class DiagramFacade {
     @Inject(DIAGRAM_REPOSITORY) private repo: DiagramRepository,
   ) {}
 
+  getCurrentDiagramId(): string | null {
+    const diagram = this.diagramState.getDiagram();
+    return diagram?.id ?? null;
+  }
+
   async loadDiagram(id: string): Promise<void> {
     const diagram = await this.repo.get(id);
     this.diagramState.load(diagram);
     this.diagramSubject.next(diagram);
+  }
+
+  ensureDiagram(): void {
+    const diagram = this.diagramState.ensureDiagram();
+    this.diagramSubject.next(diagram);
+  }
+
+  beginBatch(): void {
+    this.diagramState.beginBatch();
+  }
+
+  endBatch(): void {
+    this.diagramState.endBatch();
   }
 
   addNode(node: DiagramNode): void {

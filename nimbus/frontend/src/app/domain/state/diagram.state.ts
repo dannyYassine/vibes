@@ -6,6 +6,8 @@ import { UndoRedoManager } from './undo-redo.manager';
 export class DiagramState {
   private diagram: Diagram | null = null;
   private undoRedo = new UndoRedoManager<Diagram>();
+  private batchMode = false;
+  private batchSnapshot: Diagram | null = null;
 
   load(diagram: Diagram): void {
     this.diagram = diagram;
@@ -15,9 +17,44 @@ export class DiagramState {
     return this.diagram;
   }
 
+  ensureDiagram(): Diagram {
+    if (!this.diagram) {
+      this.diagram = {
+        id: '',
+        name: '',
+        description: '',
+        nodes: [],
+        edges: [],
+        viewport: { x: 0, y: 0, zoom: 1 },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+    return this.diagram;
+  }
+
+  beginBatch(): void {
+    this.batchSnapshot = this.diagram ? { ...this.diagram } : null;
+    this.batchMode = true;
+  }
+
+  endBatch(): void {
+    if (this.batchSnapshot) {
+      this.undoRedo.push(this.batchSnapshot);
+    }
+    this.batchMode = false;
+    this.batchSnapshot = null;
+  }
+
+  private pushUndo(current: Diagram): void {
+    if (!this.batchMode) {
+      this.undoRedo.push(current);
+    }
+  }
+
   addNode(node: DiagramNode): Diagram {
     const current = this.diagram!;
-    this.undoRedo.push(current);
+    this.pushUndo(current);
     this.diagram = {
       ...current,
       nodes: [...current.nodes, node],
@@ -27,7 +64,7 @@ export class DiagramState {
 
   updateNode(id: string, changes: Partial<DiagramNode>): Diagram {
     const current = this.diagram!;
-    this.undoRedo.push(current);
+    this.pushUndo(current);
     this.diagram = {
       ...current,
       nodes: current.nodes.map((n) =>
@@ -39,7 +76,7 @@ export class DiagramState {
 
   removeNode(id: string): Diagram {
     const current = this.diagram!;
-    this.undoRedo.push(current);
+    this.pushUndo(current);
     this.diagram = {
       ...current,
       nodes: current.nodes.filter((n) => n.id !== id),
@@ -52,7 +89,7 @@ export class DiagramState {
 
   addEdge(edge: DiagramEdge): Diagram {
     const current = this.diagram!;
-    this.undoRedo.push(current);
+    this.pushUndo(current);
     this.diagram = {
       ...current,
       edges: [...current.edges, edge],
@@ -62,7 +99,7 @@ export class DiagramState {
 
   removeEdge(id: string): Diagram {
     const current = this.diagram!;
-    this.undoRedo.push(current);
+    this.pushUndo(current);
     this.diagram = {
       ...current,
       edges: current.edges.filter((e) => e.id !== id),
@@ -72,7 +109,7 @@ export class DiagramState {
 
   moveNode(id: string, position: Position): Diagram {
     const current = this.diagram!;
-    this.undoRedo.push(current);
+    this.pushUndo(current);
     this.diagram = {
       ...current,
       nodes: current.nodes.map((n) =>

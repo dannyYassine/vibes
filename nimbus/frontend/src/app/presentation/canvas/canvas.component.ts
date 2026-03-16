@@ -1,6 +1,8 @@
 import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { DiagramFacade } from '../../application/facades/diagram.facade';
+import { ValidationFacade } from '../../application/facades/validation.facade';
 import { CanvasEngine } from './canvas-engine';
 
 @Component({
@@ -19,7 +21,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private resizeObserver?: ResizeObserver;
 
-  constructor(private facade: DiagramFacade) {}
+  constructor(private facade: DiagramFacade, private validationFacade: ValidationFacade) {}
 
   ngAfterViewInit(): void {
     const canvas = this.canvasRef.nativeElement;
@@ -33,6 +35,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.push(
       this.facade.diagram$.subscribe(diagram => this.engine.setDiagram(diagram)),
       this.facade.selectedNodeIds$.subscribe(ids => this.engine.setSelectedNodeIds(ids)),
+      this.validationFacade.validationResult$.pipe(
+        map(result => {
+          if (!result) return [];
+          const nodeIds = new Set<string>();
+          for (const w of result.warnings) {
+            for (const id of w.nodeIds) nodeIds.add(id);
+          }
+          return [...nodeIds];
+        }),
+      ).subscribe(ids => this.engine.setWarnedNodeIds(ids)),
     );
 
     // Resize observer

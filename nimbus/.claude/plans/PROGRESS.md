@@ -120,15 +120,15 @@
   - [x] Message queue without DLQ
 
 **Frontend:**
-- [ ] Implement `SseClient` in infrastructure layer (impl AiProvider streaming)
-- [ ] Progressive rendering: add nodes to canvas as SSE events arrive
-- [ ] Add loading/streaming indicator in chat panel
-- [ ] Wire AI assistant: chat input → `POST /modify` → changes on canvas
-- [ ] Implement `ValidationFacade` + validation results panel
-- [ ] "Validate" button in toolbar
-- [ ] Warning list with "Fix with AI" buttons
-- [ ] Implement generic architecture icons (SVG per component category)
-- [ ] Polish node rendering: icons, styled labels, group node borders
+- [x] Implement `SseClient` in infrastructure layer (impl AiProvider streaming)
+- [x] Progressive rendering: add nodes to canvas as SSE events arrive
+- [x] Add loading/streaming indicator in chat panel
+- [x] Wire AI assistant: chat input → `POST /modify` → changes on canvas
+- [x] Implement `ValidationFacade` + validation results panel
+- [x] "Validate" button in toolbar
+- [x] Warning list with "Fix with AI" buttons
+- [x] Implement generic architecture icons (SVG per component category)
+- [x] Polish node rendering: icons, styled labels, group node borders
 
 ---
 

@@ -3,11 +3,12 @@ import { ToolbarComponent } from '../toolbar/toolbar.component';
 import { CanvasComponent } from '../canvas/canvas.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { ChatComponent } from '../chat/chat.component';
+import { ValidationPanelComponent } from '../validation/validation-panel.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [ToolbarComponent, CanvasComponent, SidebarComponent, ChatComponent],
+  imports: [ToolbarComponent, CanvasComponent, SidebarComponent, ChatComponent, ValidationPanelComponent],
   template: `
     <div class="layout">
       <app-toolbar />
@@ -15,6 +16,7 @@ import { ChatComponent } from '../chat/chat.component';
         <app-canvas class="canvas-area" />
         <div class="right-panel">
           <app-chat class="chat-area" />
+          <app-validation-panel />
           <app-sidebar class="sidebar-area" />
         </div>
       </div>

@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiFacade, ChatMessage } from '../../application/facades/ai.facade';
-import { Observable } from 'rxjs';
+import { DiagramFacade } from '../../application/facades/diagram.facade';
+import { Observable, map } from 'rxjs';
 
 @Component({
   selector: 'app-chat',
@@ -11,17 +12,23 @@ import { Observable } from 'rxjs';
   template: `
     <div class="chat-container">
       <div class="chat-header">AI Assistant</div>
-      <div class="messages">
+      <div class="messages" #messagesContainer>
         @for (msg of messages$ | async; track $index) {
           <div class="message" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'">
             <span class="role">{{ msg.role === 'user' ? 'You' : 'AI' }}</span>
             <span class="content">{{ msg.content }}</span>
           </div>
         }
-        @if (loading$ | async) {
+        @if (streaming$ | async) {
           <div class="message assistant">
             <span class="role">AI</span>
-            <span class="content loading">Generating...</span>
+            <span class="content loading">
+              <span class="dot-animation">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </span>
+            </span>
           </div>
         }
       </div>
@@ -30,11 +37,11 @@ import { Observable } from 'rxjs';
           type="text"
           [(ngModel)]="prompt"
           (keydown.enter)="onSubmit()"
-          placeholder="Describe your architecture..."
+          [placeholder]="(isModifyMode$ | async) ? 'Describe modifications...' : 'Describe your architecture...'"
           [disabled]="!!(loading$ | async)"
         />
         <button (click)="onSubmit()" [disabled]="!prompt.trim() || !!(loading$ | async)">
-          Generate
+          {{ (isModifyMode$ | async) ? 'Modify' : 'Generate' }}
         </button>
       </div>
     </div>
@@ -93,6 +100,25 @@ import { Observable } from 'rxjs';
       color: #a6adc8;
       font-style: italic;
     }
+    .dot-animation {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #a6adc8;
+      animation: dotPulse 1.4s infinite ease-in-out both;
+    }
+    .dot:nth-child(1) { animation-delay: -0.32s; }
+    .dot:nth-child(2) { animation-delay: -0.16s; }
+    .dot:nth-child(3) { animation-delay: 0s; }
+    @keyframes dotPulse {
+      0%, 80%, 100% { transform: scale(0.4); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
     .input-area {
       display: flex;
       gap: 8px;
@@ -134,20 +160,48 @@ import { Observable } from 'rxjs';
     }
   `],
 })
-export class ChatComponent {
+export class ChatComponent implements AfterViewChecked {
+  @ViewChild('messagesContainer') private messagesContainer!: ElementRef<HTMLDivElement>;
+
   prompt = '';
   messages$: Observable<ChatMessage[]>;
   loading$: Observable<boolean>;
+  streaming$: Observable<boolean>;
+  isModifyMode$: Observable<boolean>;
 
-  constructor(private aiFacade: AiFacade) {
+  constructor(
+    private aiFacade: AiFacade,
+    private diagramFacade: DiagramFacade,
+  ) {
     this.messages$ = this.aiFacade.messages$;
     this.loading$ = this.aiFacade.loading$;
+    this.streaming$ = this.aiFacade.streaming$;
+    this.isModifyMode$ = this.diagramFacade.diagram$.pipe(
+      map(d => d !== null && d.id !== ''),
+    );
+  }
+
+  ngAfterViewChecked(): void {
+    this.scrollToBottom();
   }
 
   onSubmit(): void {
     const prompt = this.prompt.trim();
     if (!prompt) return;
     this.prompt = '';
-    this.aiFacade.generateDiagram(prompt);
+
+    const diagramId = this.diagramFacade.getCurrentDiagramId();
+    if (diagramId && diagramId !== '') {
+      this.aiFacade.modifyDiagram(prompt);
+    } else {
+      this.aiFacade.generateDiagram(prompt);
+    }
+  }
+
+  private scrollToBottom(): void {
+    if (this.messagesContainer) {
+      const el = this.messagesContainer.nativeElement;
+      el.scrollTop = el.scrollHeight;
+    }
   }
 }

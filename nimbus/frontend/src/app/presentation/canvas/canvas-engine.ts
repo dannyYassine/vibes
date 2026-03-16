@@ -26,6 +26,7 @@ export class CanvasEngine implements CanvasContext {
   private nodes: DiagramNode[] = [];
   private edges: DiagramEdge[] = [];
   private selectedIds = new Set<string>();
+  private warnedIds = new Set<string>();
   private renderRequested = false;
   private dpr = 1;
 
@@ -92,6 +93,11 @@ export class CanvasEngine implements CanvasContext {
     this.requestRender();
   }
 
+  setWarnedNodeIds(ids: string[]): void {
+    this.warnedIds = new Set(ids);
+    this.requestRender();
+  }
+
   // CanvasContext interface
   screenToCanvas(screenX: number, screenY: number): { x: number; y: number } {
     return {
@@ -131,7 +137,7 @@ export class CanvasEngine implements CanvasContext {
     // Draw in order: grid, edges, nodes
     this.gridRenderer.render(ctx, canvas, this.viewport);
     this.edgeRenderer.render(ctx, this.edges, this.nodes, this.selectedIds);
-    this.nodeRenderer.render(ctx, this.nodes, this.selectedIds);
+    this.nodeRenderer.render(ctx, this.nodes, this.selectedIds, this.warnedIds);
 
     ctx.restore();
 
