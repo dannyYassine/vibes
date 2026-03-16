@@ -16,6 +16,9 @@ export class DiagramFacade {
   private selectionSubject = new BehaviorSubject<string[]>([]);
   readonly selectedNodeIds$ = this.selectionSubject.asObservable();
 
+  private selectedEdgeSubject = new BehaviorSubject<string[]>([]);
+  readonly selectedEdgeIds$ = this.selectedEdgeSubject.asObservable();
+
   readonly isDirty$ = new BehaviorSubject<boolean>(false);
 
   private diagramState = new DiagramState();
@@ -79,6 +82,16 @@ export class DiagramFacade {
     this.isDirty$.next(true);
   }
 
+  updateEdge(id: string, changes: Partial<DiagramEdge>): void {
+    const diagram = this.diagramState.getDiagram();
+    if (!diagram) return;
+    const edge = diagram.edges.find(e => e.id === id);
+    if (!edge) return;
+    const updated = this.diagramState.updateEdge(id, changes);
+    this.diagramSubject.next(updated);
+    this.isDirty$.next(true);
+  }
+
   removeEdge(id: string): void {
     const updated = this.diagramState.removeEdge(id);
     this.diagramSubject.next(updated);
@@ -88,11 +101,22 @@ export class DiagramFacade {
   selectNodes(ids: string[]): void {
     this.selectionState.selectNodes(ids);
     this.selectionSubject.next(this.selectionState.getSelectedNodeIds());
+    // Clear edge selection when selecting nodes
+    if (ids.length > 0) {
+      this.selectedEdgeSubject.next([]);
+    }
+  }
+
+  selectEdges(ids: string[]): void {
+    this.selectionState.selectNodes([]);
+    this.selectionSubject.next([]);
+    this.selectedEdgeSubject.next(ids);
   }
 
   clearSelection(): void {
     this.selectionState.clearSelection();
     this.selectionSubject.next([]);
+    this.selectedEdgeSubject.next([]);
   }
 
   undo(): void {

@@ -10,13 +10,18 @@ use axum::Json;
 use futures_util::{Stream, StreamExt};
 use uuid::Uuid;
 
+use nimbus_app::use_cases::patch_diagram_edge::PatchEdgeInput;
+use nimbus_app::use_cases::patch_diagram_node::PatchNodeInput;
 use nimbus_app::use_cases::update_diagram::UpdateDiagramInput;
 use nimbus_domain::entities::diagram::{Diagram, DiagramListItem};
+use nimbus_domain::entities::edge::Edge;
+use nimbus_domain::entities::node::Node;
 use nimbus_domain::entities::validation::ValidationResult;
 use nimbus_shared::events::GenerateEvent;
 
 use crate::dto::diagram::{
-    CreateDiagramRequest, FixDiagramRequest, GenerateDiagramRequest, ModifyDiagramRequest,
+    AddEdgeRequest, AddNodeRequest, CreateDiagramRequest, FixDiagramRequest,
+    GenerateDiagramRequest, ModifyDiagramRequest, PatchEdgeRequest, PatchNodeRequest,
     UpdateDiagramRequest,
 };
 use crate::middleware::error_handler::AppError;
@@ -124,4 +129,75 @@ pub async fn fix_diagram(
         .execute(id, &req.rule, &req.message)
         .await?;
     Ok(stream_to_sse(stream))
+}
+
+pub async fn add_node(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    Json(req): Json<AddNodeRequest>,
+) -> Result<(StatusCode, Json<Node>), AppError> {
+    let node = state.add_diagram_node.execute(id, req.node).await?;
+    Ok((StatusCode::CREATED, Json(node)))
+}
+
+pub async fn patch_node(
+    State(state): State<Arc<AppState>>,
+    Path((id, node_id)): Path<(Uuid, Uuid)>,
+    Json(req): Json<PatchNodeRequest>,
+) -> Result<Json<Node>, AppError> {
+    let input = PatchNodeInput {
+        label: req.label,
+        node_type: req.node_type,
+        position: req.position,
+        size: req.size,
+        properties: req.properties,
+        parent_id: req.parent_id,
+    };
+    let node = state
+        .patch_diagram_node
+        .execute(id, node_id, input)
+        .await?;
+    Ok(Json(node))
+}
+
+pub async fn delete_node(
+    State(state): State<Arc<AppState>>,
+    Path((id, node_id)): Path<(Uuid, Uuid)>,
+) -> Result<StatusCode, AppError> {
+    state.delete_diagram_node.execute(id, node_id).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn add_edge(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    Json(req): Json<AddEdgeRequest>,
+) -> Result<(StatusCode, Json<Edge>), AppError> {
+    let edge = state.add_diagram_edge.execute(id, req.edge).await?;
+    Ok((StatusCode::CREATED, Json(edge)))
+}
+
+pub async fn patch_edge(
+    State(state): State<Arc<AppState>>,
+    Path((id, edge_id)): Path<(Uuid, Uuid)>,
+    Json(req): Json<PatchEdgeRequest>,
+) -> Result<Json<Edge>, AppError> {
+    let input = PatchEdgeInput {
+        edge_type: req.edge_type,
+        label: req.label,
+        properties: req.properties,
+    };
+    let edge = state
+        .patch_diagram_edge
+        .execute(id, edge_id, input)
+        .await?;
+    Ok(Json(edge))
+}
+
+pub async fn delete_edge(
+    State(state): State<Arc<AppState>>,
+    Path((id, edge_id)): Path<(Uuid, Uuid)>,
+) -> Result<StatusCode, AppError> {
+    state.delete_diagram_edge.execute(id, edge_id).await?;
+    Ok(StatusCode::NO_CONTENT)
 }

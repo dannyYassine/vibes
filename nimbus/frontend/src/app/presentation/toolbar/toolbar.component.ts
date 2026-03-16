@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { DiagramFacade } from '../../application/facades/diagram.facade';
 import { ValidationFacade } from '../../application/facades/validation.facade';
@@ -15,6 +15,7 @@ import { ValidationFacade } from '../../application/facades/validation.facade';
         <span class="diagram-name">Nimbus</span>
       }
       <div class="toolbar-actions">
+        <button class="library-btn" (click)="libraryToggled.emit()">Library</button>
         <button (click)="facade.undo()">Undo</button>
         <button (click)="facade.redo()">Redo</button>
         <button class="validate-btn" (click)="onValidate()" [disabled]="!(facade.diagram$ | async)">Validate</button>
@@ -53,9 +54,18 @@ import { ValidationFacade } from '../../application/facades/validation.facade';
     .validate-btn:hover:not(:disabled) {
       background: rgba(166, 227, 161, 0.15);
     }
+    .library-btn {
+      border-color: #89b4fa;
+      color: #89b4fa;
+    }
+    .library-btn:hover {
+      background: rgba(137, 180, 250, 0.15);
+    }
   `],
 })
 export class ToolbarComponent {
+  @Output() libraryToggled = new EventEmitter<void>();
+
   constructor(
     public facade: DiagramFacade,
     private validationFacade: ValidationFacade,

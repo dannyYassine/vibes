@@ -97,6 +97,18 @@ export class DiagramState {
     return this.diagram;
   }
 
+  updateEdge(id: string, changes: Partial<DiagramEdge>): Diagram {
+    const current = this.diagram!;
+    this.pushUndo(current);
+    this.diagram = {
+      ...current,
+      edges: current.edges.map((e) =>
+        e.id === id ? { ...e, ...changes } : e
+      ),
+    };
+    return this.diagram;
+  }
+
   removeEdge(id: string): Diagram {
     const current = this.diagram!;
     this.pushUndo(current);

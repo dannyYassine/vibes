@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::routing::{get, post};
+use axum::routing::{get, patch, post};
 use axum::Router;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
@@ -36,6 +36,22 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route(
             "/api/diagrams/{id}/fix",
             post(handlers::diagram::fix_diagram),
+        )
+        .route(
+            "/api/diagrams/{id}/nodes",
+            post(handlers::diagram::add_node),
+        )
+        .route(
+            "/api/diagrams/{id}/nodes/{node_id}",
+            patch(handlers::diagram::patch_node).delete(handlers::diagram::delete_node),
+        )
+        .route(
+            "/api/diagrams/{id}/edges",
+            post(handlers::diagram::add_edge),
+        )
+        .route(
+            "/api/diagrams/{id}/edges/{edge_id}",
+            patch(handlers::diagram::patch_edge).delete(handlers::diagram::delete_edge),
         )
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())

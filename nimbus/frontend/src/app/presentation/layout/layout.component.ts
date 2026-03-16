@@ -1,23 +1,25 @@
 import { Component } from '@angular/core';
 import { ToolbarComponent } from '../toolbar/toolbar.component';
 import { CanvasComponent } from '../canvas/canvas.component';
-import { SidebarComponent } from '../sidebar/sidebar.component';
+import { PropertiesPanelComponent } from '../properties-panel/properties-panel.component';
 import { ChatComponent } from '../chat/chat.component';
 import { ValidationPanelComponent } from '../validation/validation-panel.component';
+import { ServiceLibraryComponent } from '../service-library/service-library.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [ToolbarComponent, CanvasComponent, SidebarComponent, ChatComponent, ValidationPanelComponent],
+  imports: [ToolbarComponent, CanvasComponent, PropertiesPanelComponent, ChatComponent, ValidationPanelComponent, ServiceLibraryComponent],
   template: `
     <div class="layout">
-      <app-toolbar />
-      <div class="main">
+      <app-toolbar (libraryToggled)="libraryVisible = !libraryVisible" />
+      <div class="main" [style.grid-template-columns]="libraryVisible ? '220px 1fr 300px' : '1fr 300px'">
+        <app-service-library [visible]="libraryVisible" />
         <app-canvas class="canvas-area" />
         <div class="right-panel">
           <app-chat class="chat-area" />
           <app-validation-panel />
-          <app-sidebar class="sidebar-area" />
+          <app-properties-panel class="sidebar-area" />
         </div>
       </div>
     </div>
@@ -51,4 +53,6 @@ import { ValidationPanelComponent } from '../validation/validation-panel.compone
     }
   `],
 })
-export class LayoutComponent {}
+export class LayoutComponent {
+  libraryVisible = false;
+}

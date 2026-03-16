@@ -45,3 +45,34 @@ pub struct UpdateDiagramRequest {
     pub edges: Option<Vec<Edge>>,
     pub viewport: Option<Viewport>,
 }
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddNodeRequest {
+    pub node: Node,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PatchNodeRequest {
+    pub label: Option<String>,
+    pub node_type: Option<nimbus_domain::entities::node::NodeType>,
+    pub position: Option<nimbus_domain::entities::node::Position>,
+    pub size: Option<nimbus_domain::entities::node::Size>,
+    pub properties: Option<nimbus_domain::entities::node::NodeProperties>,
+    pub parent_id: Option<Option<uuid::Uuid>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddEdgeRequest {
+    pub edge: Edge,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PatchEdgeRequest {
+    pub edge_type: Option<nimbus_domain::entities::edge::EdgeType>,
+    pub label: Option<Option<String>>,
+    pub properties: Option<nimbus_domain::entities::edge::EdgeProperties>,
+}

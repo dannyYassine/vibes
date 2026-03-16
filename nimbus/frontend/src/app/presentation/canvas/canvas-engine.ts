@@ -5,10 +5,13 @@ import { EdgeRenderer } from './renderers/edge.renderer';
 import { ZoomHandler } from './handlers/zoom.handler';
 import { DragHandler } from './handlers/drag.handler';
 import { SelectionHandler } from './handlers/selection.handler';
+import { KeyboardHandler } from './handlers/keyboard.handler';
+import { EdgeCreationHandler, hitTestPort, drawPorts } from './handlers/edge-creation.handler';
 import { Diagram } from '../../domain/models/diagram.model';
 import { DiagramNode } from '../../domain/models/node.model';
 import { DiagramEdge } from '../../domain/models/edge.model';
 import { Position } from '../../domain/models/node.model';
+import { CATEGORY_COLORS } from '../../domain/models/service-catalog';
 
 export class CanvasEngine implements CanvasContext {
   canvas!: HTMLCanvasElement;
@@ -22,17 +25,27 @@ export class CanvasEngine implements CanvasContext {
   private zoomHandler!: ZoomHandler;
   private dragHandler!: DragHandler;
   private selectionHandler!: SelectionHandler;
+  private keyboardHandler!: KeyboardHandler;
+  private edgeCreationHandler!: EdgeCreationHandler;
 
   private nodes: DiagramNode[] = [];
   private edges: DiagramEdge[] = [];
   private selectedIds = new Set<string>();
+  private selectedEdgeIds = new Set<string>();
   private warnedIds = new Set<string>();
+  private hoveredNodeId: string | null = null;
   private renderRequested = false;
   private dpr = 1;
 
   // Callbacks
   onNodeMoved: ((id: string, position: Position) => void) | null = null;
   onSelectionChanged: ((ids: string[]) => void) | null = null;
+  onDeleteRequested: (() => void) | null = null;
+  onUndo: (() => void) | null = null;
+  onRedo: (() => void) | null = null;
+  onSave: (() => void) | null = null;
+  onEdgeCreated: ((sourceId: string, targetId: string) => void) | null = null;
+  onEdgeSelectionChanged: ((ids: string[]) => void) | null = null;
 
   // Bound event listeners for cleanup
   private boundWheel: (e: WheelEvent) => void;
@@ -57,15 +70,25 @@ export class CanvasEngine implements CanvasContext {
     this.selectionHandler = new SelectionHandler(
       this, this.nodeRenderer, () => this.nodes, () => [...this.selectedIds],
     );
+    this.edgeCreationHandler = new EdgeCreationHandler(this);
 
     this.dragHandler.onNodeMoved = (id, pos) => this.onNodeMoved?.(id, pos);
     this.selectionHandler.onSelectionChanged = (ids) => this.onSelectionChanged?.(ids);
+    this.edgeCreationHandler.onEdgeCreated = (event) => this.onEdgeCreated?.(event.sourceId, event.targetId);
+
+    this.keyboardHandler = new KeyboardHandler({
+      onDeleteRequested: () => this.onDeleteRequested?.(),
+      onUndo: () => this.onUndo?.(),
+      onRedo: () => this.onRedo?.(),
+      onSave: () => this.onSave?.(),
+    });
 
     this.attachEvents();
   }
 
   destroy(): void {
     this.detachEvents();
+    this.keyboardHandler?.destroy();
   }
 
   resize(width: number, height: number): void {
@@ -90,6 +113,11 @@ export class CanvasEngine implements CanvasContext {
 
   setSelectedNodeIds(ids: string[]): void {
     this.selectedIds = new Set(ids);
+    this.requestRender();
+  }
+
+  setSelectedEdgeIds(ids: string[]): void {
+    this.selectedEdgeIds = new Set(ids);
     this.requestRender();
   }
 
@@ -136,8 +164,21 @@ export class CanvasEngine implements CanvasContext {
 
     // Draw in order: grid, edges, nodes
     this.gridRenderer.render(ctx, canvas, this.viewport);
-    this.edgeRenderer.render(ctx, this.edges, this.nodes, this.selectedIds);
+    this.edgeRenderer.render(ctx, this.edges, this.nodes, this.selectedIds, this.selectedEdgeIds);
     this.nodeRenderer.render(ctx, this.nodes, this.selectedIds, this.warnedIds);
+
+    // Draw ports on hovered/selected nodes
+    const portVisibleIds = new Set<string>(this.selectedIds);
+    if (this.hoveredNodeId) portVisibleIds.add(this.hoveredNodeId);
+    for (const node of this.nodes) {
+      if (portVisibleIds.has(node.id) && node.nodeType.category !== 'Group') {
+        const color = CATEGORY_COLORS[node.nodeType.category] || '#6c7086';
+        drawPorts(ctx, node, color);
+      }
+    }
+
+    // Edge creation preview
+    this.edgeCreationHandler.renderPreview(ctx, this.nodes);
 
     ctx.restore();
 
@@ -170,6 +211,17 @@ export class CanvasEngine implements CanvasContext {
     const screenX = event.clientX - rect.left;
     const screenY = event.clientY - rect.top;
     const canvasPos = this.screenToCanvas(screenX, screenY);
+
+    // Check port hit first for edge creation
+    const portVisibleIds = new Set<string>(this.selectedIds);
+    if (this.hoveredNodeId) portVisibleIds.add(this.hoveredNodeId);
+    const portHit = hitTestPort(this.nodes, canvasPos.x, canvasPos.y, portVisibleIds);
+    if (portHit && event.button === 0) {
+      this.edgeCreationHandler.onMouseDown(portHit);
+      this.canvas.style.cursor = 'crosshair';
+      return;
+    }
+
     const hitNode = this.nodeRenderer.hitTest(this.nodes, canvasPos.x, canvasPos.y);
 
     // Shift+drag on empty = selection rect
@@ -189,6 +241,17 @@ export class CanvasEngine implements CanvasContext {
   }
 
   private handleMouseMove(event: MouseEvent): void {
+    const rect = this.canvas.getBoundingClientRect();
+    const screenX = event.clientX - rect.left;
+    const screenY = event.clientY - rect.top;
+
+    // Edge creation mode
+    if (this.edgeCreationHandler.isCreating) {
+      this.edgeCreationHandler.onMouseMove(screenX, screenY);
+      this.canvas.style.cursor = 'crosshair';
+      return;
+    }
+
     if (this.dragHandler.isDragging) {
       this.dragHandler.onMouseMove(event);
       this.updateCursorForMode();
@@ -197,16 +260,46 @@ export class CanvasEngine implements CanvasContext {
 
     this.selectionHandler.onMouseMove(event);
 
-    // Update cursor on hover
-    const rect = this.canvas.getBoundingClientRect();
-    const screenX = event.clientX - rect.left;
-    const screenY = event.clientY - rect.top;
+    // Update cursor and hovered node
     const canvasPos = this.screenToCanvas(screenX, screenY);
     const hitNode = this.nodeRenderer.hitTest(this.nodes, canvasPos.x, canvasPos.y);
-    this.canvas.style.cursor = hitNode ? 'pointer' : 'default';
+
+    // Check port hover
+    const portVisibleIds = new Set<string>(this.selectedIds);
+    if (hitNode) portVisibleIds.add(hitNode.id);
+    if (this.hoveredNodeId) portVisibleIds.add(this.hoveredNodeId);
+    const portHit = hitTestPort(this.nodes, canvasPos.x, canvasPos.y, portVisibleIds);
+
+    const prevHovered = this.hoveredNodeId;
+    this.hoveredNodeId = hitNode?.id ?? null;
+    if (prevHovered !== this.hoveredNodeId) {
+      this.requestRender();
+    }
+
+    if (portHit) {
+      this.canvas.style.cursor = 'crosshair';
+    } else {
+      this.canvas.style.cursor = hitNode ? 'pointer' : 'default';
+    }
   }
 
   private handleMouseUp(event: MouseEvent): void {
+    // Edge creation mode
+    if (this.edgeCreationHandler.isCreating) {
+      const rect = this.canvas.getBoundingClientRect();
+      const screenX = event.clientX - rect.left;
+      const screenY = event.clientY - rect.top;
+      const canvasPos = this.screenToCanvas(screenX, screenY);
+      const portVisibleIds = new Set<string>(this.selectedIds);
+      if (this.hoveredNodeId) portVisibleIds.add(this.hoveredNodeId);
+      // Add all node IDs so we can target any node's ports
+      for (const node of this.nodes) portVisibleIds.add(node.id);
+      const targetPortHit = hitTestPort(this.nodes, canvasPos.x, canvasPos.y, portVisibleIds);
+      this.edgeCreationHandler.onMouseUp(targetPortHit);
+      this.canvas.style.cursor = 'default';
+      return;
+    }
+
     const wasDragging = this.dragHandler.isDragging;
     const wasMode = this.dragHandler.currentMode;
 
@@ -222,7 +315,14 @@ export class CanvasEngine implements CanvasContext {
       const hitNode = this.nodeRenderer.hitTest(this.nodes, canvasPos.x, canvasPos.y);
 
       if (!event.shiftKey && !hitNode) {
-        this.selectionHandler.handleClick(null, false);
+        // Check if we clicked on an edge
+        const hitEdge = this.edgeRenderer.hitTest(this.edges, this.nodes, canvasPos.x, canvasPos.y);
+        if (hitEdge) {
+          this.onEdgeSelectionChanged?.([hitEdge.id]);
+        } else {
+          this.selectionHandler.handleClick(null, false);
+          this.onEdgeSelectionChanged?.([]);
+        }
       }
     }
 

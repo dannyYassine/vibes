@@ -16,7 +16,7 @@ const EDGE_STYLES: Record<EdgeType, EdgeStyle> = {
 const ARROW_SIZE = 10;
 
 export class EdgeRenderer {
-  render(ctx: CanvasRenderingContext2D, edges: DiagramEdge[], nodes: DiagramNode[], selectedNodeIds: Set<string>): void {
+  render(ctx: CanvasRenderingContext2D, edges: DiagramEdge[], nodes: DiagramNode[], selectedNodeIds: Set<string>, selectedEdgeIds?: Set<string>): void {
     const nodeMap = new Map<string, DiagramNode>();
     for (const n of nodes) nodeMap.set(n.id, n);
 
@@ -24,7 +24,7 @@ export class EdgeRenderer {
       const source = nodeMap.get(edge.sourceId);
       const target = nodeMap.get(edge.targetId);
       if (!source || !target) continue;
-      this.drawEdge(ctx, edge, source, target, selectedNodeIds);
+      this.drawEdge(ctx, edge, source, target, selectedNodeIds, selectedEdgeIds);
     }
   }
 
@@ -34,6 +34,7 @@ export class EdgeRenderer {
     source: DiagramNode,
     target: DiagramNode,
     selectedNodeIds: Set<string>,
+    selectedEdgeIds?: Set<string>,
   ): void {
     const sx = source.position.x + source.size.width / 2;
     const sy = source.position.y + source.size.height / 2;
@@ -46,10 +47,11 @@ export class EdgeRenderer {
 
     const style = EDGE_STYLES[edge.edgeType] || EDGE_STYLES['Synchronous'];
     const isConnected = selectedNodeIds.has(edge.sourceId) || selectedNodeIds.has(edge.targetId);
+    const isEdgeSelected = selectedEdgeIds?.has(edge.id) ?? false;
 
     ctx.save();
-    ctx.strokeStyle = style.color;
-    ctx.lineWidth = isConnected ? 2 : 1.5;
+    ctx.strokeStyle = isEdgeSelected ? '#cba6f7' : style.color;
+    ctx.lineWidth = isEdgeSelected ? 3 : isConnected ? 2 : 1.5;
     ctx.setLineDash(style.dash);
 
     ctx.beginPath();
