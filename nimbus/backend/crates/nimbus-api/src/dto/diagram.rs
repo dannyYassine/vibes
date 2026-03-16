@@ -22,6 +22,22 @@ pub struct GenerateDiagramRequest {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ModifyDiagramRequest {
+    pub prompt: String,
+    #[serde(default)]
+    pub selected_node_ids: Vec<Uuid>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FixDiagramRequest {
+    pub warning_id: String,
+    pub rule: String,
+    pub message: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateDiagramRequest {
     pub name: Option<String>,
     pub description: Option<String>,

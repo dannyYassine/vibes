@@ -1,6 +1,6 @@
 # Nimbus — Progress Tracker
 
-## Current Phase: Phase 2, Week 3
+## Current Phase: Phase 2, Week 4
 
 ---
 
@@ -101,23 +101,23 @@
 ## Phase 2, Week 4: Streaming, AI Assistant & Validation
 
 **Backend:**
-- [ ] Define SSE event types in `nimbus-shared` (events.rs)
-- [ ] Convert AI generation to streaming (Axum SSE response)
-- [ ] Implement chunked parsing of Claude's streaming response
-- [ ] Stream `node_added` / `edge_added` events to frontend
-- [ ] Implement `POST /api/diagrams/:id/modify` — AI assistant endpoint (SSE)
-- [ ] Implement `POST /api/diagrams/:id/validate` — deterministic validation (no AI)
-- [ ] Implement `POST /api/diagrams/:id/fix` — AI-powered fix (SSE)
-- [ ] Implement validation rules in `ValidationService`:
-  - [ ] Orphan nodes (no connections)
-  - [ ] Load balancer with single target
-  - [ ] Invalid containment / nesting
-  - [ ] Circular synchronous dependencies
-  - [ ] Single point of failure detection
-  - [ ] Missing observability / security (warnings)
-  - [ ] Database without backup/replication
-  - [ ] Synchronous chain too deep
-  - [ ] Message queue without DLQ
+- [x] Define SSE event types in `nimbus-shared` (events.rs) — added `GenerateEventType::as_str()` for snake_case SSE event names
+- [x] Convert AI generation to streaming (Axum SSE response) — channel-based streaming with `mpsc` + `ReceiverStream`
+- [x] Implement chunked parsing of Claude's streaming response — collect-then-drip pattern (tool_use must be complete)
+- [x] Stream `node_added` / `edge_added` events to frontend — SSE with 15s keepalive
+- [x] Implement `POST /api/diagrams/:id/modify` — AI assistant endpoint (SSE) with `modify_diagram` tool schema
+- [x] Implement `POST /api/diagrams/:id/validate` — deterministic validation (JSON, no SSE)
+- [x] Implement `POST /api/diagrams/:id/fix` — AI-powered fix (SSE) with constrained prompt
+- [x] Implement validation rules in `ValidationService`:
+  - [x] Orphan nodes (no connections)
+  - [x] Load balancer with single target
+  - [x] Invalid containment / nesting
+  - [x] Circular synchronous dependencies
+  - [x] Single point of failure detection
+  - [x] Missing observability / security (warnings)
+  - [x] Database without backup/replication
+  - [x] Synchronous chain too deep
+  - [x] Message queue without DLQ
 
 **Frontend:**
 - [ ] Implement `SseClient` in infrastructure layer (impl AiProvider streaming)

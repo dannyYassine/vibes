@@ -25,6 +25,18 @@ pub fn create_router(state: Arc<AppState>) -> Router {
                 .patch(handlers::diagram::update_diagram)
                 .delete(handlers::diagram::delete_diagram),
         )
+        .route(
+            "/api/diagrams/{id}/modify",
+            post(handlers::diagram::modify_diagram),
+        )
+        .route(
+            "/api/diagrams/{id}/validate",
+            post(handlers::diagram::validate_diagram),
+        )
+        .route(
+            "/api/diagrams/{id}/fix",
+            post(handlers::diagram::fix_diagram),
+        )
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .with_state(state)

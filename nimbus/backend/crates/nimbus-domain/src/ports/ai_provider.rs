@@ -21,4 +21,11 @@ pub trait AiProvider: Send + Sync {
         existing_diagram: &Diagram,
         selected_node_ids: &[Uuid],
     ) -> Result<Pin<Box<dyn Stream<Item = GenerateEvent> + Send>>, DomainError>;
+
+    async fn fix(
+        &self,
+        existing_diagram: &Diagram,
+        warning_rule: &str,
+        warning_message: &str,
+    ) -> Result<Pin<Box<dyn Stream<Item = GenerateEvent> + Send>>, DomainError>;
 }

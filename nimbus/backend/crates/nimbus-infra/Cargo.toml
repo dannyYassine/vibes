@@ -16,3 +16,4 @@ serde = { workspace = true }
 tokio = { workspace = true }
 futures-util = { workspace = true }
 nimbus-shared = { path = "../nimbus-shared" }
+tokio-stream = "0.1"

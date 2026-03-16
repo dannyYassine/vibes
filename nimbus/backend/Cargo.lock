@@ -1088,6 +1088,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "dotenvy",
+ "futures-util",
  "nimbus-app",
  "nimbus-domain",
  "nimbus-infra",
@@ -1096,6 +1097,7 @@ dependencies = [
  "serde_json",
  "sqlx",
  "tokio",
+ "tokio-stream",
  "tower",
  "tower-http",
  "tracing",
@@ -1113,6 +1115,7 @@ dependencies = [
  "nimbus-shared",
  "serde_json",
  "tokio",
+ "tokio-stream",
  "tracing",
  "uuid",
 ]
@@ -1145,6 +1148,7 @@ dependencies = [
  "serde_json",
  "sqlx",
  "tokio",
+ "tokio-stream",
  "tracing",
  "uuid",
 ]

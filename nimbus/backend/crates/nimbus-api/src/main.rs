@@ -7,10 +7,13 @@ use nimbus_api::routes::create_router;
 use nimbus_api::state::AppState;
 use nimbus_app::use_cases::create_diagram::CreateDiagram;
 use nimbus_app::use_cases::delete_diagram::DeleteDiagram;
+use nimbus_app::use_cases::fix_diagram::FixDiagram;
 use nimbus_app::use_cases::generate_diagram::GenerateDiagram;
 use nimbus_app::use_cases::get_diagram::GetDiagram;
 use nimbus_app::use_cases::list_diagrams::ListDiagrams;
+use nimbus_app::use_cases::modify_diagram::ModifyDiagram;
 use nimbus_app::use_cases::update_diagram::UpdateDiagram;
+use nimbus_app::use_cases::validate_diagram::ValidateDiagram;
 use nimbus_domain::ports::ai_provider::AiProvider;
 use nimbus_infra::ai::ClaudeAiProvider;
 use nimbus_infra::persistence::{create_pool, PostgresDiagramRepo};
@@ -47,7 +50,10 @@ async fn main() {
         list_diagrams: ListDiagrams::new(diagram_repo.clone()),
         update_diagram: UpdateDiagram::new(diagram_repo.clone()),
         delete_diagram: DeleteDiagram::new(diagram_repo.clone()),
-        generate_diagram: GenerateDiagram::new(ai_provider, diagram_repo.clone()),
+        generate_diagram: GenerateDiagram::new(ai_provider.clone(), diagram_repo.clone()),
+        modify_diagram: ModifyDiagram::new(ai_provider.clone(), diagram_repo.clone()),
+        validate_diagram: ValidateDiagram::new(diagram_repo.clone()),
+        fix_diagram: FixDiagram::new(ai_provider, diagram_repo.clone()),
         diagram_repo,
     });
 

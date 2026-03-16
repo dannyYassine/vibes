@@ -18,3 +18,18 @@ pub enum GenerateEventType {
     Complete,
     Error,
 }
+
+impl GenerateEventType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            GenerateEventType::NodeAdded => "node_added",
+            GenerateEventType::EdgeAdded => "edge_added",
+            GenerateEventType::NodeRemoved => "node_removed",
+            GenerateEventType::NodeUpdated => "node_updated",
+            GenerateEventType::EdgeRemoved => "edge_removed",
+            GenerateEventType::LayoutUpdated => "layout_updated",
+            GenerateEventType::Complete => "complete",
+            GenerateEventType::Error => "error",
+        }
+    }
+}

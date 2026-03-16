@@ -211,6 +211,138 @@ fn parse_node_type(category: &str, component: &str) -> Result<NodeType, DomainEr
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiModifyResponse {
+    #[serde(default)]
+    pub nodes_to_add: Vec<AiNode>,
+    #[serde(default)]
+    pub nodes_to_remove: Vec<String>,
+    #[serde(default)]
+    pub nodes_to_update: Vec<AiNodeUpdate>,
+    #[serde(default)]
+    pub edges_to_add: Vec<AiEdge>,
+    #[serde(default)]
+    pub edges_to_remove: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiNodeUpdate {
+    pub id: String,
+    pub label: Option<String>,
+    pub category: Option<String>,
+    pub component: Option<String>,
+}
+
+/// Apply a modify response to an existing diagram, returning the diff components:
+/// (added_nodes, removed_node_ids, updated_nodes, added_edges, removed_edge_ids)
+pub fn apply_modify_response(
+    response: &AiModifyResponse,
+    existing_diagram: &nimbus_domain::entities::diagram::Diagram,
+) -> Result<(Vec<Node>, Vec<Uuid>, Vec<Node>, Vec<Edge>, Vec<Uuid>), DomainError> {
+    // Build ID map for new nodes (temp IDs -> UUIDs)
+    let mut id_map: HashMap<String, Uuid> = HashMap::new();
+    for ai_node in &response.nodes_to_add {
+        id_map.insert(ai_node.id.clone(), Uuid::new_v4());
+    }
+
+    // Also map existing node UUIDs so edges can reference them
+    for node in &existing_diagram.nodes {
+        id_map.insert(node.id.to_string(), node.id);
+    }
+
+    // Parse new nodes
+    let mut added_nodes = Vec::new();
+    for ai_node in &response.nodes_to_add {
+        let node_type = parse_node_type(&ai_node.category, &ai_node.component)?;
+        let parent_id = match &ai_node.parent_id {
+            Some(pid) => Some(
+                *id_map
+                    .get(pid)
+                    .ok_or_else(|| DomainError::AiError(format!("Unknown parent_id: {}", pid)))?,
+            ),
+            None => None,
+        };
+
+        added_nodes.push(Node {
+            id: id_map[&ai_node.id],
+            node_type,
+            label: ai_node.label.clone(),
+            position: Position { x: 0.0, y: 0.0 },
+            size: Size {
+                width: 180.0,
+                height: 80.0,
+            },
+            properties: NodeProperties {
+                config: serde_json::Value::Object(serde_json::Map::new()),
+                style: None,
+            },
+            parent_id,
+            provider_mappings: None,
+        });
+    }
+
+    // Parse removed node IDs
+    let removed_node_ids: Vec<Uuid> = response
+        .nodes_to_remove
+        .iter()
+        .filter_map(|id_str| Uuid::parse_str(id_str).ok())
+        .collect();
+
+    // Parse updated nodes
+    let mut updated_nodes = Vec::new();
+    for update in &response.nodes_to_update {
+        let node_id = Uuid::parse_str(&update.id)
+            .map_err(|_| DomainError::AiError(format!("Invalid UUID in update: {}", update.id)))?;
+
+        if let Some(existing) = existing_diagram.nodes.iter().find(|n| n.id == node_id) {
+            let mut node = existing.clone();
+            if let Some(label) = &update.label {
+                node.label = label.clone();
+            }
+            if let (Some(category), Some(component)) = (&update.category, &update.component) {
+                node.node_type = parse_node_type(category, component)?;
+            }
+            updated_nodes.push(node);
+        }
+    }
+
+    // Parse new edges
+    let mut added_edges = Vec::new();
+    for ai_edge in &response.edges_to_add {
+        let source_id = *id_map.get(&ai_edge.source_id).ok_or_else(|| {
+            DomainError::AiError(format!("Unknown edge source_id: {}", ai_edge.source_id))
+        })?;
+        let target_id = *id_map.get(&ai_edge.target_id).ok_or_else(|| {
+            DomainError::AiError(format!("Unknown edge target_id: {}", ai_edge.target_id))
+        })?;
+        let edge_type = parse_edge_type(&ai_edge.edge_type)?;
+
+        added_edges.push(Edge {
+            id: Uuid::new_v4(),
+            source_id,
+            target_id,
+            edge_type,
+            label: ai_edge.label.clone(),
+            properties: EdgeProperties {
+                protocol: ai_edge.protocol.clone(),
+                port: None,
+                bidirectional: false,
+                communication_pattern: None,
+                style: None,
+            },
+        });
+    }
+
+    // Parse removed edge IDs
+    let removed_edge_ids: Vec<Uuid> = response
+        .edges_to_remove
+        .iter()
+        .filter_map(|id_str| Uuid::parse_str(id_str).ok())
+        .collect();
+
+    Ok((added_nodes, removed_node_ids, updated_nodes, added_edges, removed_edge_ids))
+}
+
 fn parse_edge_type(edge_type: &str) -> Result<EdgeType, DomainError> {
     match edge_type {
         "Synchronous" => Ok(EdgeType::Synchronous),
