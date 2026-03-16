@@ -51,14 +51,14 @@
 ## Phase 1, Week 2: Canvas Basics & CRUD
 
 **Frontend:**
-- [ ] Implement `CanvasComponent` with HTML5 Canvas setup
-- [ ] Implement `GridRenderer` (background grid)
-- [ ] Implement `NodeRenderer` (draw rectangular nodes with labels)
-- [ ] Implement `EdgeRenderer` (straight lines with arrows)
-- [ ] Implement `ZoomHandler` (scroll wheel zoom with min/max bounds)
-- [ ] Implement `DragHandler` (node dragging + canvas panning)
-- [ ] Implement `SelectionHandler` (click select, shift-click multi-select, drag selection box)
-- [ ] Wire canvas to `DiagramFacade` (render from state, update state on interactions)
+- [x] Implement `CanvasComponent` with HTML5 Canvas setup
+- [x] Implement `GridRenderer` (background grid)
+- [x] Implement `NodeRenderer` (draw rectangular nodes with labels)
+- [x] Implement `EdgeRenderer` (straight lines with arrows)
+- [x] Implement `ZoomHandler` (scroll wheel zoom with min/max bounds)
+- [x] Implement `DragHandler` (node dragging + canvas panning)
+- [x] Implement `SelectionHandler` (click select, shift-click multi-select, drag selection box)
+- [x] Wire canvas to `DiagramFacade` (render from state, update state on interactions)
 
 **Backend:**
 - [x] Define DTOs: `CreateDiagramRequest`, `UpdateDiagramRequest`, `DiagramListItem` (nimbus-api/src/dto/)

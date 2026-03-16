@@ -1,4 +1,7 @@
-import { Component, ElementRef, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { DiagramFacade } from '../../application/facades/diagram.facade';
+import { CanvasEngine } from './canvas-engine';
 
 @Component({
   selector: 'app-canvas',
@@ -9,45 +12,46 @@ import { Component, ElementRef, AfterViewInit, ViewChild } from '@angular/core';
     canvas { width: 100%; height: 100%; display: block; }
   `],
 })
-export class CanvasComponent implements AfterViewInit {
+export class CanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvasEl', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
+
+  private engine = new CanvasEngine();
+  private subscriptions: Subscription[] = [];
+  private resizeObserver?: ResizeObserver;
+
+  constructor(private facade: DiagramFacade) {}
 
   ngAfterViewInit(): void {
     const canvas = this.canvasRef.nativeElement;
+    this.engine.init(canvas);
+
+    // Wire callbacks to facade
+    this.engine.onNodeMoved = (id, position) => this.facade.moveNode(id, position);
+    this.engine.onSelectionChanged = (ids) => this.facade.selectNodes(ids);
+
+    // Subscribe to diagram changes
+    this.subscriptions.push(
+      this.facade.diagram$.subscribe(diagram => this.engine.setDiagram(diagram)),
+      this.facade.selectedNodeIds$.subscribe(ids => this.engine.setSelectedNodeIds(ids)),
+    );
+
+    // Resize observer
     const parent = canvas.parentElement!;
-    canvas.width = parent.clientWidth;
-    canvas.height = parent.clientHeight;
+    this.resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        this.engine.resize(width, height);
+      }
+    });
+    this.resizeObserver.observe(parent);
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    this.drawGrid(ctx, canvas.width, canvas.height);
-    this.drawPlaceholder(ctx, canvas.width, canvas.height);
+    // Initial size
+    this.engine.resize(parent.clientWidth, parent.clientHeight);
   }
 
-  private drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-    ctx.strokeStyle = '#e0e0e0';
-    ctx.lineWidth = 1;
-    const step = 20;
-    for (let x = 0; x <= w; x += step) {
-      ctx.beginPath();
-      ctx.moveTo(x + 0.5, 0);
-      ctx.lineTo(x + 0.5, h);
-      ctx.stroke();
-    }
-    for (let y = 0; y <= h; y += step) {
-      ctx.beginPath();
-      ctx.moveTo(0, y + 0.5);
-      ctx.lineTo(w, y + 0.5);
-      ctx.stroke();
-    }
-  }
-
-  private drawPlaceholder(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-    ctx.fillStyle = '#666';
-    ctx.font = '24px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Canvas Ready', w / 2, h / 2);
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(s => s.unsubscribe());
+    this.resizeObserver?.disconnect();
+    this.engine.destroy();
   }
 }
