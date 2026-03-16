@@ -1,6 +1,6 @@
 # Nimbus — Progress Tracker
 
-## Current Phase: Phase 2, Week 4
+## Current Phase: Phase 3, Week 5
 
 ---
 
@@ -135,17 +135,17 @@
 ## Phase 3, Week 5: Manual Editing
 
 **Frontend:**
-- [ ] Implement `PropertiesPanelComponent` — edit node label, type, config
-- [ ] Implement edge creation: drag from node port to draw connection
-- [ ] Implement node/edge deletion with confirmation dialog
-- [ ] Implement `ServiceLibraryComponent` — categorized generic component library
-- [ ] Drag from service library to canvas to add new nodes
-- [ ] Implement undo/redo in `DiagramState` + expose via `DiagramFacade`
-- [ ] Keyboard shortcuts: Delete, Ctrl+Z, Ctrl+Shift+Z, Ctrl+S
+- [x] Implement `PropertiesPanelComponent` — edit node label, type, config
+- [x] Implement edge creation: drag from node port to draw connection
+- [x] Implement node/edge deletion with confirmation dialog
+- [x] Implement `ServiceLibraryComponent` — categorized generic component library
+- [x] Drag from service library to canvas to add new nodes
+- [x] Implement undo/redo in `DiagramState` + expose via `DiagramFacade`
+- [x] Keyboard shortcuts: Delete, Ctrl+Z, Ctrl+Shift+Z, Ctrl+S
 
 **Backend:**
-- [ ] Implement PATCH endpoint for partial diagram updates (nodes/edges individually)
-- [ ] Handle concurrent update conflicts (last-write-wins for MVP)
+- [x] Implement PATCH endpoint for partial diagram updates (nodes/edges individually)
+- [x] Handle concurrent update conflicts (last-write-wins for MVP)
 
 ---
 
