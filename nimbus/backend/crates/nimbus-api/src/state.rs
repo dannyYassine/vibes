@@ -14,6 +14,7 @@ use nimbus_app::use_cases::list_diagrams::ListDiagrams;
 use nimbus_app::use_cases::modify_diagram::ModifyDiagram;
 use nimbus_app::use_cases::patch_diagram_edge::PatchDiagramEdge;
 use nimbus_app::use_cases::patch_diagram_node::PatchDiagramNode;
+use nimbus_app::use_cases::translate_diagram::TranslateDiagram;
 use nimbus_app::use_cases::update_diagram::UpdateDiagram;
 use nimbus_app::use_cases::validate_diagram::ValidateDiagram;
 use nimbus_domain::ports::diagram_repository::DiagramRepository;
@@ -36,4 +37,5 @@ pub struct AppState {
     pub add_diagram_edge: AddDiagramEdge,
     pub patch_diagram_edge: PatchDiagramEdge,
     pub delete_diagram_edge: DeleteDiagramEdge,
+    pub translate_diagram: TranslateDiagram,
 }

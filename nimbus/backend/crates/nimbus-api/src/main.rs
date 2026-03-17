@@ -19,6 +19,7 @@ use nimbus_app::use_cases::list_diagrams::ListDiagrams;
 use nimbus_app::use_cases::modify_diagram::ModifyDiagram;
 use nimbus_app::use_cases::patch_diagram_edge::PatchDiagramEdge;
 use nimbus_app::use_cases::patch_diagram_node::PatchDiagramNode;
+use nimbus_app::use_cases::translate_diagram::TranslateDiagram;
 use nimbus_app::use_cases::update_diagram::UpdateDiagram;
 use nimbus_app::use_cases::validate_diagram::ValidateDiagram;
 use nimbus_domain::ports::ai_provider::AiProvider;
@@ -68,6 +69,7 @@ async fn main() {
         add_diagram_edge: AddDiagramEdge::new(diagram_repo.clone()),
         patch_diagram_edge: PatchDiagramEdge::new(diagram_repo.clone()),
         delete_diagram_edge: DeleteDiagramEdge::new(diagram_repo.clone()),
+        translate_diagram: TranslateDiagram::new(diagram_repo.clone()),
         diagram_repo,
     });
 

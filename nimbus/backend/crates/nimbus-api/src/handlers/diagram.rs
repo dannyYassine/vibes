@@ -25,7 +25,7 @@ use axum::response::IntoResponse;
 use crate::dto::diagram::{
     AddEdgeRequest, AddNodeRequest, CreateDiagramRequest, FixDiagramRequest,
     GenerateDiagramRequest, ModifyDiagramRequest, PatchEdgeRequest, PatchNodeRequest,
-    UpdateDiagramRequest,
+    TranslateRequest, UpdateDiagramRequest,
 };
 use crate::middleware::error_handler::AppError;
 use crate::state::AppState;
@@ -221,4 +221,24 @@ pub async fn delete_edge(
 ) -> Result<StatusCode, AppError> {
     state.delete_diagram_edge.execute(id, edge_id).await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn translate_diagram(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    Json(req): Json<TranslateRequest>,
+) -> Result<Json<Diagram>, AppError> {
+    let diagram = state
+        .translate_diagram
+        .execute_translate(id, req.provider)
+        .await?;
+    Ok(Json(diagram))
+}
+
+pub async fn clear_translation(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<Diagram>, AppError> {
+    let diagram = state.translate_diagram.execute_clear(id).await?;
+    Ok(Json(diagram))
 }

@@ -1,6 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { SERVICE_CATALOG, CATEGORY_COLORS } from '../../domain/models/service-catalog';
+import { Subscription } from 'rxjs';
+import { TranslationFacade } from '../../application/facades/translation.facade';
+import { CloudProvider } from '../../domain/models/diagram.model';
+import { SERVICE_CATALOG, CATEGORY_COLORS, PROVIDER_SERVICE_NAMES } from '../../domain/models/service-catalog';
 import { NodeCategory } from '../../domain/models/node.model';
 
 @Component({
@@ -33,7 +36,7 @@ import { NodeCategory } from '../../domain/models/node.model';
                       draggable="true"
                       (dragstart)="onDragStart($event, category, comp)"
                     >
-                      {{ comp }}
+                      {{ comp }}@if (getProviderName(category, comp); as pn) { <span class="provider-name">({{ pn }})</span>}
                     </div>
                   }
                 </div>
@@ -100,14 +103,25 @@ import { NodeCategory } from '../../domain/models/node.model';
       margin-bottom: 2px;
     }
     .component-item:hover { background: #313244; color: #cdd6f4; }
+    .provider-name { color: #6c7086; font-size: 11px; margin-left: 2px; }
   `],
 })
-export class ServiceLibraryComponent {
+export class ServiceLibraryComponent implements OnDestroy {
   @Input() visible = false;
 
   searchTerm = '';
   categories = Object.keys(SERVICE_CATALOG) as NodeCategory[];
+  activeProvider: CloudProvider | null = null;
   private expandedCategories = new Set<NodeCategory>(this.categories);
+  private sub: Subscription;
+
+  constructor(private translationFacade: TranslationFacade) {
+    this.sub = this.translationFacade.activeProvider$.subscribe(p => this.activeProvider = p);
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+  }
 
   getColor(category: NodeCategory): string {
     return CATEGORY_COLORS[category];
@@ -130,6 +144,12 @@ export class ServiceLibraryComponent {
     if (!this.searchTerm) return components;
     const term = this.searchTerm.toLowerCase();
     return components.filter(c => c.toLowerCase().includes(term));
+  }
+
+  getProviderName(category: NodeCategory, component: string): string | null {
+    if (!this.activeProvider) return null;
+    const key = `${category}::${component}`;
+    return PROVIDER_SERVICE_NAMES[key]?.[this.activeProvider] ?? null;
   }
 
   onDragStart(event: DragEvent, category: NodeCategory, component: string): void {

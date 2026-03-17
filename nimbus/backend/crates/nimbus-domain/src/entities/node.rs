@@ -28,7 +28,7 @@ pub struct Size {
     pub height: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(tag = "category", content = "component")]
 pub enum NodeType {
     Compute(ComputeComponent),
@@ -42,7 +42,7 @@ pub enum NodeType {
     Group(GroupType),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ComputeComponent {
     ApplicationServer,
     Worker,
@@ -52,7 +52,7 @@ pub enum ComputeComponent {
     Scheduler,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum NetworkingComponent {
     LoadBalancer,
     ApiGateway,
@@ -64,7 +64,7 @@ pub enum NetworkingComponent {
     ReverseProxy,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DataComponent {
     RelationalDb,
     DocumentDb,
@@ -75,13 +75,13 @@ pub enum DataComponent {
     TimeSeriesDb,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CachingComponent {
     Cache,
     SessionStore,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MessagingComponent {
     MessageQueue,
     EventBus,
@@ -90,14 +90,14 @@ pub enum MessagingComponent {
     JobBroker,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum StorageComponent {
     ObjectStorage,
     BlockStorage,
     FileStorage,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SecurityComponent {
     IdentityProvider,
     SecretManager,
@@ -105,7 +105,7 @@ pub enum SecurityComponent {
     Waf,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ObservabilityComponent {
     Logging,
     Monitoring,
@@ -113,7 +113,7 @@ pub enum ObservabilityComponent {
     Alerting,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum GroupType {
     NetworkBoundary,
     AvailabilityZone,

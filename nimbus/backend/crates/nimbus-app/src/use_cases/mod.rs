@@ -12,5 +12,6 @@ pub mod list_diagrams;
 pub mod modify_diagram;
 pub mod patch_diagram_edge;
 pub mod patch_diagram_node;
+pub mod translate_diagram;
 pub mod update_diagram;
 pub mod validate_diagram;

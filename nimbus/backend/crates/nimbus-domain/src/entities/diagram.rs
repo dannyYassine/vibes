@@ -27,7 +27,7 @@ pub struct Viewport {
     pub zoom: f64,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CloudProvider {
     Aws,
     Gcp,

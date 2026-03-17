@@ -1,4 +1,5 @@
 import { DiagramNode, NodeCategory } from '../../../domain/models/node.model';
+import { CloudProvider } from '../../../domain/models/diagram.model';
 import { IconRenderer } from './icon.renderer';
 
 const CATEGORY_COLORS: Record<NodeCategory, string> = {
@@ -21,12 +22,12 @@ const MIN_ZOOM_FOR_ICON = 0.4;
 export class NodeRenderer {
   private iconRenderer = new IconRenderer();
 
-  render(ctx: CanvasRenderingContext2D, nodes: DiagramNode[], selectedIds: Set<string>, warnedIds?: Set<string>): void {
+  render(ctx: CanvasRenderingContext2D, nodes: DiagramNode[], selectedIds: Set<string>, warnedIds?: Set<string>, activeProvider?: CloudProvider | null): void {
     for (const node of nodes) {
       if (node.nodeType.category === 'Group') {
         this.drawGroupNode(ctx, node, selectedIds.has(node.id));
       } else {
-        this.drawNode(ctx, node, selectedIds.has(node.id), warnedIds?.has(node.id) ?? false);
+        this.drawNode(ctx, node, selectedIds.has(node.id), warnedIds?.has(node.id) ?? false, activeProvider);
       }
     }
   }
@@ -70,7 +71,7 @@ export class NodeRenderer {
     ctx.fillText(node.label, x + ICON_PADDING, y + ICON_PADDING, w - ICON_PADDING * 2);
   }
 
-  private drawNode(ctx: CanvasRenderingContext2D, node: DiagramNode, selected: boolean, warned: boolean): void {
+  private drawNode(ctx: CanvasRenderingContext2D, node: DiagramNode, selected: boolean, warned: boolean, activeProvider?: CloudProvider | null): void {
     const { x, y } = node.position;
     const { width: w, height: h } = node.size;
     const color = CATEGORY_COLORS[node.nodeType.category] || '#6c7086';
@@ -129,10 +130,16 @@ export class NodeRenderer {
     ctx.textBaseline = 'middle';
     ctx.fillText(node.label, textX, y + h / 2 - 7, maxTextWidth);
 
-    // Secondary label (component type)
+    // Secondary label (component type or provider service name)
+    let secondaryLabel = node.nodeType.component;
+    if (activeProvider && node.providerMappings) {
+      const key = activeProvider.toLowerCase() as 'aws' | 'gcp' | 'azure';
+      const mapping = node.providerMappings[key];
+      if (mapping) secondaryLabel = mapping.serviceName;
+    }
     ctx.fillStyle = '#a6adc8';
     ctx.font = '11px sans-serif';
-    ctx.fillText(node.nodeType.component, textX, y + h / 2 + 8, maxTextWidth);
+    ctx.fillText(secondaryLabel, textX, y + h / 2 + 8, maxTextWidth);
 
     // Validation warning triangle
     if (warned) {

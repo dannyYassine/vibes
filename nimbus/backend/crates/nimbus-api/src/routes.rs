@@ -38,6 +38,11 @@ pub fn create_router(state: Arc<AppState>) -> Router {
             post(handlers::diagram::fix_diagram),
         )
         .route(
+            "/api/diagrams/{id}/translate",
+            post(handlers::diagram::translate_diagram)
+                .delete(handlers::diagram::clear_translation),
+        )
+        .route(
             "/api/diagrams/{id}/export/json",
             get(handlers::diagram::export_diagram_json),
         )

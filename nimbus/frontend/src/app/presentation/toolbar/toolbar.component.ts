@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { DiagramFacade } from '../../application/facades/diagram.facade';
 import { ValidationFacade } from '../../application/facades/validation.facade';
 import { ExportFacade } from '../../application/facades/export.facade';
+import { ProviderSelectorComponent } from './provider-selector.component';
 
 @Component({
   selector: 'app-toolbar',
   standalone: true,
-  imports: [AsyncPipe],
+  imports: [AsyncPipe, ProviderSelectorComponent],
   template: `
     <div class="toolbar">
       @if (facade.diagram$ | async; as diagram) {
@@ -17,6 +18,7 @@ import { ExportFacade } from '../../application/facades/export.facade';
         <span class="diagram-name">Nimbus</span>
       }
       <div class="toolbar-actions">
+        <app-provider-selector />
         <button class="library-btn" (click)="libraryToggled.emit()">Library</button>
         <button (click)="facade.undo()">Undo</button>
         <button (click)="facade.redo()">Redo</button>

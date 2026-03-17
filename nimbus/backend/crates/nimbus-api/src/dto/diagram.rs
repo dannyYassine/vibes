@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 use uuid::Uuid;
 
-use nimbus_domain::entities::diagram::Viewport;
+use nimbus_domain::entities::diagram::{CloudProvider, Viewport};
 use nimbus_domain::entities::edge::Edge;
 use nimbus_domain::entities::node::Node;
 
@@ -75,4 +75,10 @@ pub struct PatchEdgeRequest {
     pub edge_type: Option<nimbus_domain::entities::edge::EdgeType>,
     pub label: Option<Option<String>>,
     pub properties: Option<nimbus_domain::entities::edge::EdgeProperties>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TranslateRequest {
+    pub provider: CloudProvider,
 }

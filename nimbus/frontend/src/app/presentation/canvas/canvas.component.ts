@@ -2,6 +2,7 @@ import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild } from '@ang
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DiagramFacade } from '../../application/facades/diagram.facade';
+import { TranslationFacade } from '../../application/facades/translation.facade';
 import { ValidationFacade } from '../../application/facades/validation.facade';
 import { CanvasEngine } from './canvas-engine';
 import { ConfirmDialogComponent } from '../shared/confirm-dialog.component';
@@ -42,7 +43,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private resizeObserver?: ResizeObserver;
 
-  constructor(private facade: DiagramFacade, private validationFacade: ValidationFacade) {}
+  constructor(
+    private facade: DiagramFacade,
+    private translationFacade: TranslationFacade,
+    private validationFacade: ValidationFacade,
+  ) {}
 
   ngAfterViewInit(): void {
     const canvas = this.canvasRef.nativeElement;
@@ -85,6 +90,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.facade.diagram$.subscribe(diagram => this.engine.setDiagram(diagram)),
       this.facade.selectedNodeIds$.subscribe(ids => this.engine.setSelectedNodeIds(ids)),
       this.facade.selectedEdgeIds$.subscribe(ids => this.engine.setSelectedEdgeIds(ids)),
+      this.translationFacade.activeProvider$.subscribe(p => this.engine.setActiveProvider(p)),
       this.validationFacade.validationResult$.pipe(
         map(result => {
           if (!result) return [];

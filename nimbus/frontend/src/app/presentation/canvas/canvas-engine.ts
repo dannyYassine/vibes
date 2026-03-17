@@ -7,7 +7,7 @@ import { DragHandler } from './handlers/drag.handler';
 import { SelectionHandler } from './handlers/selection.handler';
 import { KeyboardHandler } from './handlers/keyboard.handler';
 import { EdgeCreationHandler, hitTestPort, drawPorts } from './handlers/edge-creation.handler';
-import { Diagram } from '../../domain/models/diagram.model';
+import { CloudProvider, Diagram } from '../../domain/models/diagram.model';
 import { DiagramNode } from '../../domain/models/node.model';
 import { DiagramEdge } from '../../domain/models/edge.model';
 import { Position } from '../../domain/models/node.model';
@@ -34,6 +34,7 @@ export class CanvasEngine implements CanvasContext {
   private selectedEdgeIds = new Set<string>();
   private warnedIds = new Set<string>();
   private hoveredNodeId: string | null = null;
+  private activeProvider: CloudProvider | null = null;
   private renderRequested = false;
   private dpr = 1;
 
@@ -128,6 +129,11 @@ export class CanvasEngine implements CanvasContext {
     this.requestRender();
   }
 
+  setActiveProvider(provider: CloudProvider | null): void {
+    this.activeProvider = provider;
+    this.requestRender();
+  }
+
   // CanvasContext interface
   screenToCanvas(screenX: number, screenY: number): { x: number; y: number } {
     return {
@@ -167,7 +173,7 @@ export class CanvasEngine implements CanvasContext {
     // Draw in order: grid, edges, nodes
     this.gridRenderer.render(ctx, canvas, this.viewport);
     this.edgeRenderer.render(ctx, this.edges, this.nodes, this.selectedIds, this.selectedEdgeIds);
-    this.nodeRenderer.render(ctx, this.nodes, this.selectedIds, this.warnedIds);
+    this.nodeRenderer.render(ctx, this.nodes, this.selectedIds, this.warnedIds, this.activeProvider);
 
     // Draw ports on hovered/selected nodes
     const portVisibleIds = new Set<string>(this.selectedIds);

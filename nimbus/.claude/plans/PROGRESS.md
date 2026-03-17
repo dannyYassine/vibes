@@ -1,6 +1,6 @@
 # Nimbus — Progress Tracker
 
-## Current Phase: Phase 3, Week 6
+## Current Phase: Phase 4, Week 7
 
 ---
 
@@ -170,20 +170,20 @@
 ## Phase 4, Week 7: Cloud Provider Translation
 
 **Backend:**
-- [ ] Implement `cloud_catalog.rs` — generic → AWS mappings (~30 services)
-- [ ] Implement `cloud_catalog.rs` — generic → GCP mappings (~30 services)
-- [ ] Implement `cloud_catalog.rs` — generic → Azure mappings (~30 services)
-- [ ] Implement `TranslationService` — apply catalog, populate `provider_mappings`
-- [ ] Implement `POST /api/diagrams/:id/translate` endpoint
-- [ ] Implement `DELETE /api/diagrams/:id/translate` endpoint
-- [ ] Implement `TranslateDiagramUseCase`
+- [x] Implement `cloud_catalog.rs` — generic → AWS mappings (~39 services)
+- [x] Implement `cloud_catalog.rs` — generic → GCP mappings (~39 services)
+- [x] Implement `cloud_catalog.rs` — generic → Azure mappings (~39 services)
+- [x] Implement `TranslationService` — apply catalog, populate `provider_mappings`
+- [x] Implement `POST /api/diagrams/:id/translate` endpoint
+- [x] Implement `DELETE /api/diagrams/:id/translate` endpoint
+- [x] Implement `TranslateDiagramUseCase`
 
 **Frontend:**
-- [ ] Implement `ProviderSelectorComponent` — dropdown: Generic / AWS / GCP / Azure
-- [ ] Implement `TranslationFacade` — manages provider state, calls backend
-- [ ] Update canvas: show provider-specific icons + labels when provider active
-- [ ] Update `ServiceLibraryComponent` — show provider names alongside generic
-- [ ] Update `PropertiesPanelComponent` — show provider-specific config fields
+- [x] Implement `ProviderSelectorComponent` — dropdown: Generic / AWS / GCP / Azure
+- [x] Implement `TranslationFacade` — manages provider state, calls backend
+- [x] Update canvas: show provider-specific icons + labels when provider active
+- [x] Update `ServiceLibraryComponent` — show provider names alongside generic
+- [x] Update `PropertiesPanelComponent` — show provider-specific config fields
 
 ---
 

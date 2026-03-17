@@ -2,7 +2,9 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subscription, combineLatest } from 'rxjs';
 import { DiagramFacade } from '../../application/facades/diagram.facade';
-import { DiagramNode, NodeCategory } from '../../domain/models/node.model';
+import { TranslationFacade } from '../../application/facades/translation.facade';
+import { CloudProvider } from '../../domain/models/diagram.model';
+import { DiagramNode, NodeCategory, ProviderMapping } from '../../domain/models/node.model';
 import { DiagramEdge, EdgeType } from '../../domain/models/edge.model';
 import { SERVICE_CATALOG, CATEGORY_COLORS } from '../../domain/models/service-catalog';
 
@@ -55,6 +57,17 @@ import { SERVICE_CATALOG, CATEGORY_COLORS } from '../../domain/models/service-ca
             [value]="configJson"
             (blur)="onConfigChange($event)"
           ></textarea>
+
+          @if (activeProviderMapping) {
+            <div class="provider-info">
+              <label>Cloud Provider Service</label>
+              <div class="provider-value">{{ activeProviderMapping.serviceName }}</div>
+              @if (activeProviderMapping.terraformResourceType) {
+                <label>Terraform Resource</label>
+                <div class="provider-value mono">{{ activeProviderMapping.terraformResourceType }}</div>
+              }
+            </div>
+          }
         </div>
       }
 
@@ -154,6 +167,16 @@ import { SERVICE_CATALOG, CATEGORY_COLORS } from '../../domain/models/service-ca
       cursor: pointer;
     }
     .checkbox-label input[type="checkbox"] { width: auto; }
+    .provider-info { margin-top: 8px; border-top: 1px solid #45475a; padding-top: 8px; }
+    .provider-value {
+      padding: 6px 8px;
+      background: #313244;
+      border: 1px solid #45475a;
+      border-radius: 4px;
+      color: #cdd6f4;
+      font-size: 13px;
+    }
+    .provider-value.mono { font-family: monospace; font-size: 12px; }
   `],
 })
 export class PropertiesPanelComponent implements OnInit, OnDestroy {
@@ -164,13 +187,19 @@ export class PropertiesPanelComponent implements OnInit, OnDestroy {
   categories = Object.keys(SERVICE_CATALOG) as NodeCategory[];
   currentComponents: string[] = [];
   edgeTypes: EdgeType[] = ['Synchronous', 'Asynchronous', 'DataFlow', 'Dependency'];
+  activeProvider: CloudProvider | null = null;
+  activeProviderMapping: ProviderMapping | null = null;
 
   private subscriptions: Subscription[] = [];
 
-  constructor(private facade: DiagramFacade) {}
+  constructor(private facade: DiagramFacade, private translationFacade: TranslationFacade) {}
 
   ngOnInit(): void {
     this.subscriptions.push(
+      this.translationFacade.activeProvider$.subscribe(p => {
+        this.activeProvider = p;
+        this.updateProviderMapping();
+      }),
       combineLatest([this.facade.selectedNodeIds$, this.facade.diagram$, this.facade.selectedEdgeIds$]).subscribe(
         ([nodeIds, diagram, edgeIds]) => {
           this.selectedCount = nodeIds.length;
@@ -182,6 +211,9 @@ export class PropertiesPanelComponent implements OnInit, OnDestroy {
             if (this.selectedNode) {
               this.configJson = JSON.stringify(this.selectedNode.properties.config, null, 2);
               this.currentComponents = SERVICE_CATALOG[this.selectedNode.nodeType.category] || [];
+              this.updateProviderMapping();
+            } else {
+              this.activeProviderMapping = null;
             }
           } else if (nodeIds.length === 0 && edgeIds.length === 1 && diagram) {
             this.selectedEdge = diagram.edges.find(e => e.id === edgeIds[0]) ?? null;
@@ -231,6 +263,14 @@ export class PropertiesPanelComponent implements OnInit, OnDestroy {
       });
     } catch {
       // Invalid JSON, ignore
+    }
+  }
+
+  private updateProviderMapping(): void {
+    this.activeProviderMapping = null;
+    if (this.activeProvider && this.selectedNode?.providerMappings) {
+      const key = this.activeProvider.toLowerCase() as 'aws' | 'gcp' | 'azure';
+      this.activeProviderMapping = this.selectedNode.providerMappings[key] ?? null;
     }
   }
 
