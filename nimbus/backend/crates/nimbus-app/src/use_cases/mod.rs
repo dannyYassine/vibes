@@ -3,6 +3,8 @@ pub mod add_diagram_node;
 pub mod create_diagram;
 pub mod delete_diagram;
 pub mod export_diagram_json;
+pub mod export_docker_compose;
+pub mod export_terraform;
 pub mod delete_diagram_edge;
 pub mod delete_diagram_node;
 pub mod fix_diagram;

@@ -23,18 +23,45 @@ export class NodeRenderer {
   private iconRenderer = new IconRenderer();
 
   render(ctx: CanvasRenderingContext2D, nodes: DiagramNode[], selectedIds: Set<string>, warnedIds?: Set<string>, activeProvider?: CloudProvider | null): void {
+    // Two-pass rendering: groups first (background), then children on top
     for (const node of nodes) {
       if (node.nodeType.category === 'Group') {
-        this.drawGroupNode(ctx, node, selectedIds.has(node.id));
-      } else {
+        this.drawGroupNode(ctx, node, selectedIds.has(node.id), nodes);
+      }
+    }
+    for (const node of nodes) {
+      if (node.nodeType.category !== 'Group') {
         this.drawNode(ctx, node, selectedIds.has(node.id), warnedIds?.has(node.id) ?? false, activeProvider);
       }
     }
   }
 
-  private drawGroupNode(ctx: CanvasRenderingContext2D, node: DiagramNode, selected: boolean): void {
-    const { x, y } = node.position;
-    const { width: w, height: h } = node.size;
+  private drawGroupNode(ctx: CanvasRenderingContext2D, node: DiagramNode, selected: boolean, allNodes: DiagramNode[]): void {
+    // Auto-resize: compute bounding box of child nodes
+    const children = allNodes.filter(n => n.parentId === node.id && n.nodeType.category !== 'Group');
+    let { x, y } = node.position;
+    let { width: w, height: h } = node.size;
+
+    if (children.length > 0) {
+      const padding = 20;
+      const headerHeight = 30;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const child of children) {
+        minX = Math.min(minX, child.position.x);
+        minY = Math.min(minY, child.position.y);
+        maxX = Math.max(maxX, child.position.x + child.size.width);
+        maxY = Math.max(maxY, child.position.y + child.size.height);
+      }
+      const newX = minX - padding;
+      const newY = minY - padding - headerHeight;
+      const newW = maxX - minX + padding * 2;
+      const newH = maxY - minY + padding * 2 + headerHeight;
+      // Only expand, don't shrink below original
+      x = Math.min(x, newX);
+      y = Math.min(y, newY);
+      w = Math.max(w, newW, (maxX - x) + padding);
+      h = Math.max(h, newH, (maxY - y) + padding);
+    }
 
     // Dashed border, semi-transparent fill
     ctx.save();
@@ -43,9 +70,21 @@ export class NodeRenderer {
     ctx.fillStyle = 'rgba(49, 50, 68, 0.4)';
     ctx.fill();
 
+    // Gradient header bar
+    const headerH = 28;
+    const gradient = ctx.createLinearGradient(x, y, x, y + headerH);
+    gradient.addColorStop(0, 'rgba(108, 112, 134, 0.3)');
+    gradient.addColorStop(1, 'rgba(108, 112, 134, 0.05)');
+    ctx.beginPath();
+    this.roundRect(ctx, x, y, w, headerH, CORNER_RADIUS);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
     ctx.setLineDash([6, 4]);
     ctx.strokeStyle = selected ? '#cba6f7' : '#6c7086';
     ctx.lineWidth = selected ? 2 : 1;
+    ctx.beginPath();
+    this.roundRect(ctx, x, y, w, h, CORNER_RADIUS);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
@@ -91,7 +130,7 @@ export class NodeRenderer {
     // Shadow
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 6;
+    ctx.shadowBlur = 10;
     ctx.shadowOffsetX = 1;
     ctx.shadowOffsetY = 2;
 
@@ -108,6 +147,16 @@ export class NodeRenderer {
     ctx.strokeStyle = selected ? '#cba6f7' : '#45475a';
     ctx.lineWidth = selected ? 2 : 1;
     ctx.stroke();
+
+    // Subtle top border highlight
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x + CORNER_RADIUS, y + 0.5);
+    ctx.lineTo(x + w - CORNER_RADIUS, y + 0.5);
+    ctx.strokeStyle = 'rgba(205, 214, 244, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
 
     // Icon or fallback dot
     const iconX = x + ICON_PADDING;

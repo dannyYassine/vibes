@@ -5,6 +5,8 @@ use nimbus_app::use_cases::add_diagram_node::AddDiagramNode;
 use nimbus_app::use_cases::create_diagram::CreateDiagram;
 use nimbus_app::use_cases::delete_diagram::DeleteDiagram;
 use nimbus_app::use_cases::export_diagram_json::ExportDiagramJson;
+use nimbus_app::use_cases::export_docker_compose::ExportDockerCompose;
+use nimbus_app::use_cases::export_terraform::ExportTerraform;
 use nimbus_app::use_cases::delete_diagram_edge::DeleteDiagramEdge;
 use nimbus_app::use_cases::delete_diagram_node::DeleteDiagramNode;
 use nimbus_app::use_cases::fix_diagram::FixDiagram;
@@ -38,4 +40,6 @@ pub struct AppState {
     pub patch_diagram_edge: PatchDiagramEdge,
     pub delete_diagram_edge: DeleteDiagramEdge,
     pub translate_diagram: TranslateDiagram,
+    pub export_terraform: ExportTerraform,
+    pub export_docker_compose: ExportDockerCompose,
 }

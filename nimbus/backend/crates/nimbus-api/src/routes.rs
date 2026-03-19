@@ -47,6 +47,14 @@ pub fn create_router(state: Arc<AppState>) -> Router {
             get(handlers::diagram::export_diagram_json),
         )
         .route(
+            "/api/diagrams/{id}/export/terraform",
+            get(handlers::diagram::export_terraform),
+        )
+        .route(
+            "/api/diagrams/{id}/export/docker-compose",
+            get(handlers::diagram::export_docker_compose),
+        )
+        .route(
             "/api/diagrams/{id}/nodes",
             post(handlers::diagram::add_node),
         )

@@ -55,6 +55,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     // Wire callbacks to facade
     this.engine.onNodeMoved = (id, position) => this.facade.moveNode(id, position);
+    this.engine.onNodeParentChanged = (nodeId, groupId) => {
+      this.facade.updateNode(nodeId, { parentId: groupId ?? undefined });
+    };
     this.engine.onSelectionChanged = (ids) => this.facade.selectNodes(ids);
 
     // Keyboard shortcuts

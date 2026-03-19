@@ -14,6 +14,7 @@ use nimbus_app::use_cases::patch_diagram_edge::PatchEdgeInput;
 use nimbus_app::use_cases::patch_diagram_node::PatchNodeInput;
 use nimbus_app::use_cases::update_diagram::UpdateDiagramInput;
 use nimbus_domain::entities::diagram::{Diagram, DiagramListItem};
+use nimbus_domain::services::terraform_service::TerraformFiles;
 use nimbus_domain::entities::edge::Edge;
 use nimbus_domain::entities::node::Node;
 use nimbus_domain::entities::validation::ValidationResult;
@@ -241,4 +242,30 @@ pub async fn clear_translation(
 ) -> Result<Json<Diagram>, AppError> {
     let diagram = state.translate_diagram.execute_clear(id).await?;
     Ok(Json(diagram))
+}
+
+pub async fn export_terraform(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<TerraformFiles>, AppError> {
+    let files = state.export_terraform.execute(id).await?;
+    Ok(Json(files))
+}
+
+pub async fn export_docker_compose(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, AppError> {
+    let yaml = state.export_docker_compose.execute(id).await?;
+    Ok((
+        StatusCode::OK,
+        [
+            (header::CONTENT_TYPE, "application/x-yaml".to_string()),
+            (
+                header::CONTENT_DISPOSITION,
+                "attachment; filename=\"docker-compose.yml\"".to_string(),
+            ),
+        ],
+        yaml,
+    ))
 }

@@ -6,6 +6,13 @@ import { DiagramRepository } from '../../domain/interfaces/diagram-repository.in
 import { DiagramMapper } from '../../application/mappers/diagram.mapper';
 import { environment } from '../../../environments/environment';
 
+export interface TerraformFiles {
+  providers_tf: string;
+  main_tf: string;
+  variables_tf: string;
+  outputs_tf: string;
+}
+
 @Injectable()
 export class ApiGateway implements DiagramRepository {
   private baseUrl = `${environment.apiBaseUrl}/api/diagrams`;
@@ -39,5 +46,19 @@ export class ApiGateway implements DiagramRepository {
 
   async delete(id: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/${id}`));
+  }
+
+  async exportTerraform(id: string): Promise<TerraformFiles> {
+    return firstValueFrom(
+      this.http.get<TerraformFiles>(`${this.baseUrl}/${id}/export/terraform`)
+    );
+  }
+
+  async exportDockerCompose(id: string): Promise<Blob> {
+    return firstValueFrom(
+      this.http.get(`${this.baseUrl}/${id}/export/docker-compose`, {
+        responseType: 'blob',
+      })
+    );
   }
 }

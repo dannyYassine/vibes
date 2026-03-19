@@ -13,6 +13,7 @@ export class DragHandler {
   private hasMoved = false;
 
   onNodeMoved: ((id: string, position: Position) => void) | null = null;
+  onNodeParentChanged: ((nodeId: string, groupId: string | null) => void) | null = null;
 
   constructor(
     private context: CanvasContext,
@@ -88,6 +89,30 @@ export class DragHandler {
       const node = nodes.find(n => n.id === this.draggedNodeId);
       if (node && this.onNodeMoved) {
         this.onNodeMoved(this.draggedNodeId, { ...node.position });
+      }
+
+      // Check containment: if dragged node center falls within a group node
+      if (node && node.nodeType.category !== 'Group' && this.onNodeParentChanged) {
+        const centerX = node.position.x + node.size.width / 2;
+        const centerY = node.position.y + node.size.height / 2;
+        let newParentId: string | null = null;
+
+        for (const other of nodes) {
+          if (other.nodeType.category === 'Group' && other.id !== node.id) {
+            const gx = other.position.x;
+            const gy = other.position.y;
+            const gw = other.size.width;
+            const gh = other.size.height;
+            if (centerX >= gx && centerX <= gx + gw && centerY >= gy && centerY <= gy + gh) {
+              newParentId = other.id;
+              break;
+            }
+          }
+        }
+
+        if (newParentId !== (node.parentId ?? null)) {
+          this.onNodeParentChanged(this.draggedNodeId, newParentId);
+        }
       }
     }
 

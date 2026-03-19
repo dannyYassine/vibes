@@ -115,6 +115,13 @@ export function drawPorts(
   const sides: PortSide[] = ['top', 'right', 'bottom', 'left'];
   for (const side of sides) {
     const pos = getPortPosition(node, side);
+    // White outer border ring
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, PORT_RADIUS + 1.5, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(205, 214, 244, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // Main port circle
     ctx.beginPath();
     ctx.arc(pos.x, pos.y, PORT_RADIUS, 0, Math.PI * 2);
     ctx.fillStyle = color;

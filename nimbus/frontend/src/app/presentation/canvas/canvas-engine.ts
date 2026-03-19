@@ -47,6 +47,7 @@ export class CanvasEngine implements CanvasContext {
   onSave: (() => void) | null = null;
   onEdgeCreated: ((sourceId: string, targetId: string) => void) | null = null;
   onEdgeSelectionChanged: ((ids: string[]) => void) | null = null;
+  onNodeParentChanged: ((nodeId: string, groupId: string | null) => void) | null = null;
   onViewportChanged: ((viewport: ViewportState) => void) | null = null;
 
   // Bound event listeners for cleanup
@@ -75,6 +76,7 @@ export class CanvasEngine implements CanvasContext {
     this.edgeCreationHandler = new EdgeCreationHandler(this);
 
     this.dragHandler.onNodeMoved = (id, pos) => this.onNodeMoved?.(id, pos);
+    this.dragHandler.onNodeParentChanged = (nodeId, groupId) => this.onNodeParentChanged?.(nodeId, groupId);
     this.selectionHandler.onSelectionChanged = (ids) => this.onSelectionChanged?.(ids);
     this.edgeCreationHandler.onEdgeCreated = (event) => this.onEdgeCreated?.(event.sourceId, event.targetId);
 

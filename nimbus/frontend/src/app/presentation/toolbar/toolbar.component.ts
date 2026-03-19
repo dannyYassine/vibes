@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { DiagramFacade } from '../../application/facades/diagram.facade';
+import { TranslationFacade } from '../../application/facades/translation.facade';
 import { ValidationFacade } from '../../application/facades/validation.facade';
 import { ExportFacade } from '../../application/facades/export.facade';
 import { ProviderSelectorComponent } from './provider-selector.component';
@@ -26,6 +27,8 @@ import { ProviderSelectorComponent } from './provider-selector.component';
         <button (click)="facade.save()">Save</button>
         <button (click)="exportPngRequested.emit()" [disabled]="!(facade.diagram$ | async)">Export PNG</button>
         <button (click)="onExportJson()" [disabled]="!(facade.diagram$ | async)">Export JSON</button>
+        <button class="export-tf-btn" (click)="onExportTerraform()" [disabled]="!(translationFacade.activeProvider$ | async)">Export Terraform</button>
+        <button (click)="onExportDockerCompose()" [disabled]="!(facade.diagram$ | async)">Export Docker Compose</button>
         <button (click)="fileInput.click()">Import JSON</button>
         <input #fileInput type="file" accept=".json" style="display:none" (change)="onImportFile($event)" />
       </div>
@@ -69,6 +72,13 @@ import { ProviderSelectorComponent } from './provider-selector.component';
     .library-btn:hover {
       background: rgba(137, 180, 250, 0.15);
     }
+    .export-tf-btn {
+      border-color: #fab387;
+      color: #fab387;
+    }
+    .export-tf-btn:hover:not(:disabled) {
+      background: rgba(250, 179, 135, 0.15);
+    }
   `],
 })
 export class ToolbarComponent {
@@ -78,6 +88,7 @@ export class ToolbarComponent {
 
   constructor(
     public facade: DiagramFacade,
+    public translationFacade: TranslationFacade,
     private validationFacade: ValidationFacade,
     private exportFacade: ExportFacade,
     private router: Router,
@@ -94,6 +105,28 @@ export class ToolbarComponent {
     const diagram = this.facade.getCurrentDiagram();
     if (diagram) {
       this.exportFacade.exportJson(diagram);
+    }
+  }
+
+  async onExportTerraform(): Promise<void> {
+    const diagram = this.facade.getCurrentDiagram();
+    if (diagram) {
+      try {
+        await this.exportFacade.exportTerraform(diagram.id, diagram.name);
+      } catch (e) {
+        console.error('Terraform export failed:', e);
+      }
+    }
+  }
+
+  async onExportDockerCompose(): Promise<void> {
+    const diagram = this.facade.getCurrentDiagram();
+    if (diagram) {
+      try {
+        await this.exportFacade.exportDockerCompose(diagram.id, diagram.name);
+      } catch (e) {
+        console.error('Docker Compose export failed:', e);
+      }
     }
   }
 
