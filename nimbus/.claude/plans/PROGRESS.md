@@ -207,22 +207,22 @@
 - [x] Improve canvas rendering: enhanced shadows, top border highlight, gradient group headers, port outer rings
 
 **Testing:**
-- [ ] Rust unit tests: domain entities
-- [ ] Rust unit tests: validation rules
-- [ ] Rust unit tests: cloud translation
+- [x] Rust unit tests: domain entities
+- [x] Rust unit tests: validation rules
+- [x] Rust unit tests: cloud translation
 - [x] Rust unit tests: terraform generation (provider blocks, resources, sanitization, error on no provider)
 - [x] Rust unit tests: docker-compose generation (services, depends_on, networks, ports/env, volumes)
 - [x] Rust unit tests: docker catalog (all NodeType variants mapped, spot-check images)
-- [ ] Rust integration tests: CRUD endpoints
-- [ ] Rust integration tests: generate endpoint
-- [ ] Rust integration tests: translate endpoint
-- [ ] Rust integration tests: export endpoints
-- [ ] Angular unit tests: domain state classes
+- [x] Rust integration tests: CRUD endpoints
+- [x] Rust integration tests: generate endpoint
+- [x] Rust integration tests: translate endpoint
+- [x] Rust integration tests: export endpoints
+- [x] Angular unit tests: domain state classes
 - [x] Angular unit tests: export facade (terraform zip, docker compose download)
-- [ ] E2E tests: generate diagram flow
-- [ ] E2E tests: translate diagram flow
-- [ ] E2E tests: export terraform flow
-- [ ] E2E tests: export docker-compose flow
+- [x] E2E tests: generate diagram flow
+- [x] E2E tests: translate diagram flow
+- [x] E2E tests: export terraform flow
+- [x] E2E tests: export docker-compose flow
 - [x] Performance test: 100+ node diagram (both services < 1s)
 
 ---

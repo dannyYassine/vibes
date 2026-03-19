@@ -485,3 +485,330 @@ impl ValidationService {
             .collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::entities::edge::EdgeType;
+    use crate::entities::node::*;
+    use crate::test_helpers::*;
+
+    // --- OrphanNode ---
+
+    #[test]
+    fn orphan_node_detected() {
+        let n = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "Lonely");
+        let diagram = make_diagram(vec![n], vec![]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::OrphanNode)));
+    }
+
+    #[test]
+    fn connected_node_ok() {
+        let n1 = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "A");
+        let n2 = make_node(NodeType::Compute(ComputeComponent::Worker), "B");
+        let edge = make_edge(n1.id, n2.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![n1, n2], vec![edge]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::OrphanNode)));
+    }
+
+    #[test]
+    fn group_node_not_flagged() {
+        let n = make_node(NodeType::Group(GroupType::NetworkBoundary), "VPC");
+        let diagram = make_diagram(vec![n], vec![]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::OrphanNode)));
+    }
+
+    // --- SingleTargetLb ---
+
+    #[test]
+    fn lb_one_target_warns() {
+        let lb = make_node(NodeType::Networking(NetworkingComponent::LoadBalancer), "LB");
+        let srv = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "Srv");
+        let edge = make_edge(lb.id, srv.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![lb, srv], vec![edge]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::SingleTargetLb)));
+    }
+
+    #[test]
+    fn lb_multiple_targets_ok() {
+        let lb = make_node(NodeType::Networking(NetworkingComponent::LoadBalancer), "LB");
+        let s1 = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "S1");
+        let s2 = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "S2");
+        let e1 = make_edge(lb.id, s1.id, EdgeType::Synchronous);
+        let e2 = make_edge(lb.id, s2.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![lb, s1, s2], vec![e1, e2]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::SingleTargetLb)));
+    }
+
+    // --- InvalidContainment ---
+
+    #[test]
+    fn nonexistent_parent_errors() {
+        let mut n = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "Child");
+        n.parent_id = Some(Uuid::new_v4()); // nonexistent
+        let diagram = make_diagram(vec![n], vec![]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::InvalidContainment) && matches!(w.severity, Severity::Error)));
+    }
+
+    #[test]
+    fn non_group_parent_errors() {
+        let parent = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "Parent");
+        let mut child = make_node(NodeType::Compute(ComputeComponent::Worker), "Child");
+        child.parent_id = Some(parent.id);
+        let diagram = make_diagram(vec![parent, child], vec![]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::InvalidContainment)));
+    }
+
+    #[test]
+    fn valid_group_parent_ok() {
+        let group = make_node(NodeType::Group(GroupType::NetworkBoundary), "VPC");
+        let mut child = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "App");
+        child.parent_id = Some(group.id);
+        let diagram = make_diagram(vec![group, child], vec![]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::InvalidContainment)));
+    }
+
+    #[test]
+    fn circular_nesting_detected() {
+        let mut g1 = make_node(NodeType::Group(GroupType::NetworkBoundary), "G1");
+        let mut g2 = make_node(NodeType::Group(GroupType::NetworkBoundary), "G2");
+        g1.parent_id = Some(g2.id);
+        g2.parent_id = Some(g1.id);
+        let diagram = make_diagram(vec![g1, g2], vec![]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::InvalidContainment)));
+    }
+
+    // --- CircularSyncDependency ---
+
+    #[test]
+    fn sync_cycle_detected() {
+        let a = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "A");
+        let b = make_node(NodeType::Compute(ComputeComponent::Worker), "B");
+        let e1 = make_edge(a.id, b.id, EdgeType::Synchronous);
+        let e2 = make_edge(b.id, a.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![a, b], vec![e1, e2]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::CircularSyncDependency)));
+    }
+
+    #[test]
+    fn async_cycle_ignored() {
+        let a = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "A");
+        let b = make_node(NodeType::Compute(ComputeComponent::Worker), "B");
+        let e1 = make_edge(a.id, b.id, EdgeType::Asynchronous);
+        let e2 = make_edge(b.id, a.id, EdgeType::Asynchronous);
+        let diagram = make_diagram(vec![a, b], vec![e1, e2]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::CircularSyncDependency)));
+    }
+
+    #[test]
+    fn no_cycle_ok() {
+        let a = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "A");
+        let b = make_node(NodeType::Compute(ComputeComponent::Worker), "B");
+        let e = make_edge(a.id, b.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![a, b], vec![e]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::CircularSyncDependency)));
+    }
+
+    // --- SinglePointOfFailure ---
+
+    #[test]
+    fn spof_3_incoming_warns() {
+        let target = make_node(NodeType::Data(DataComponent::RelationalDb), "DB");
+        let s1 = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "S1");
+        let s2 = make_node(NodeType::Compute(ComputeComponent::Worker), "S2");
+        let s3 = make_node(NodeType::Compute(ComputeComponent::Function), "S3");
+        let e1 = make_edge(s1.id, target.id, EdgeType::Synchronous);
+        let e2 = make_edge(s2.id, target.id, EdgeType::Synchronous);
+        let e3 = make_edge(s3.id, target.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![target, s1, s2, s3], vec![e1, e2, e3]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::SinglePointOfFailure)));
+    }
+
+    #[test]
+    fn redundant_nodes_ok() {
+        // Two DB nodes of same type = redundant, so no SPOF even with 3 incoming
+        let db1 = make_node(NodeType::Data(DataComponent::RelationalDb), "DB1");
+        let db2 = make_node(NodeType::Data(DataComponent::RelationalDb), "DB2");
+        let s1 = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "S1");
+        let s2 = make_node(NodeType::Compute(ComputeComponent::Worker), "S2");
+        let s3 = make_node(NodeType::Compute(ComputeComponent::Function), "S3");
+        let e1 = make_edge(s1.id, db1.id, EdgeType::Synchronous);
+        let e2 = make_edge(s2.id, db1.id, EdgeType::Synchronous);
+        let e3 = make_edge(s3.id, db1.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![db1, db2, s1, s2, s3], vec![e1, e2, e3]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::SinglePointOfFailure)));
+    }
+
+    // --- MissingObservability ---
+
+    #[test]
+    fn no_observability_warns() {
+        let n = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "App");
+        let n2 = make_node(NodeType::Compute(ComputeComponent::Worker), "W");
+        let e = make_edge(n.id, n2.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![n, n2], vec![e]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::MissingObservability)));
+    }
+
+    #[test]
+    fn has_observability_ok() {
+        let n = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "App");
+        let obs = make_node(NodeType::Observability(ObservabilityComponent::Logging), "Logs");
+        let e = make_edge(n.id, obs.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![n, obs], vec![e]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::MissingObservability)));
+    }
+
+    // --- MissingSecurity ---
+
+    #[test]
+    fn no_security_warns() {
+        let n = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "App");
+        let n2 = make_node(NodeType::Compute(ComputeComponent::Worker), "W");
+        let e = make_edge(n.id, n2.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![n, n2], vec![e]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::MissingSecurity)));
+    }
+
+    #[test]
+    fn has_security_ok() {
+        let n = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "App");
+        let sec = make_node(NodeType::Security(SecurityComponent::IdentityProvider), "Auth");
+        let e = make_edge(n.id, sec.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![n, sec], vec![e]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::MissingSecurity)));
+    }
+
+    // --- DatabaseWithoutBackup ---
+
+    #[test]
+    fn single_db_warns() {
+        let db = make_node(NodeType::Data(DataComponent::RelationalDb), "DB");
+        let app = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "App");
+        let e = make_edge(app.id, db.id, EdgeType::Synchronous);
+        let diagram = make_diagram(vec![db, app], vec![e]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::DatabaseWithoutBackup)));
+    }
+
+    #[test]
+    fn db_with_storage_ok() {
+        let db = make_node(NodeType::Data(DataComponent::RelationalDb), "DB");
+        let storage = make_node(NodeType::Storage(StorageComponent::ObjectStorage), "S3");
+        let app = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "App");
+        let e1 = make_edge(app.id, db.id, EdgeType::Synchronous);
+        let e2 = make_edge(db.id, storage.id, EdgeType::DataFlow);
+        let diagram = make_diagram(vec![db, storage, app], vec![e1, e2]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::DatabaseWithoutBackup)));
+    }
+
+    #[test]
+    fn db_with_sibling_ok() {
+        let db1 = make_node(NodeType::Data(DataComponent::RelationalDb), "Primary");
+        let db2 = make_node(NodeType::Data(DataComponent::RelationalDb), "Replica");
+        let app = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "App");
+        let e1 = make_edge(app.id, db1.id, EdgeType::Synchronous);
+        let e2 = make_edge(db1.id, db2.id, EdgeType::DataFlow);
+        let diagram = make_diagram(vec![db1, db2, app], vec![e1, e2]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::DatabaseWithoutBackup)));
+    }
+
+    // --- SyncChainTooDeep ---
+
+    #[test]
+    fn chain_5_warns() {
+        let nodes: Vec<_> = (0..6)
+            .map(|i| make_node(NodeType::Compute(ComputeComponent::ApplicationServer), &format!("N{}", i)))
+            .collect();
+        let edges: Vec<_> = nodes.windows(2)
+            .map(|w| make_edge(w[0].id, w[1].id, EdgeType::Synchronous))
+            .collect();
+        let diagram = make_diagram(nodes, edges);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::SyncChainTooDeep)));
+    }
+
+    #[test]
+    fn chain_4_ok() {
+        let nodes: Vec<_> = (0..5)
+            .map(|i| make_node(NodeType::Compute(ComputeComponent::ApplicationServer), &format!("N{}", i)))
+            .collect();
+        let edges: Vec<_> = nodes.windows(2)
+            .map(|w| make_edge(w[0].id, w[1].id, EdgeType::Synchronous))
+            .collect();
+        let diagram = make_diagram(nodes, edges);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::SyncChainTooDeep)));
+    }
+
+    // --- MessageQueueWithoutDlq ---
+
+    #[test]
+    fn mq_no_dlq_warns() {
+        let mq = make_node(NodeType::Messaging(MessagingComponent::MessageQueue), "MainQ");
+        let app = make_node(NodeType::Compute(ComputeComponent::Worker), "Worker");
+        let e = make_edge(mq.id, app.id, EdgeType::Asynchronous);
+        let diagram = make_diagram(vec![mq, app], vec![e]);
+        let result = ValidationService::validate(&diagram);
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::MessageQueueWithoutDlq)));
+    }
+
+    #[test]
+    fn mq_connected_to_mq_ok() {
+        let mq = make_node(NodeType::Messaging(MessagingComponent::MessageQueue), "MainQ");
+        let main_q_id = mq.id;
+        let dlq = make_node(NodeType::Messaging(MessagingComponent::MessageQueue), "DLQ");
+        let app = make_node(NodeType::Compute(ComputeComponent::Worker), "Worker");
+        let e1 = make_edge(mq.id, app.id, EdgeType::Asynchronous);
+        let e2 = make_edge(mq.id, dlq.id, EdgeType::Asynchronous);
+        let diagram = make_diagram(vec![mq, dlq, app], vec![e1, e2]);
+        let result = ValidationService::validate(&diagram);
+        // MainQ is connected to DLQ so should not warn for MainQ
+        let mq_warnings: Vec<_> = result.warnings.iter()
+            .filter(|w| matches!(w.rule, ValidationRule::MessageQueueWithoutDlq))
+            .collect();
+        // DLQ itself may warn since it's not connected to another MQ, but MainQ should not
+        assert!(!mq_warnings.iter().any(|w| w.node_ids.contains(&main_q_id)));
+    }
+
+    // --- Top-level validate ---
+
+    #[test]
+    fn empty_diagram_has_info_warnings() {
+        let diagram = make_diagram(vec![], vec![]);
+        let result = ValidationService::validate(&diagram);
+        // Empty diagram should have MissingObservability + MissingSecurity (Info severity)
+        assert!(result.valid); // Info doesn't make it invalid
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::MissingObservability)));
+        assert!(result.warnings.iter().any(|w| matches!(w.rule, ValidationRule::MissingSecurity)));
+    }
+
+    #[test]
+    fn errors_make_invalid() {
+        let mut n = make_node(NodeType::Compute(ComputeComponent::ApplicationServer), "Orphan");
+        n.parent_id = Some(Uuid::new_v4()); // nonexistent parent = Error
+        let diagram = make_diagram(vec![n], vec![]);
+        let result = ValidationService::validate(&diagram);
+        assert!(!result.valid);
+    }
+}

@@ -44,3 +44,43 @@ pub struct DiagramListItem {
     pub active_provider: Option<CloudProvider>,
     pub updated_at: DateTime<Utc>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn diagram_json_round_trip() {
+        let diagram = Diagram {
+            id: Uuid::new_v4(),
+            name: "My Arch".to_string(),
+            description: Some("desc".to_string()),
+            nodes: vec![],
+            edges: vec![],
+            viewport: Viewport { x: 10.0, y: 20.0, zoom: 1.5 },
+            active_provider: Some(CloudProvider::Aws),
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        };
+
+        let json = serde_json::to_string(&diagram).unwrap();
+        // Verify camelCase
+        assert!(json.contains("activeProvider"));
+        assert!(json.contains("createdAt"));
+        assert!(!json.contains("active_provider"));
+
+        let deserialized: Diagram = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.name, "My Arch");
+        assert_eq!(deserialized.active_provider, Some(CloudProvider::Aws));
+    }
+
+    #[test]
+    fn cloud_provider_serialization() {
+        assert_eq!(serde_json::to_string(&CloudProvider::Aws).unwrap(), "\"Aws\"");
+        assert_eq!(serde_json::to_string(&CloudProvider::Gcp).unwrap(), "\"Gcp\"");
+        assert_eq!(serde_json::to_string(&CloudProvider::Azure).unwrap(), "\"Azure\"");
+
+        let aws: CloudProvider = serde_json::from_str("\"Aws\"").unwrap();
+        assert_eq!(aws, CloudProvider::Aws);
+    }
+}

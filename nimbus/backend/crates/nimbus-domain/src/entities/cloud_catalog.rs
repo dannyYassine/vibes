@@ -227,3 +227,29 @@ pub fn cloud_catalog() -> Vec<CloudServiceMapping> {
         m(NodeType::Observability(Alerting), Azure, "Azure Monitor Alerts", "Azure Monitor Alerts", "azure-monitor", "azurerm_monitor_metric_alert"),
     ]
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lookup_mapping_returns_correct_aws_service() {
+        let result = lookup_mapping(
+            &NodeType::Compute(ComputeComponent::ApplicationServer),
+            &CloudProvider::Aws,
+        );
+        assert!(result.is_some());
+        let mapping = result.unwrap();
+        assert_eq!(mapping.service_name, "Elastic Beanstalk");
+        assert!(mapping.terraform_resource_type.contains("aws"));
+    }
+
+    #[test]
+    fn lookup_mapping_returns_none_for_group() {
+        let result = lookup_mapping(
+            &NodeType::Group(crate::entities::node::GroupType::NetworkBoundary),
+            &CloudProvider::Aws,
+        );
+        assert!(result.is_none());
+    }
+}

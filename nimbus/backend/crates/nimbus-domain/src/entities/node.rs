@@ -153,3 +153,46 @@ pub struct ProviderMapping {
     pub config: serde_json::Value,
     pub terraform_resource_type: Option<String>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn node_type_tagged_serialization() {
+        let nt = NodeType::Compute(ComputeComponent::ApplicationServer);
+        let json = serde_json::to_string(&nt).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(v["category"], "Compute");
+        assert_eq!(v["component"], "ApplicationServer");
+    }
+
+    #[test]
+    fn node_json_round_trip() {
+        let node = Node {
+            id: Uuid::new_v4(),
+            node_type: NodeType::Data(DataComponent::RelationalDb),
+            label: "Primary DB".to_string(),
+            position: Position { x: 100.0, y: 200.0 },
+            size: Size { width: 180.0, height: 48.0 },
+            properties: NodeProperties {
+                config: serde_json::json!({"engine": "postgres"}),
+                style: Some(NodeStyle {
+                    color: Some("#ff0000".to_string()),
+                    icon: None,
+                    opacity: Some(0.9),
+                }),
+            },
+            parent_id: None,
+            provider_mappings: None,
+        };
+
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("nodeType"));
+        assert!(json.contains("parentId"));
+
+        let deserialized: Node = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.label, "Primary DB");
+        assert!(matches!(deserialized.node_type, NodeType::Data(DataComponent::RelationalDb)));
+    }
+}
