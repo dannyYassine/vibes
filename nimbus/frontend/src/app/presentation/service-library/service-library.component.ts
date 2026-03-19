@@ -48,6 +48,10 @@ import { NodeCategory } from '../../domain/models/node.model';
     }
   `,
   styles: [`
+    :host {
+      overflow: hidden;
+      min-height: 0;
+    }
     .library {
       width: 220px;
       height: 100%;

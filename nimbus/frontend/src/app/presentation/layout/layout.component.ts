@@ -16,7 +16,9 @@ import { DiagramFacade } from '../../application/facades/diagram.facade';
     <div class="layout">
       <app-toolbar (libraryToggled)="libraryVisible = !libraryVisible" (exportPngRequested)="onExportPng()" />
       <div class="main" [style.grid-template-columns]="libraryVisible ? '220px 1fr 300px' : '1fr 300px'">
-        <app-service-library [visible]="libraryVisible" />
+        @if (libraryVisible) {
+          <app-service-library [visible]="true" />
+        }
         <app-canvas class="canvas-area" />
         <div class="right-panel">
           <app-chat class="chat-area" />
@@ -52,6 +54,7 @@ import { DiagramFacade } from '../../application/facades/diagram.facade';
     .sidebar-area {
       overflow-y: auto;
       flex-shrink: 0;
+      max-height: 200px;
     }
   `],
 })

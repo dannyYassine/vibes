@@ -37,6 +37,7 @@ export class CanvasEngine implements CanvasContext {
   private activeProvider: CloudProvider | null = null;
   private renderRequested = false;
   private dpr = 1;
+  private viewportInitialized = false;
 
   // Callbacks
   onNodeMoved: ((id: string, position: Position) => void) | null = null;
@@ -108,10 +109,14 @@ export class CanvasEngine implements CanvasContext {
     if (!diagram) {
       this.nodes = [];
       this.edges = [];
+      this.viewportInitialized = false;
     } else {
       this.nodes = diagram.nodes;
       this.edges = diagram.edges;
-      this.viewport = { x: diagram.viewport.x, y: diagram.viewport.y, zoom: diagram.viewport.zoom };
+      if (!this.viewportInitialized) {
+        this.viewport = { x: diagram.viewport.x, y: diagram.viewport.y, zoom: diagram.viewport.zoom };
+        this.viewportInitialized = true;
+      }
     }
     this.requestRender();
   }

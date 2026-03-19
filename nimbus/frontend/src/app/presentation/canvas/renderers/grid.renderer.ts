@@ -22,7 +22,7 @@ export class GridRenderer {
 
       // Minor lines (only if zoom >= 0.4 and step is BASE_GRID)
       if (zoom >= 0.4) {
-        ctx.strokeStyle = '#e8e8e8';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
         ctx.lineWidth = 1 / zoom;
         ctx.beginPath();
         for (let x = startX; x <= right; x += step) {
@@ -43,7 +43,7 @@ export class GridRenderer {
       const majorStartX = Math.floor(left / majorStep) * majorStep;
       const majorStartY = Math.floor(top / majorStep) * majorStep;
 
-      ctx.strokeStyle = '#d0d0d0';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
       ctx.lineWidth = 1 / zoom;
       ctx.beginPath();
       for (let x = majorStartX; x <= right; x += majorStep) {

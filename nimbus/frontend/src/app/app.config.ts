@@ -14,6 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(withInterceptors([errorInterceptor])),
+    ApiGateway,
     { provide: DIAGRAM_REPOSITORY, useClass: ApiGateway },
     { provide: AI_PROVIDER, useClass: AiGateway },
     { provide: TRANSLATION_PROVIDER, useClass: TranslationGateway },
