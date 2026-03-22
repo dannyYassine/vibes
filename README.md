@@ -1,6 +1,6 @@
 # vibes
 
-A collection of projects built entirely through "vibes coding" — an experimental approach where every project is created using only AI-assisted development. The goal is to explore how far you can take vibes coding to plan, build, and maintain full projects while still following the same best practices you'd expect from traditional development.
+A collection of projects built entirely through "vibe coding" — an experimental approach where every project is created using only AI-assisted development. The goal is to explore how far you can take vibes coding to plan, build, and maintain full projects while still following the same best practices you'd expect from traditional development.
 
 ## Projects
 
