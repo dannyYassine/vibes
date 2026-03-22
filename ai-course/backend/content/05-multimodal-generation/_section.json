@@ -1,0 +1,5 @@
+{
+  "title": "Multi-modal Generation",
+  "description": "Master image and video generation with VAEs, GANs, diffusion models, and beyond",
+  "order": 5
+}

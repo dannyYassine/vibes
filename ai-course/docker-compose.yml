@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - sqlite_data:/data
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - DATABASE_URL=sqlite:////data/bytebytego_ai.db
+      - CONTENT_DIR=./content
+      - ACCESS_TOKEN_EXPIRE_MINUTES=10080
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
