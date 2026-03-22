@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-prod}
+      - DATABASE_URL=sqlite:///./python_course.db
+      - CONTENT_DIR=./content
+    volumes:
+      - db_data:/app/backend
+    restart: unless-stopped
+
+volumes:
+  db_data:

@@ -1,0 +1,5 @@
+{
+  "title": "REST APIs with Django",
+  "description": "Build production-ready REST APIs using Django and Django REST Framework.",
+  "order": 4
+}
