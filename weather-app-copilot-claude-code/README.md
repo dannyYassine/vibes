@@ -11,7 +11,8 @@ A modern, cross-platform desktop weather application built with [Tauri](https://
 </div>
 
 **Demo Video:**
-[Video](https://github.com/user-attachments/assets/58ba598e-5d4c-4d00-ae9f-4b5d0c4aebbf)
+
+[![Watch the video](https://github.com/user-attachments/assets/58ba598e-5d4c-4d00-ae9f-4b5d0c4aebbf)](https://github.com/user-attachments/assets/58ba598e-5d4c-4d00-ae9f-4b5d0c4aebbf)
 
 
 ## Features
