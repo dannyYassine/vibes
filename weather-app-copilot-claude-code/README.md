@@ -2,6 +2,15 @@
 
 A modern, cross-platform desktop weather application built with [Tauri](https://tauri.app/), [Angular](https://angular.io/), and [Rust](https://www.rust-lang.org/). Get real-time weather information with hourly and daily forecasts for any location.
 
+## Screenshots & Demo
+
+<div style="display: flex; gap: 10px; margin-bottom: 20px;">
+  <img src="./hero_1.png" alt="Weather App Hero 1" width="300">
+  <img src="./hero_2.png" alt="Weather App Hero 2" width="300">
+</div>
+
+**Demo Video:** [home.mov](./home.mov)
+
 ## Features
 
 - **Current Weather Display** - Real-time temperature, humidity, pressure, wind speed, and conditions
