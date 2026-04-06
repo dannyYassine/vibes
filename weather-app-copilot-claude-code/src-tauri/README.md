@@ -14,7 +14,7 @@ Tauri is a modern framework that creates lightweight native applications by comb
 ## Technology Stack
 
 ### Tauri Framework
-- **Tauri**: 2.10.3 - Desktop application framework
+- **Tauri**: 2.10.3 - Desktop application framework (with `tray-icon` feature)
 - **tauri-build**: 2.5.6 - Build tooling for Tauri
 - **tauri-plugin-log**: 2 - Logging plugin
 
@@ -77,15 +77,25 @@ Core Tauri application logic:
 - `run()` function - Main application setup and initialization
 - Tauri builder configuration
 - Plugin setup (logging)
-- Window creation and lifecycle management
-- IPC command registration (when applicable)
+- Window and tray creation
+- IPC command registration
 - Error handling
 
 Key setup:
 - Initializes Tauri builder
 - Registers plugins (tauri-plugin-log in debug mode)
-- Configures log level to Info
-- Runs the application and generates context
+- Creates the **popup window** (320×300, no decorations, always on top, hidden)
+- Creates the **tray icon** with a 1×1 transparent pixel icon (text-only in menu bar)
+- Tray left-click positions and shows the popup below the tray icon, or hides it if already visible
+- Manages `TrayState` for cross-command tray access
+
+#### IPC Commands
+
+| Command | Description |
+|---|---|
+| `update_tray_title` | Updates the menu bar label (e.g. `14° ☁️`) — called by Angular after each weather fetch |
+| `hide_popup` | Hides the popup window — called by Angular on `window:blur` |
+| `open_main_window` | Hides the popup and shows/focuses the main window — called by the expand button |
 
 ### Configuration
 
@@ -104,14 +114,16 @@ Central Tauri configuration file:
   },
   "app": {
     "windows": [{
+      "label": "main",
       "title": "Weather",
-      "width": 420,
-      "height": 780,
-      "minWidth": 380,
-      "minHeight": 600,
+      "width": 600,
+      "height": 900,
+      "minWidth": 500,
+      "minHeight": 750,
       "resizable": true,
       "fullscreen": false,
-      "decorations": true
+      "decorations": true,
+      "visible": false
     }],
     "security": {
       "csp": null
@@ -137,10 +149,9 @@ Central Tauri configuration file:
 - `version`: "0.1.0" - Application version
 - `frontendDist`: Path to built Angular frontend
 - `devUrl`: Development server URL (Angular dev server)
-- Window dimensions: 420×780 pixels (mobile-first design)
-- Minimum size: 380×600 pixels
-- Resizable: true
-- Decorations: true (native title bar and window controls)
+- Main window (`label: "main"`): 600×900 pixels, starts hidden (`visible: false`) — opened via popup expand button
+- Minimum size: 500×750 pixels
+- The **popup window** (320×300, no decorations) is created programmatically in `lib.rs`
 - Bundle targets: all platforms (macOS, Windows, Linux)
 
 #### `Cargo.toml`
@@ -165,12 +176,12 @@ tauri-build = { version = "2.5.6", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.10.3", features = [] }
+tauri = { version = "2.10.3", features = ["tray-icon"] }
 tauri-plugin-log = "2"
 ```
 
 **Dependencies**:
-- `tauri` - Core framework
+- `tauri` - Core framework (`tray-icon` feature enables macOS menu bar integration)
 - `tauri-plugin-log` - Logging plugin
 - `serde`/`serde_json` - Serialization for API communication
 - `log` - Logging abstraction
@@ -252,19 +263,54 @@ Creates platform-specific distributables:
 
 Binaries are output in `target/release/bundle/` organized by platform.
 
+## macOS Menu Bar (Tray)
+
+The app runs as a menu bar application — no Dock icon, no visible window on launch.
+
+### Tray Icon
+A 1×1 transparent pixel with `icon_as_template: true` is used so only the title text appears in the menu bar. The title is initialized to `--°` and updated to e.g. `14° ☁️` after the first weather fetch.
+
+### Popup Window
+A second Tauri webview window (`label: "popup"`) is created at startup:
+
+| Property | Value |
+|---|---|
+| Size | 320×300 logical pixels |
+| Decorations | None |
+| Always on top | Yes |
+| Skip taskbar | Yes |
+| Initial visibility | Hidden |
+| Shadow | Yes |
+
+On tray left-click, the popup is positioned centered below the tray icon using the click `rect` physical coordinates, then shown and focused. Clicking again hides it. Clicking outside (window blur) triggers the Angular popup component to call `hide_popup`.
+
+### Data Flow
+```
+WeatherStore.fetchWeather()
+  └─► TrayService.updateTray(temp, condition)
+        └─► invoke('update_tray_title', { title: '14° ☁️' })
+              └─► TrayState.icon.set_title(Some(title))
+
+Popup expand button
+  └─► invoke('open_main_window')
+        └─► popup.hide() + main.show() + main.set_focus()
+```
+
 ## Window Configuration
 
 The application window is configured in `tauri.conf.json`:
 
-### Dimensions
-- **Default**: 420×780 pixels (portrait mobile-first design)
-- **Minimum**: 380×600 pixels
+### Main Window (`label: "main"`)
+- **Default**: 600×900 pixels
+- **Minimum**: 500×750 pixels
 - **Resizable**: Yes
-
-### Behavior
-- **Fullscreen**: Disabled
+- **Visible on launch**: No — opened via the popup's expand button
 - **Decorations**: Enabled (native window chrome)
-- **Title**: "Weather"
+
+### Popup Window (`label: "popup"`)
+- **Size**: 320×300 pixels (fixed, created in `lib.rs`)
+- **Decorations**: None
+- **Visible on launch**: No — shown on tray click
 
 ### Security
 - **CSP** (Content Security Policy): null (not configured)

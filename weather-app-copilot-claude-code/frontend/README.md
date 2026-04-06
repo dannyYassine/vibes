@@ -39,42 +39,48 @@ frontend/
 ├── src/
 │   ├── app/
 │   │   ├── features/                    # Feature modules
-│   │   │   └── weather/                # Weather feature module
-│   │   │       ├── weather-view.ts     # Main weather view component
-│   │   │       ├── hero-section/       # Current weather display
-│   │   │       │   ├── hero-section.ts
-│   │   │       │   └── hero-section.scss
-│   │   │       ├── hourly-forecast/    # 24-hour forecast
-│   │   │       │   ├── hourly-forecast.ts
-│   │   │       │   ├── hourly-item/    # Individual hourly item
-│   │   │       │   │   ├── hourly-item.ts
-│   │   │       │   │   └── hourly-item.scss
-│   │   │       │   └── hourly-forecast.scss
-│   │   │       ├── daily-forecast/     # Extended forecast
-│   │   │       │   ├── daily-forecast.ts
-│   │   │       │   ├── daily-row/      # Individual daily row
-│   │   │       │   │   ├── daily-row.ts
-│   │   │       │   │   └── daily-row.scss
-│   │   │       │   └── daily-forecast.scss
-│   │   │       ├── data-cards/         # Weather metrics cards
-│   │   │       │   ├── data-cards.ts
-│   │   │       │   ├── data-card/      # Individual metric card
-│   │   │       │   │   ├── data-card.ts
-│   │   │       │   │   └── data-card.scss
-│   │   │       │   └── data-cards.scss
-│   │   │       ├── advisory-bar/       # Weather alerts
-│   │   │       │   ├── advisory-bar.ts
-│   │   │       │   └── advisory-bar.scss
-│   │   │       ├── loading-overlay/    # Loading spinner
-│   │   │       │   ├── loading-overlay.ts
-│   │   │       │   └── loading-overlay.scss
-│   │   │       └── weather-view.scss
+│   │   │   ├── weather/                # Full weather view
+│   │   │   │   ├── weather-view.ts     # Main weather view component
+│   │   │   │   ├── hero-section/       # Current weather display
+│   │   │   │   │   ├── hero-section.ts
+│   │   │   │   │   └── hero-section.scss
+│   │   │   │   ├── hourly-forecast/    # 24-hour forecast
+│   │   │   │   │   ├── hourly-forecast.ts
+│   │   │   │   │   ├── hourly-item/    # Individual hourly item
+│   │   │   │   │   │   ├── hourly-item.ts
+│   │   │   │   │   │   └── hourly-item.scss
+│   │   │   │   │   └── hourly-forecast.scss
+│   │   │   │   ├── daily-forecast/     # Extended forecast
+│   │   │   │   │   ├── daily-forecast.ts
+│   │   │   │   │   ├── daily-row/      # Individual daily row
+│   │   │   │   │   │   ├── daily-row.ts
+│   │   │   │   │   │   └── daily-row.scss
+│   │   │   │   │   └── daily-forecast.scss
+│   │   │   │   ├── data-cards/         # Weather metrics cards
+│   │   │   │   │   ├── data-cards.ts
+│   │   │   │   │   ├── data-card/      # Individual metric card
+│   │   │   │   │   │   ├── data-card.ts
+│   │   │   │   │   │   └── data-card.scss
+│   │   │   │   │   └── data-cards.scss
+│   │   │   │   ├── advisory-bar/       # Weather alerts
+│   │   │   │   │   ├── advisory-bar.ts
+│   │   │   │   │   └── advisory-bar.scss
+│   │   │   │   ├── loading-overlay/    # Loading spinner
+│   │   │   │   │   ├── loading-overlay.ts
+│   │   │   │   │   └── loading-overlay.scss
+│   │   │   │   └── weather-view.scss
+│   │   │   │
+│   │   │   └── popup/                  # Tray popup window
+│   │   │       ├── popup.ts            # Popup component
+│   │   │       ├── popup.html          # Hero + hourly strip template
+│   │   │       └── popup.scss          # Compact popup styles
 │   │   │
 │   │   ├── shared/                     # Shared utilities and components
 │   │   │   ├── services/               # Core services
 │   │   │   │   ├── weather.service.ts         # Weather API calls
 │   │   │   │   ├── location.service.ts        # Location/search functionality
-│   │   │   │   └── weather-store.service.ts   # State management
+│   │   │   │   ├── weather-store.service.ts   # State management
+│   │   │   │   └── tray.service.ts            # macOS menu bar tray updates
 │   │   │   ├── models/                 # TypeScript interfaces/types
 │   │   │   │   ├── weather.model.ts    # Weather data structures
 │   │   │   │   └── theme.model.ts      # Theme configuration
@@ -118,6 +124,14 @@ frontend/
 
 #### Weather View (`features/weather/weather-view.ts`)
 Main container component that orchestrates all weather display sections. Handles data loading and layout composition.
+
+#### Popup (`features/popup/popup.ts`)
+Compact tray popup window shown when the user clicks the macOS menu bar icon:
+- Gradient background matching current weather condition
+- Icon, condition label, large temperature, location, feels like
+- Horizontal scrollable hourly forecast strip at the bottom
+- Expand button (top-right) to open the full main window
+- Auto-hides on window blur via `hide_popup` Tauri command
 
 #### Hero Section (`features/weather/hero-section/`)
 Displays prominent current weather information:
@@ -185,12 +199,19 @@ Manages location and search functionality:
 - Coordinates handling
 
 ### Weather Store Service (`shared/services/weather-store.service.ts`)
-Central state management using RxJS:
+Central state management using Angular signals:
 - Current weather state
 - Forecast data caching
-- Loading states
-- Error states
-- Observable streams for components
+- Loading and error states
+- Calls `TrayService.updateTray()` after every successful weather fetch
+- Auto-refresh every 10 minutes
+
+### Tray Service (`shared/services/tray.service.ts`)
+Bridges Angular weather data to the macOS menu bar:
+- Lazily loads `@tauri-apps/api/core` only when running inside Tauri
+- Maps weather conditions to emojis (e.g. `clouds` → `☁️`)
+- Invokes the `update_tray_title` Rust command with a formatted string like `14° ☁️`
+- No-op when running in a browser (outside Tauri)
 
 ## Models & Types
 
@@ -430,8 +451,10 @@ Prettier formatting configuration for consistent code style.
 When running in Tauri context:
 - Frontend is built to `dist/frontend/browser`
 - Development server runs on `localhost:4200`
-- Tauri dev server proxies requests to Angular dev server
-- Preload/IPC scripts available via Tauri APIs (if configured)
+- The root `App` component detects the Tauri window label (`main` or `popup`) and renders the appropriate view
+- `TrayService` uses `window.__TAURI_INTERNALS__` to detect the Tauri context before invoking commands
+- Three IPC commands are used: `update_tray_title`, `hide_popup`, `open_main_window`
+- `@tauri-apps/api` is dynamically imported to avoid errors in non-Tauri environments
 
 For development within Tauri:
 ```bash

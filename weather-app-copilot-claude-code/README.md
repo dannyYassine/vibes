@@ -13,11 +13,14 @@ A modern, cross-platform desktop weather application built with [Tauri](https://
 
 ## Features
 
+- **macOS Menu Bar Icon** - Persistent tray icon showing live temperature and weather emoji (e.g. `14° ☁️`), updated after every fetch
+- **Tray Popup** - Click the tray icon to open a compact weather dropdown (hero + hourly scroll); click again or click away to dismiss
+- **Open Full App** - Expand button in the popup opens the main window
 - **Current Weather Display** - Real-time temperature, humidity, pressure, wind speed, and conditions
 - **Hourly Forecast** - 24-hour weather predictions with precipitation probability
 - **Daily Forecast** - Extended forecast for upcoming days
 - **Location Search** - Find weather for any location worldwide
-- **Responsive Design** - Optimized UI that adapts to different screen sizes (420×780 base)
+- **Responsive Design** - Optimized UI that adapts to different screen sizes
 - **Modern Animations** - Smooth scroll reveals and transitions
 - **Personality Headlines** - Contextual weather descriptions based on current conditions
 - **Theme Support** - Themed UI that adapts to weather conditions
@@ -30,10 +33,11 @@ A modern, cross-platform desktop weather application built with [Tauri](https://
 - **Build Tool**: Angular CLI
 - **Styling**: SCSS
 
-### Backend
+### Desktop Shell
 - **Runtime**: Tauri 2.10.3
 - **Language**: Rust
 - **Logging**: tauri-plugin-log
+- **Tray**: Native macOS menu bar integration (`tray-icon` feature)
 
 ### Desktop
 - **Platform**: Tauri (macOS, Windows, Linux compatible)
@@ -61,11 +65,15 @@ weather-app-copilot-claude-code/
 │   │   │   │       ├── data-cards/
 │   │   │   │       ├── advisory-bar/
 │   │   │   │       └── loading-overlay/
+│   │   │   ├── features/
+│   │   │   │   ├── weather/          # Full weather view
+│   │   │   │   └── popup/            # Tray popup (hero + hourly strip)
 │   │   │   ├── shared/           # Shared services and components
 │   │   │   │   ├── services/
 │   │   │   │   │   ├── weather.service.ts
 │   │   │   │   │   ├── location.service.ts
-│   │   │   │   │   └── weather-store.service.ts
+│   │   │   │   │   ├── weather-store.service.ts
+│   │   │   │   │   └── tray.service.ts
 │   │   │   │   ├── models/
 │   │   │   │   │   ├── weather.model.ts
 │   │   │   │   │   └── theme.model.ts
@@ -169,16 +177,19 @@ npm run build
 
 ### Window Settings
 Edit `src-tauri/tauri.conf.json` to customize:
-- Window dimensions (default: 420×780)
-- Minimum size (380×600)
+- **Main window** dimensions (default: 600×900, starts hidden — opened via popup expand button)
+- Minimum size (500×750)
 - Application title and identifier
 - Bundle icons and targets
+
+The **popup window** (320×300) is created programmatically in `src-tauri/src/lib.rs` and cannot be configured via `tauri.conf.json`.
 
 ### API Integration
 Weather data is provided through services in `frontend/src/app/shared/services/`:
 - `weather.service.ts` - Handles weather API requests
 - `location.service.ts` - Manages location/search functionality
-- `weather-store.service.ts` - Central state management for weather data
+- `weather-store.service.ts` - Central state management; calls `TrayService.updateTray()` after every successful fetch
+- `tray.service.ts` - Invokes the `update_tray_title` Tauri command to update the menu bar label
 
 ## Key Components
 
