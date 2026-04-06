@@ -9,7 +9,12 @@ A modern, cross-platform desktop weather application built with [Tauri](https://
   <img src="./hero_2.png" alt="Weather App Hero 2" width="300">
 </div>
 
-**Demo Video:** [home.mov](./home.mov)
+**Demo Video:**
+
+<video width="400" autoplay loop muted controls style="border-radius: 8px;">
+  <source src="./home.mov" type="video/quicktime">
+  Your browser does not support the video tag.
+</video>
 
 ## Features
 
