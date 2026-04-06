@@ -4,6 +4,17 @@ A collection of projects built entirely through "vibe coding" — an experimenta
 
 ## Projects
 
+### [Weather App](weather-app-copilot-claude-code/)
+
+A modern, cross-platform desktop weather application built with Tauri, Angular, and Rust. Features real-time weather information with hourly and daily forecasts, location search, weather-themed UI, and smooth animations.
+
+<table>
+  <tr>
+    <td><img src="weather-app-copilot-claude-code/hero_1.png" alt="Weather App Hero 1" width="280"></td>
+    <td><img src="weather-app-copilot-claude-code/hero_2.png" alt="Weather App Hero 2" width="280"></td>
+  </tr>
+</table>
+
 ### [ByteByteGo AI Course](ai-course/)
 
 A self-hosted AI course platform covering fundamentals to expert-level techniques. Built with a FastAPI backend serving markdown-based lessons and a vanilla JavaScript frontend with progress tracking. Covers LLM foundations, RAG, prompt engineering, AI agents, reasoning models, and multi-modal generation across 6 modules.

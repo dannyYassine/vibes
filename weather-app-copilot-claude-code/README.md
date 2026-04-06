@@ -4,21 +4,12 @@ A modern, cross-platform desktop weather application built with [Tauri](https://
 
 ## Screenshots & Demo
 
-<table>
-  <tr>
-    <td>
-      <img src="./hero_1.png" alt="Weather App Hero 1" width="280">
-    </td>
-    <td>
-      <img src="./hero_2.png" alt="Weather App Hero 2" width="280">
-    </td>
-    <td>
-      <a href="./home.mov" style="display: flex; align-items: center; justify-content: center; height: 100%; text-decoration: none;">
-        <strong>▶ Demo Video</strong>
-      </a>
-    </td>
-  </tr>
-</table>
+<div style="display: flex; gap: 10px; margin-bottom: 20px;">
+  <img src="./hero_1.png" alt="Weather App Hero 1" width="300">
+  <img src="./hero_2.png" alt="Weather App Hero 2" width="300">
+</div>
+
+**Demo Video:** [home.mov](./home.mov)
 
 ## Features
 
