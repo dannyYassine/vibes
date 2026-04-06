@@ -10,7 +10,9 @@ A modern, cross-platform desktop weather application built with [Tauri](https://
   <img src="./hero_3.png" alt="Weather App Hero 3" width="300">
 </div>
 
-**Demo Video:** [home.mov](./home.mov)
+**Demo Video:**
+https://github.com/user-attachments/assets/58ba598e-5d4c-4d00-ae9f-4b5d0c4aebbf
+
 
 ## Features
 
