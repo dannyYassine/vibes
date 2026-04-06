@@ -7,6 +7,7 @@ A modern, cross-platform desktop weather application built with [Tauri](https://
 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
   <img src="./hero_1.png" alt="Weather App Hero 1" width="300">
   <img src="./hero_2.png" alt="Weather App Hero 2" width="300">
+  <img src="./hero_3.png" alt="Weather App Hero 3" width="300">
 </div>
 
 **Demo Video:** [home.mov](./home.mov)
