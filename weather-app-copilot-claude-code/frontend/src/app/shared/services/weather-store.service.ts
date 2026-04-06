@@ -11,6 +11,7 @@ import {
 } from '../models/theme.model';
 import { WeatherService } from './weather.service';
 import { LocationService, StoredLocation } from './location.service';
+import { TrayService } from './tray.service';
 
 @Injectable({ providedIn: 'root' })
 export class WeatherStore {
@@ -44,7 +45,8 @@ export class WeatherStore {
 
   constructor(
     private weatherService: WeatherService,
-    private locationService: LocationService
+    private locationService: LocationService,
+    private trayService: TrayService,
   ) {}
 
   async initialize(): Promise<void> {
@@ -97,6 +99,8 @@ export class WeatherStore {
       this.currentWeather.set(weather);
       this.hourlyForecast.set(forecast.hourly);
       this.dailyForecast.set(forecast.daily);
+      console.log('[WeatherStore] calling updateTray', weather.temperature, weather.condition);
+      this.trayService.updateTray(weather.temperature, weather.condition);
 
       // Save location
       this.locationService.saveLocation({
