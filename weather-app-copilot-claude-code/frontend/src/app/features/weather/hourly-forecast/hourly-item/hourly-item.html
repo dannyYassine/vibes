@@ -1,0 +1,5 @@
+<div class="hourly-item">
+  <span class="hourly-item__time">{{ isNow() ? 'NOW' : time() }}</span>
+  <app-weather-icon [iconCode]="iconCode()" [size]="32" />
+  <span class="hourly-item__temp">{{ temperature() | temperature }}</span>
+</div>

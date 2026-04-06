@@ -1,0 +1,34 @@
+// === Fade in up ===
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// === Fade in ===
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+// === Stagger mixin ===
+@mixin stagger-children($count: 10, $delay: 100ms, $base-delay: 0ms) {
+  @for $i from 1 through $count {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$base-delay + ($i - 1) * $delay};
+    }
+  }
+}
+
+// === Reduced motion ===
+@mixin respect-motion {
+  @media (prefers-reduced-motion: reduce) {
+    animation: none !important;
+    transition: none !important;
+  }
+}

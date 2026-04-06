@@ -1,0 +1,10 @@
+<div class="daily-row">
+  <span class="daily-row__date">{{ date() | date:'EEE, MMM d' }}</span>
+  <div class="daily-row__icon">
+    <app-weather-icon [iconCode]="iconCode()" [size]="28" />
+  </div>
+  <span class="daily-row__high">{{ tempHigh() | temperature }}</span>
+  <span class="daily-row__separator"></span>
+  <span class="daily-row__low">{{ tempLow() | temperature }}</span>
+  <span class="daily-row__condition">{{ conditionLabel() }}</span>
+</div>

@@ -1,0 +1,27 @@
+@use 'styles/variables' as *;
+@use 'styles/typography' as *;
+
+:host {
+  display: block;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+.hourly-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  min-width: 72px;
+
+  &__time {
+    @include hourly-time;
+    color: $dark-muted;
+  }
+
+  &__temp {
+    @include hourly-temp;
+    color: $dark-text;
+  }
+}

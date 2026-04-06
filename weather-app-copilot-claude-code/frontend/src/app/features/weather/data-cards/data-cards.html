@@ -1,0 +1,23 @@
+<section class="data-cards">
+  <app-data-card
+    appScrollReveal
+    [appScrollRevealDelay]="0"
+    [icon]="windIcon"
+    label="Wind"
+    [value]="windSpeed()"
+  />
+  <app-data-card
+    appScrollReveal
+    [appScrollRevealDelay]="100"
+    [icon]="pressureIcon"
+    label="Pressure"
+    [value]="pressure()"
+  />
+  <app-data-card
+    appScrollReveal
+    [appScrollRevealDelay]="200"
+    [icon]="humidityIcon"
+    label="Humidity"
+    [value]="humidity()"
+  />
+</section>

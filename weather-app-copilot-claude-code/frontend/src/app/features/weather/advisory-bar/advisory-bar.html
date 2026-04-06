@@ -1,0 +1,8 @@
+<footer class="advisory-bar">
+  <span class="advisory-bar__text">{{ subtitleText() }}</span>
+  @if (updatedAt(); as updated) {
+    <span class="advisory-bar__updated">
+      Last updated {{ updated | date:'shortTime' }}
+    </span>
+  }
+</footer>

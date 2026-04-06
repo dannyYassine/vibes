@@ -1,0 +1,58 @@
+@use 'styles/variables' as *;
+@use 'styles/typography' as *;
+
+:host {
+  display: block;
+}
+
+.daily-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1px solid $dark-card-border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__date {
+    @include daily-date;
+    color: $dark-text;
+    min-width: 110px;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  &__high {
+    @include daily-high;
+    color: $dark-text;
+    min-width: 48px;
+    text-align: right;
+  }
+
+  &__separator {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, $dark-text, $dark-muted);
+    opacity: 0.3;
+    flex-shrink: 0;
+  }
+
+  &__low {
+    @include daily-low;
+    min-width: 48px;
+  }
+
+  &__condition {
+    @include daily-date;
+    color: $dark-muted;
+    margin-left: auto;
+    text-align: right;
+  }
+}

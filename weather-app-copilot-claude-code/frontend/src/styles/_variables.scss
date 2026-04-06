@@ -1,0 +1,35 @@
+// === Weather-dependent gradient palettes ===
+$gradient-clear-sunny: linear-gradient(135deg, #F9D976, #F39F86, #E8837C);
+$gradient-cloudy: linear-gradient(135deg, #D4D3DD, #B8C6DB, #A0AAB8);
+$gradient-rain: linear-gradient(135deg, #B0C4DE, #8AACC8, #6B8DB2, #C8B6D4);
+$gradient-drizzle: linear-gradient(135deg, #C5CAE9, #B0C4DE, #A0AAB8);
+$gradient-snow: linear-gradient(135deg, #E8EAF6, #C5CAE9, #9FA8DA, #B39DDB);
+$gradient-thunderstorm: linear-gradient(135deg, #4A4458, #37474F, #263238);
+$gradient-fog: linear-gradient(135deg, #CFD8DC, #B0BEC5, #90A4AE);
+$gradient-night-clear: linear-gradient(135deg, #1A1A2E, #16213E, #0F3460);
+$gradient-night-cloudy: linear-gradient(135deg, #2C2C54, #474787, #3B3B6D);
+
+// === Dark data zone ===
+$dark-bg: #1C1C2E;
+$dark-text: #EAEAEA;
+$dark-muted: #8E8E93;
+$dark-card-bg: rgba(255, 255, 255, 0.10);
+$dark-card-border: rgba(255, 255, 255, 0.15);
+
+// === Frosted glass ===
+$frost-bg: rgba(255, 255, 255, 0.15);
+$frost-border: rgba(255, 255, 255, 0.2);
+$frost-blur: 20px;
+$frost-radius: 16px;
+
+// === Spacing ===
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-2xl: 48px;
+$spacing-3xl: 64px;
+
+// === Font family ===
+$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

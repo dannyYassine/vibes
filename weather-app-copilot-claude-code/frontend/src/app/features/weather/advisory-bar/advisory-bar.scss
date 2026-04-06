@@ -1,0 +1,26 @@
+@use 'styles/variables' as *;
+@use 'styles/typography' as *;
+
+:host {
+  display: block;
+}
+
+.advisory-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md $spacing-lg;
+  background: color-mix(in srgb, $dark-bg 94%, black);
+  border-top: 1px solid $dark-card-border;
+
+  &__text {
+    @include advisory-text;
+    color: $dark-muted;
+  }
+
+  &__updated {
+    @include advisory-text;
+    color: $dark-muted;
+    opacity: 0.7;
+  }
+}

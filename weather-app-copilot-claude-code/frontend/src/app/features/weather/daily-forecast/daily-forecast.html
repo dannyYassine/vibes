@@ -1,0 +1,16 @@
+<section class="daily-forecast">
+  <h2 class="daily-forecast__title">10 days forecast</h2>
+  <div class="daily-forecast__list">
+    @for (day of dailyForecast(); track day.date) {
+      <app-daily-row
+        appScrollReveal
+        [appScrollRevealDelay]="$index * 50"
+        [date]="day.date"
+        [iconCode]="day.icon_code"
+        [tempHigh]="day.temp_high"
+        [tempLow]="day.temp_low"
+        [conditionLabel]="day.condition_label"
+      />
+    }
+  </div>
+</section>

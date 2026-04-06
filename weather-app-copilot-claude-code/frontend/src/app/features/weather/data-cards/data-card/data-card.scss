@@ -1,0 +1,44 @@
+@use 'styles/variables' as *;
+@use 'styles/typography' as *;
+
+:host {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.data-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-lg;
+  background: $frost-bg;
+  backdrop-filter: blur($frost-blur);
+  -webkit-backdrop-filter: blur($frost-blur);
+  border: 1px solid $frost-border;
+  border-radius: $frost-radius;
+
+  &__icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $dark-text;
+
+    ::ng-deep svg {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  &__label {
+    @include card-label;
+  }
+
+  &__value {
+    @include card-value;
+    color: $dark-text;
+  }
+}

@@ -1,0 +1,12 @@
+<section class="hourly-forecast">
+  <div class="hourly-forecast__scroll">
+    @for (hour of hourlyForecast(); track hour.time; let i = $index) {
+      <app-hourly-item
+        [time]="hour.time"
+        [iconCode]="hour.icon_code"
+        [temperature]="hour.temperature"
+        [isNow]="i === 0"
+      />
+    }
+  </div>
+</section>

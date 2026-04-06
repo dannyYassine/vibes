@@ -1,0 +1,32 @@
+@use 'styles/variables' as *;
+
+:host {
+  display: block;
+}
+
+.hourly-forecast {
+  background: $dark-bg;
+  padding: $spacing-md 0;
+
+  &__scroll {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 $spacing-md;
+    gap: $spacing-xs;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+    }
+  }
+}

@@ -1,0 +1,12 @@
+@use 'styles/variables' as *;
+
+:host {
+  display: block;
+}
+
+.data-cards {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  background: $dark-bg;
+}

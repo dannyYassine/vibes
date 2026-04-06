@@ -1,0 +1,89 @@
+@use 'variables' as *;
+
+// === Font face (using system fonts, Inter via CDN fallback) ===
+
+// === Type scale ===
+@mixin hero-headline {
+  font-family: $font-family;
+  font-weight: 900;
+  font-size: clamp(48px, 10vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+@mixin hero-keyword-outline {
+  -webkit-text-stroke: 2px currentColor;
+  -webkit-text-fill-color: transparent;
+}
+
+@mixin hero-subtitle {
+  font-family: $font-family;
+  font-weight: 400;
+  font-size: 16px;
+  opacity: 0.6;
+}
+
+@mixin temperature-display {
+  font-family: $font-family;
+  font-weight: 200;
+  font-size: clamp(72px, 15vw, 120px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+@mixin feels-like {
+  font-family: $font-family;
+  font-weight: 400;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+@mixin card-value {
+  font-family: $font-family;
+  font-weight: 600;
+  font-size: 24px;
+}
+
+@mixin card-label {
+  font-family: $font-family;
+  font-weight: 400;
+  font-size: 13px;
+  color: $dark-muted;
+}
+
+@mixin hourly-time {
+  font-family: $font-family;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+@mixin hourly-temp {
+  font-family: $font-family;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+@mixin daily-date {
+  font-family: $font-family;
+  font-weight: 400;
+  font-size: 15px;
+}
+
+@mixin daily-high {
+  font-family: $font-family;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+@mixin daily-low {
+  font-family: $font-family;
+  font-weight: 400;
+  font-size: 15px;
+  color: $dark-muted;
+}
+
+@mixin advisory-text {
+  font-family: $font-family;
+  font-weight: 500;
+  font-size: 13px;
+}

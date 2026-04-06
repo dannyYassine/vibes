@@ -1,0 +1,111 @@
+@switch (normalizedCode) {
+  <!-- Clear Day: sun with rays -->
+  @case ('clear-day') {
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="32" cy="32" r="10" />
+      <line x1="32" y1="8" x2="32" y2="14" />
+      <line x1="32" y1="50" x2="32" y2="56" />
+      <line x1="8" y1="32" x2="14" y2="32" />
+      <line x1="50" y1="32" x2="56" y2="32" />
+      <line x1="15" y1="15" x2="19.2" y2="19.2" />
+      <line x1="44.8" y1="44.8" x2="49" y2="49" />
+      <line x1="49" y1="15" x2="44.8" y2="19.2" />
+      <line x1="19.2" y1="44.8" x2="15" y2="49" />
+    </svg>
+  }
+
+  <!-- Clear Night: crescent moon -->
+  @case ('clear-night') {
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M38 12a18 18 0 1 0 14 40 20 20 0 0 1-14-40z" />
+    </svg>
+  }
+
+  <!-- Few Clouds: sun peeking behind cloud -->
+  @case ('few-clouds') {
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="22" cy="22" r="8" />
+      <line x1="22" y1="6" x2="22" y2="10" />
+      <line x1="6" y1="22" x2="10" y2="22" />
+      <line x1="10.7" y1="10.7" x2="13.5" y2="13.5" />
+      <line x1="33.3" y1="10.7" x2="30.5" y2="13.5" />
+      <line x1="10.7" y1="33.3" x2="13.5" y2="30.5" />
+      <path d="M20 44h28a10 10 0 0 0 0-20 8 8 0 0 0-8-8 12 12 0 0 0-22 8 8 8 0 0 0 2 16z" />
+    </svg>
+  }
+
+  <!-- Scattered Clouds: single cloud -->
+  @case ('scattered-clouds') {
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 44h32a10 10 0 0 0 0-20 8 8 0 0 0-8-8 14 14 0 0 0-26 8 8 8 0 0 0 2 20z" />
+    </svg>
+  }
+
+  <!-- Broken Clouds: two overlapping clouds -->
+  @case ('broken-clouds') {
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 36h24a8 8 0 0 0 0-16 6 6 0 0 0-6-6 10 10 0 0 0-19 6 7 7 0 0 0 1 16z" />
+      <path d="M26 50h26a9 9 0 0 0 0-18 7 7 0 0 0-7-7 11 11 0 0 0-21 7 7 7 0 0 0 2 18z" />
+    </svg>
+  }
+
+  <!-- Rain: cloud with rain drops -->
+  @case ('rain') {
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 34h32a10 10 0 0 0 0-20 8 8 0 0 0-8-8 14 14 0 0 0-26 8 8 8 0 0 0 2 20z" />
+      <line x1="22" y1="40" x2="18" y2="50" />
+      <line x1="32" y1="40" x2="28" y2="50" />
+      <line x1="42" y1="40" x2="38" y2="50" />
+      <line x1="27" y1="50" x2="23" y2="58" />
+      <line x1="37" y1="50" x2="33" y2="58" />
+    </svg>
+  }
+
+  <!-- Thunderstorm: cloud with lightning bolt -->
+  @case ('thunderstorm') {
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 30h32a10 10 0 0 0 0-20 8 8 0 0 0-8-8 14 14 0 0 0-26 8 8 8 0 0 0 2 20z" />
+      <polyline points="30,34 26,44 34,44 28,58" />
+      <line x1="40" y1="36" x2="36" y2="46" />
+      <line x1="20" y1="36" x2="16" y2="46" />
+    </svg>
+  }
+
+  <!-- Snow: cloud with snowflakes -->
+  @case ('snow') {
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 34h32a10 10 0 0 0 0-20 8 8 0 0 0-8-8 14 14 0 0 0-26 8 8 8 0 0 0 2 20z" />
+      <circle cx="22" cy="42" r="1.5" />
+      <circle cx="32" cy="42" r="1.5" />
+      <circle cx="42" cy="42" r="1.5" />
+      <circle cx="27" cy="50" r="1.5" />
+      <circle cx="37" cy="50" r="1.5" />
+      <circle cx="32" cy="56" r="1.5" />
+    </svg>
+  }
+
+  <!-- Mist: horizontal wavy lines -->
+  @case ('mist') {
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20h40" />
+      <path d="M8 28c4-3 8 3 12 0s8 3 12 0 8 3 12 0 8 3 12 0" />
+      <path d="M12 36c4-3 8 3 12 0s8 3 12 0 8 3 12 0" />
+      <path d="M8 44c4-3 8 3 12 0s8 3 12 0 8 3 12 0 8 3 12 0" />
+    </svg>
+  }
+
+  <!-- Fallback: simple sun -->
+  @default {
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="32" cy="32" r="10" />
+      <line x1="32" y1="8" x2="32" y2="14" />
+      <line x1="32" y1="50" x2="32" y2="56" />
+      <line x1="8" y1="32" x2="14" y2="32" />
+      <line x1="50" y1="32" x2="56" y2="32" />
+      <line x1="15" y1="15" x2="19.2" y2="19.2" />
+      <line x1="44.8" y1="44.8" x2="49" y2="49" />
+      <line x1="49" y1="15" x2="44.8" y2="19.2" />
+      <line x1="19.2" y1="44.8" x2="15" y2="49" />
+    </svg>
+  }
+}
