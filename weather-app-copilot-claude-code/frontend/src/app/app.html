@@ -1,1 +1,5 @@
-<app-weather-view />
+@if (windowType() === 'popup') {
+  <app-popup />
+} @else if (windowType() === 'main') {
+  <app-weather-view />
+}

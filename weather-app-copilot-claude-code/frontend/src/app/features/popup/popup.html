@@ -1,0 +1,39 @@
+<div
+  class="popup"
+  [style.background]="store.gradientCss()"
+  [style.color]="store.textColor()"
+>
+  @if (store.loading()) {
+    <div class="popup__loading">Loading…</div>
+  } @else if (store.currentWeather(); as w) {
+    <div class="popup__hero">
+      <div class="popup__top">
+        <app-weather-icon [iconCode]="w.icon_code" [size]="28" />
+        <span class="popup__condition">{{ w.condition_description }}</span>
+        <button class="popup__expand" (click)="openMain()" title="Open full app">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+        </button>
+      </div>
+      <div class="popup__temp">{{ w.temperature | temperature }}</div>
+      <div class="popup__footer">
+        <span class="popup__location">{{ w.location_name }}</span>
+        <span class="popup__feels">Feels {{ w.feels_like | temperature }}</span>
+      </div>
+    </div>
+
+    <div class="popup__hourly">
+      @for (hour of store.hourlyForecast(); track hour.time; let i = $index) {
+        <div class="popup__hour">
+          <span class="popup__hour-time">{{ i === 0 ? 'NOW' : (hour.time | date:'h a') }}</span>
+          <app-weather-icon [iconCode]="hour.icon_code" [size]="20" />
+          <span class="popup__hour-temp">{{ hour.temperature | temperature }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>
