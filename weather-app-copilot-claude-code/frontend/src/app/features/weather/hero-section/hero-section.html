@@ -3,12 +3,11 @@
   [style.background]="gradientCss()"
   [style.color]="textColor()"
 >
-  <div class="hero__top-left">
-    <app-weather-icon [iconCode]="iconCode()" [size]="64" />
-  </div>
-
   <div class="hero__bottom">
     <div class="hero__content">
+      <div class="hero__icon">
+        <app-weather-icon [iconCode]="iconCode()" [size]="64" />
+      </div>
       <div class="hero__headline">
         @for (line of headlineLines(); track $index) {
           <span
@@ -18,21 +17,18 @@
         }
       </div>
       <p class="hero__subtitle">{{ subtitleText() }}</p>
+      <span class="hero__location">
+        {{ locationName() }}
+        <svg class="hero__arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L12 22" />
+          <path d="M5 12L12 5L19 12" />
+        </svg>
+      </span>
     </div>
 
     <div class="hero__temperature">
       <span class="hero__temp-value">{{ temperature() | temperature }}</span>
       <span class="hero__feels-like">Feels like {{ feelsLike() | temperature }}</span>
     </div>
-  </div>
-
-  <div class="hero__bottom-right">
-    <span class="hero__location">
-      {{ locationName() }}
-      <svg class="hero__arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2L12 22" />
-        <path d="M5 12L12 5L19 12" />
-      </svg>
-    </span>
   </div>
 </section>

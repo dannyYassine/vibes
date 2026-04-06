@@ -33,24 +33,23 @@
     z-index: 1;
   }
 
-  &__top-left {
-    position: absolute;
-    top: $spacing-xl;
-    left: $spacing-lg;
-    z-index: 1;
-    animation: fadeIn 0.6s ease both;
-  }
-
   &__bottom {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
     gap: $spacing-lg;
+    margin-bottom: $spacing-xl;
   }
 
   &__content {
     flex: 1;
     min-width: 0;
+  }
+
+  &__icon {
+    margin-bottom: $spacing-lg;
+    opacity: 0;
+    animation: fadeIn 0.6s ease both;
   }
 
   &__headline {
@@ -73,6 +72,7 @@
 
   &__subtitle {
     @include hero-subtitle;
+    margin-top: $spacing-sm;
     opacity: 0;
     animation: fadeIn 0.8s ease 0.9s both;
   }
@@ -95,15 +95,6 @@
     margin-top: $spacing-xs;
   }
 
-  &__bottom-right {
-    position: absolute;
-    bottom: $spacing-lg;
-    right: $spacing-lg;
-    z-index: 1;
-    opacity: 0;
-    animation: fadeIn 0.8s ease 1s both;
-  }
-
   &__location {
     display: inline-flex;
     align-items: center;
@@ -111,7 +102,9 @@
     font-family: $font-family;
     font-weight: 500;
     font-size: 14px;
-    opacity: 0.8;
+    margin-top: $spacing-xs;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 1s both;
   }
 
   &__arrow-icon {
@@ -124,8 +117,8 @@
   .hero__headline-line,
   .hero__subtitle,
   .hero__temperature,
-  .hero__bottom-right,
-  .hero__top-left {
+  .hero__location,
+  .hero__icon {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
