@@ -36,5 +36,5 @@ All planning documents have been completed. Ready to begin Phase 1: Foundation.
 - [ ] Set up Docker Compose for local PostgreSQL
 - [ ] Configure Supabase project
 - [ ] Scaffold Axum server with health check
-- [ ] Scaffold Dioxus mobile app
-- [ ] Validate Dioxus mobile viability (proof of concept)
+- [ ] Scaffold React Native app with Expo
+- [ ] Validate end-to-end: React Native app calls Rust API

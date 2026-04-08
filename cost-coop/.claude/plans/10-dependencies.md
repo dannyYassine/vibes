@@ -32,37 +32,28 @@
 | `chrono` | 0.4.x | Shared timestamp types |
 | `validator` | latest | Shared validation rules |
 
-## Core Crate (`core` — Rust mobile library)
+## React Native / Mobile (`mobile/`)
 
-| Crate | Version | Purpose |
-|-------|---------|---------|
-| `uniffi` | 0.28.x | FFI binding generation (Swift + Kotlin) |
-| `reqwest` | 0.12.x | HTTP client for API calls |
-| `serde` | 1.x | JSON serialization |
-| `serde_json` | 1.x | JSON support |
-| `uuid` | 1.x | ID handling |
-| `chrono` | 0.4.x | Date formatting |
-| `tokio` | 1.x | Async runtime |
-
-## iOS Dependencies (Swift Package Manager / CocoaPods)
-
-| Package | Purpose |
-|---------|---------|
-| GoogleSignIn | Google OAuth |
-| Stripe iOS SDK | Payment UI components |
-| Firebase Messaging | Push notifications (FCM) |
-
-## Android Dependencies (Gradle)
-
-| Package | Purpose |
-|---------|---------|
-| `androidx.compose.*` | Jetpack Compose UI |
-| `androidx.navigation:navigation-compose` | Navigation |
-| `androidx.lifecycle:lifecycle-viewmodel-compose` | ViewModels |
-| `com.google.android.gms:play-services-auth` | Google Sign-In |
-| `com.stripe:stripe-android` | Payment UI |
-| `com.google.firebase:firebase-messaging` | Push notifications |
-| `net.java.dev.jna:jna` | JNA for UniFFI bindings |
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `react-native` | 0.76.x | Mobile framework |
+| `expo` | ~52 | Build tooling, OTA updates, native module access |
+| `typescript` | 5.x | Type safety |
+| `@react-navigation/native` | latest | Navigation framework |
+| `@react-navigation/bottom-tabs` | latest | Bottom tab navigator |
+| `@react-navigation/native-stack` | latest | Stack navigator |
+| `zustand` | latest | State management |
+| `axios` | latest | HTTP client |
+| `expo-secure-store` | latest | Secure token storage (Keychain / EncryptedSharedPrefs) |
+| `expo-notifications` | latest | Push notifications (FCM + APNs) |
+| `expo-auth-session` | latest | Google/Apple OAuth flows |
+| `expo-image` | latest | Optimized image loading and caching |
+| `@stripe/stripe-react-native` | latest | Payment UI (card input, Apple/Google Pay) |
+| `react-native-reanimated` | latest | Performant animations |
+| `react-native-screens` | latest | Native screen containers |
+| `react-native-safe-area-context` | latest | Safe area insets |
+| `@shopify/flash-list` | latest | High-performance list rendering |
+| `date-fns` | latest | Date formatting |
 
 ## Development & Testing
 
@@ -74,8 +65,9 @@
 | `fake` | latest | Generate fake test data |
 | `wiremock` | latest | Mock external services (Stripe) in tests |
 | `cargo-llvm-cov` | latest | Code coverage reporting |
-| `cargo-ndk` | latest | Android cross-compilation |
-| `uniffi-bindgen` | 0.28.x | Generate Swift/Kotlin bindings from Rust |
+| `jest` | latest | React Native unit/component tests |
+| `@testing-library/react-native` | latest | Component testing utilities |
+| `detox` | latest | E2E mobile testing |
 
 ## External Services
 
@@ -84,8 +76,7 @@
 | **Supabase** | Hosted PostgreSQL + Auth + Storage | Production |
 | **PostgreSQL 16** | Local database | Development (Docker) |
 | **Stripe Connect** | Payment processing + runner payouts | All |
-| **Firebase Cloud Messaging** | Android push notifications | All |
-| **Apple Push Notification Service** | iOS push notifications | All |
+| **Expo Push Notifications** | Push notifications (wraps FCM + APNs) | All |
 | **Sevalla** | Rust API hosting | Production |
 
 ## Infrastructure / Tooling
@@ -105,7 +96,7 @@ Use workspace-level dependency declarations to keep versions consistent:
 ```toml
 # Root Cargo.toml
 [workspace]
-members = ["crates/api", "crates/db", "crates/shared", "crates/core"]
+members = ["crates/api", "crates/db", "crates/shared"]
 
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }

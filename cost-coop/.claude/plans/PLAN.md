@@ -8,7 +8,7 @@ A peer-to-peer mobile app where users order Costco food court items and other Co
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Mobile framework | Rust core (UniFFI) + SwiftUI (iOS) + Jetpack Compose (Android) | Shared Rust business logic, native UI for best platform experience |
+| Mobile framework | React Native + TypeScript + Expo | Single codebase for iOS & Android, fast iteration, huge ecosystem |
 | Backend framework | Axum (Rust) | Tokio-native, composable middleware |
 | Database | PostgreSQL via Supabase | Managed hosting, built-in auth/storage |
 | API style | REST (JSON) | Simple, well-tooled, sufficient for MVP |
@@ -65,7 +65,7 @@ A peer-to-peer mobile app where users order Costco food court items and other Co
 | [02-project-structure.md](02-project-structure.md) | Cargo workspace and directory layout |
 | [03-data-models.md](03-data-models.md) | Database schema, tables, indexes |
 | [04-api-boundary.md](04-api-boundary.md) | REST API endpoints and contracts |
-| [05-mobile-modules.md](05-mobile-modules.md) | Dioxus screens, components, services |
+| [05-mobile-modules.md](05-mobile-modules.md) | React Native screens, components, services, state |
 | [06-rust-modules.md](06-rust-modules.md) | Backend crate module breakdown |
 | [07-technical-challenges.md](07-technical-challenges.md) | Known risks and mitigation strategies |
 | [08-implementation-phases.md](08-implementation-phases.md) | 8-phase implementation plan |

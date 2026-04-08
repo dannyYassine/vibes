@@ -12,7 +12,7 @@ Target: 3-6 months for MVP, then iterative feature additions.
 Set up the project infrastructure, tooling, and basic backend.
 
 ### Tasks
-- [ ] Initialize Cargo workspace with `api`, `db`, `shared`, `mobile` crates
+- [ ] Initialize Cargo workspace with `api`, `db`, `shared` crates
 - [ ] Set up Docker Compose for local PostgreSQL
 - [ ] Configure Supabase project (DB, Auth, Storage)
 - [ ] Implement database migrations (users, stores, menu_items, orders, order_items)
@@ -20,14 +20,15 @@ Set up the project infrastructure, tooling, and basic backend.
 - [ ] Implement config loading from environment variables
 - [ ] Set up error handling and logging (tracing)
 - [ ] Set up CI pipeline (cargo check, clippy, tests)
-- [ ] Scaffold `core` crate with UniFFI setup and basic exported function
-- [ ] Set up Xcode project (`ios/`) with SwiftUI, link Rust core via XCFramework
-- [ ] Set up Android project (`android/`) with Jetpack Compose, link Rust core via JNI/UniFFI
-- [ ] Create `Makefile` with `build-ios`, `build-android`, `generate-bindings` targets
-- [ ] **Validate UniFFI pipeline** — call a Rust function from Swift and Kotlin, verify round-trip
+- [ ] Scaffold React Native app with Expo (`mobile/`) using TypeScript template
+- [ ] Set up React Navigation with bottom tabs and stack navigators
+- [ ] Set up Axios API client with base URL and auth interceptors
+- [ ] Set up Zustand for state management with initial auth store
+- [ ] Configure EAS Build for iOS and Android
+- [ ] **Validate end-to-end** — React Native app calls Rust API health endpoint and displays result
 
 ### Deliverable
-Running API server + iOS and Android apps calling into Rust core.
+Running API server + React Native (Expo) app calling the backend API.
 
 ---
 
@@ -42,12 +43,12 @@ Users can register, log in, and manage their profiles.
 - [ ] Integrate Apple Sign-In flow
 - [ ] Build JWT validation middleware for Axum
 - [ ] Implement user profile CRUD endpoints
-- [ ] Implement auth module in Rust core (login, register, OAuth token exchange)
-- [ ] Build LoginView (SwiftUI) + LoginScreen (Compose) calling Rust core
-- [ ] Build RegisterView (SwiftUI) + RegisterScreen (Compose)
-- [ ] Integrate Apple Sign-In (iOS) and Google Sign-In (both platforms)
-- [ ] Implement secure token storage (Keychain on iOS, EncryptedSharedPreferences on Android)
-- [ ] Build ProfileView (SwiftUI) + ProfileScreen (Compose)
+- [ ] Implement auth service in React Native (authService.ts + authStore)
+- [ ] Build LoginScreen.tsx (email/password + Google/Apple social buttons)
+- [ ] Build RegisterScreen.tsx
+- [ ] Integrate expo-auth-session for Google OAuth and Apple Sign-In
+- [ ] Implement secure token storage with expo-secure-store
+- [ ] Build ProfileScreen.tsx
 
 ### Deliverable
 Users can sign up, log in, and see their profile on mobile.
@@ -64,12 +65,12 @@ Users can browse Costco locations and their food court menus.
 - [ ] Seed database with standard food court menu items + prices
 - [ ] Implement store listing and detail endpoints
 - [ ] Implement menu listing endpoints (by store, by category)
-- [ ] Implement store/menu modules in Rust core
-- [ ] Implement cart module in Rust core (local state, no network)
-- [ ] Build HomeView / HomeScreen with store selector (both platforms)
-- [ ] Build MenuView / MenuScreen with category tabs and item cards
-- [ ] Build ItemDetailView / ItemDetailScreen with quantity picker
-- [ ] Build CartView / CartScreen with item list and totals
+- [ ] Implement storeService.ts and storeStore (Zustand)
+- [ ] Implement cartStore (Zustand, local state, no network)
+- [ ] Build HomeScreen.tsx with store selector
+- [ ] Build MenuScreen.tsx with category tabs and item cards
+- [ ] Build ItemDetailScreen.tsx with quantity picker
+- [ ] Build CartScreen.tsx with item list and totals
 
 ### Deliverable
 Users can select a Costco, browse the food court menu, and build a cart.
@@ -87,14 +88,14 @@ Complete order lifecycle: place order → runner accepts → purchased → deliv
 - [ ] Implement order acceptance (atomic, race-condition safe)
 - [ ] Implement order status transitions (purchased, in_transit, delivered)
 - [ ] Implement order cancellation (with reason)
-- [ ] Implement order and runner modules in Rust core
-- [ ] Build CheckoutView / CheckoutScreen (delivery address + confirmation)
-- [ ] Build OrderStatusView / OrderStatusScreen with polling + status timeline
-- [ ] Build RunnerDashboardView / RunnerDashboardScreen (available orders feed)
-- [ ] Build RunnerOrderDetailView / RunnerOrderDetailScreen (accept + status actions)
-- [ ] Implement runner profile creation and availability toggle in core
-- [ ] Build role switcher in profile (requester ↔ runner) on both platforms
-- [ ] Implement push notifications (APNs on iOS, FCM on Android)
+- [ ] Implement orderService.ts, runnerService.ts, and Zustand stores
+- [ ] Build CheckoutScreen.tsx (delivery address + confirmation)
+- [ ] Build OrderStatusScreen.tsx with polling + status timeline
+- [ ] Build RunnerDashboardScreen.tsx (available orders feed)
+- [ ] Build RunnerOrderDetailScreen.tsx (accept + status actions)
+- [ ] Implement runner profile creation and availability toggle
+- [ ] Build role switcher in ProfileScreen (requester ↔ runner)
+- [ ] Implement push notifications with expo-notifications
 
 ### Deliverable
 Full ordering flow works end-to-end. Two users can interact: one orders, one delivers.
@@ -113,8 +114,8 @@ Real money flows through the app.
 - [ ] Implement runner payout on delivery confirmation
 - [ ] Implement service fee calculation
 - [ ] Implement tip handling
-- [ ] Build payment method management views (both platforms)
-- [ ] Integrate Stripe iOS SDK and Stripe Android SDK for card input
+- [ ] Build payment method management screen in React Native
+- [ ] Integrate @stripe/stripe-react-native for card input
 - [ ] Integrate payment into checkout flow
 - [ ] Implement refund flow for cancellations
 - [ ] Handle Stripe webhooks for payment status updates

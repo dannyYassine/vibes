@@ -49,8 +49,7 @@ Clean, minimal aesthetic inspired by Apple and Stripe. Prioritize clarity, white
 | Caption | System | 12px | Medium (500) | Labels, badges, hints |
 | Price | System (monospace variant) | 18px | Bold (700) | Prices, totals |
 
-- **iOS**: SF Pro (system default via SwiftUI `.font()` modifiers)
-- **Android**: Roboto (system default via MaterialTheme typography)
+Use system fonts for platform-native feel (SF Pro on iOS, Roboto on Android). React Native's default font handling maps to system fonts automatically.
 
 ---
 
@@ -199,9 +198,9 @@ Base unit: 4px
 
 ## Animation & Transitions
 
-- Screen transitions: platform native (NavigationStack push on iOS, Compose navigation on Android)
-- Bottom sheet: native `.sheet()` on iOS, `ModalBottomSheet` on Android
-- Status changes: subtle scale + fade animation
+- Screen transitions: React Navigation defaults (platform-native push/pop)
+- Bottom sheet: `@gorhom/bottom-sheet` for cross-platform bottom sheets
+- Status changes: subtle scale + fade via `react-native-reanimated`
 - Loading: skeleton screens preferred over spinners for content areas
-- Keep custom animations under 300ms for responsiveness
-- Prefer platform-native animation APIs (SwiftUI `.animation()`, Compose `animate*`)
+- Keep animations under 300ms for responsiveness
+- Use `react-native-reanimated` for performant, native-driven animations

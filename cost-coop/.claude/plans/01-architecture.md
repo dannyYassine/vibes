@@ -3,19 +3,16 @@
 ## High-Level Architecture
 
 ```
-┌──────────────────────┐   ┌───────────────────────────┐
-│     iOS App          │   │      Android App           │
-│  SwiftUI + Swift     │   │  Jetpack Compose + Kotlin  │
-│         │            │   │           │                │
-│  ┌──────┴──────┐     │   │  ┌────────┴────────┐      │
-│  │ Rust Core   │     │   │  │   Rust Core     │      │
-│  │ (via UniFFI)│     │   │  │   (via UniFFI)  │      │
-│  └─────────────┘     │   │  └─────────────────┘      │
-└──────────┬───────────┘   └───────────┬───────────────┘
-           └──────────┬────────────────┘
-                      │
-                       │ HTTPS (REST JSON)
-                       ▼
+┌─────────────────────────────────────────┐
+│         React Native App (Expo)         │
+│        TypeScript + React Navigation    │
+│                                         │
+│  Screens │ Components │ Zustand Stores  │
+│           API Services (Axios)          │
+└──────────────────┬──────────────────────┘
+                   │
+                   │ HTTPS (REST JSON)
+                   ▼
 ┌─────────────────────────────────────────────────────┐
 │                  Rust API Server                     │
 │                (Axum + Tower middleware)              │
@@ -58,13 +55,14 @@
 - Supabase Storage for user avatars, receipt photos
 - Supabase Realtime can be used for future WebSocket features
 
-### Mobile: Rust Core + Native UI
-- **Rust core library** contains all business logic, networking, state management, and validation
-- **UniFFI** generates Swift and Kotlin bindings from the Rust core automatically
-- **SwiftUI** (iOS) and **Jetpack Compose** (Android) provide fully native UI layers
-- Native UI ensures best platform experience, App Store compliance, and access to all platform APIs
-- Shared Rust core eliminates business logic duplication across platforms
-- Backend and mobile core share the `shared` crate for DTOs and types
+### Mobile: React Native + Expo
+- **React Native** with **TypeScript** for a single cross-platform codebase
+- **Expo** managed workflow for streamlined builds, OTA updates, and native module access
+- **React Navigation** for tab-based and stack-based navigation
+- **Zustand** for lightweight, performant state management
+- **Axios** for HTTP communication with the Rust backend API
+- Single codebase deploys to both iOS and Android with native performance
+- No FFI boundary or native code required — all business logic lives in TypeScript
 
 ### API Design: REST
 - Simple, well-understood, great tooling

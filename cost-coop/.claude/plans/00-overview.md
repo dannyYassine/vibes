@@ -26,9 +26,10 @@ CostCoop is a peer-to-peer mobile platform that enables users to order Costco fo
 
 | Layer | Technology |
 |-------|-----------|
-| Mobile Core | Rust shared library via UniFFI (business logic, networking, state) |
-| iOS UI | Swift + SwiftUI |
-| Android UI | Kotlin + Jetpack Compose |
+| Mobile | React Native + TypeScript + Expo |
+| Navigation | React Navigation (tab + stack) |
+| State Management | Zustand |
+| HTTP Client | Axios |
 | Backend API | Rust + Axum (REST API) |
 | Database | PostgreSQL (local dev) / Supabase (production) |
 | Auth | Email/password + Google OAuth + Apple Sign-In (via Supabase Auth) |

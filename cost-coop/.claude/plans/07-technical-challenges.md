@@ -46,31 +46,32 @@ Connecting strangers for food pickup and delivery creates trust and safety conce
 
 ---
 
-## 3. UniFFI / FFI Boundary (Medium Risk)
+## 3. React Native Performance & Expo Limitations (Medium Risk)
 
 ### Challenge
-Bridging Rust to Swift and Kotlin via UniFFI adds build complexity and constraints on what types can cross the boundary. Async Rust functions need special handling.
+React Native introduces a JavaScript bridge between the UI and native layers. Complex list rendering, animations, and real-time updates may encounter performance bottlenecks. Expo's managed workflow limits access to some native modules.
 
 ### Approach
-- Use UniFFI proc macros (`#[uniffi::export]`) for clean interface definition
-- Keep the FFI surface area minimal — expose high-level operations, not internals
-- Use UniFFI's async support (available since 0.25+) for network calls
-- All complex types must be UniFFI-compatible (no generics, limited trait objects)
-- Test bindings generation as part of CI
+- Use `react-native-reanimated` for performant, native-driven animations
+- Use `FlashList` instead of `FlatList` for large order/menu lists
+- Keep component re-renders minimal with Zustand selectors and `React.memo`
+- Use Expo's Config Plugins for native module access when managed workflow is insufficient
+- Eject to bare workflow only as a last resort
 
 ### Specific Concerns
-- Async function support across FFI (Rust async → Swift async/Kotlin coroutines)
-- Error handling: Rust `Result<T, E>` must map cleanly to Swift throws / Kotlin exceptions
-- Build pipeline: cross-compilation to iOS (aarch64-apple-ios) and Android (multiple ABIs) targets
-- Binary size — Rust + reqwest + tokio adds to app size; strip symbols and use LTO
-- Debugging across the FFI boundary (stack traces may be opaque)
+- JavaScript bridge overhead for frequent state updates (e.g., order status polling)
+- Large menu lists with images may cause jank without proper optimization
+- Expo managed workflow may not support all required native modules (e.g., advanced Stripe features)
+- OTA update size limits with expo-updates
+- Hermes engine compatibility with all dependencies
 
 ### Mitigations
-- Keep core crate's public API simple and well-documented
-- Write integration tests that exercise the generated Swift/Kotlin bindings
-- Use `cargo-ndk` for Android cross-compilation and `cargo-lipo` / `cargo xcode` for iOS
-- Set up a `Makefile` with build targets: `build-ios`, `build-android`, `generate-bindings`
-- Consider `swift-bridge` as alternative if UniFFI's limitations become blocking
+- Profile early with React DevTools and Flipper to identify bottlenecks
+- Use `expo-image` for optimized image loading and caching
+- Implement pagination and virtualized lists for menu and order screens
+- Use Expo Config Plugins to add native capabilities without ejecting
+- Test on low-end Android devices to ensure acceptable performance
+- Keep bundle size small by auditing dependencies with `npx expo-doctor`
 
 ---
 
