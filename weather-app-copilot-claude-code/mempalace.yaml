@@ -1,0 +1,25 @@
+wing: weather_app_copilot_claude_code
+rooms:
+- name: frontend
+  description: Files from frontend/
+  keywords:
+  - frontend
+  - frontend
+- name: backend
+  description: Files from backend/
+  keywords:
+  - backend
+  - backend
+- name: src_tauri
+  description: Files from src-tauri/
+  keywords:
+  - src_tauri
+  - src-tauri
+- name: inspirations
+  description: Files from inspirations/
+  keywords:
+  - inspirations
+  - inspirations
+- name: general
+  description: Files that don't fit other rooms
+  keywords: []

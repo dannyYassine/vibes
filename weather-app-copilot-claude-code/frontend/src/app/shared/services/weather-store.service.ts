@@ -55,22 +55,21 @@ export class WeatherStore {
 
     let location: StoredLocation;
 
-    // Try stored location first
-    const stored = this.locationService.getLastLocation();
-    if (stored) {
-      location = stored;
-    } else {
-      // Try geolocation
-      try {
-        const pos = await this.locationService.getCurrentPosition();
-        location = {
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-          name: '',
-        };
-      } catch {
-        location = this.locationService.getDefaultLocation();
-      }
+    // Try IP-based geolocation via backend
+    try {
+      const geo = await new Promise<{ lat: number; lon: number; city: string; country: string }>(
+        (resolve, reject) =>
+          this.weatherService.geolocate().subscribe({ next: resolve, error: reject })
+      );
+      location = {
+        lat: geo.lat,
+        lon: geo.lon,
+        name: `${geo.city}, ${geo.country}`,
+      };
+    } catch {
+      // Fallback to stored location, then default
+      const stored = this.locationService.getLastLocation();
+      location = stored ?? this.locationService.getDefaultLocation();
     }
 
     await this.fetchWeather(location.lat, location.lon);

@@ -41,6 +41,7 @@ async fn main() {
         .route("/api/weather", get(routes::weather::get_weather))
         .route("/api/forecast", get(routes::forecast::get_forecast))
         .route("/api/geocode", get(routes::geocode::get_geocode))
+        .route("/api/geolocate", get(routes::geolocate::get_geolocate))
         .layer(cors)
         .with_state(state);
 

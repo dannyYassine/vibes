@@ -43,6 +43,16 @@ A modern, cross-platform desktop weather application built with [Tauri](https://
 - **Logging**: tauri-plugin-log
 - **Tray**: Native macOS menu bar integration (`tray-icon` feature)
 
+### Backend API
+- **Framework**: Axum 0.8
+- **Runtime**: Tokio 1.x with full features
+- **Language**: Rust
+- **HTTP Client**: Reqwest 0.12 with JSON support
+- **Data Handling**: Serde 1.0 for JSON serialization
+- **Middleware**: Tower-HTTP 0.6 with CORS support
+- **Logging**: Tracing & Tracing-Subscriber
+- **Port**: 3001
+
 ### Desktop
 - **Platform**: Tauri (macOS, Windows, Linux compatible)
 
@@ -90,7 +100,24 @@ weather-app-copilot-claude-code/
 │   ├── package.json
 │   └── tsconfig.json
 │
-├── src-tauri/                     # Tauri/Rust backend
+├── backend/                       # REST API server (Rust + Axum)
+│   ├── src/
+│   │   ├── main.rs               # Application entry point
+│   │   ├── models/               # Data structures
+│   │   │   ├── weather.rs        # Weather models
+│   │   │   └── forecast.rs       # Forecast models
+│   │   ├── routes/               # API endpoints
+│   │   │   ├── weather.rs        # /api/weather endpoint
+│   │   │   ├── forecast.rs       # /api/forecast endpoint
+│   │   │   └── geocode.rs        # /api/geocode endpoint
+│   │   └── services/             # Business logic
+│   │       ├── weather_api.rs    # OpenWeather API client
+│   │       ├── cache.rs          # Response caching
+│   │       └── personality.rs    # Weather descriptions
+│   ├── Cargo.toml                # Rust dependencies
+│   └── .env                      # Environment variables
+│
+├── src-tauri/                     # Tauri desktop shell
 │   ├── src/
 │   │   ├── main.rs               # Application entry point
 │   │   └── lib.rs                # Core library logic
@@ -105,8 +132,10 @@ weather-app-copilot-claude-code/
 ### Prerequisites
 
 - **Node.js** 18+ and npm 11.8.0+
-- **Rust** 1.77.2+ ([Install Rust](https://rustup.rs/))
+- **Rust** 1.70+ ([Install Rust](https://rustup.rs/)) - Required for backend and Tauri
+- **Cargo** - Rust package manager (included with Rust)
 - **Tauri CLI** (installed via npm)
+- **OpenWeather API Key** - Get from [OpenWeather](https://openweathermap.org/api) (free tier available)
 
 ### Installation
 
@@ -116,36 +145,60 @@ weather-app-copilot-claude-code/
    cd weather-app-copilot-claude-code
    ```
 
-2. **Install frontend dependencies**
+2. **Setup backend environment**
+   ```bash
+   cd backend
+   cp .env.example .env
+   # Edit .env and add your OpenWeather API key
+   cd ..
+   ```
+
+3. **Install frontend dependencies**
    ```bash
    cd frontend
    npm install
    cd ..
    ```
 
-3. **Install Tauri dependencies**
+4. **Install Tauri dependencies**
    ```bash
    npm install -g @tauri-apps/cli
    ```
 
 ### Development
 
-**Run the development server:**
-```bash
-npm run tauri dev
-```
+**Run the complete application (recommended):**
 
-This will:
-- Start the Angular development server on `http://localhost:4200`
-- Build and run the Tauri application with hot reload
+1. **Start the backend server** (in one terminal):
+   ```bash
+   cd backend
+   cargo run
+   ```
+   Server runs on `http://127.0.0.1:3001`
+
+2. **Start the desktop app** (in another terminal):
+   ```bash
+   npm run tauri dev
+   ```
+   This starts the Angular dev server on `http://localhost:4200` and runs Tauri with hot reload.
 
 **Frontend only (web development):**
 ```bash
 cd frontend
 npm run start
 ```
-
 Navigate to `http://localhost:4200/`. The application will automatically reload if you change any source files.
+
+**Backend only:**
+```bash
+cd backend
+cargo run
+```
+Test endpoints with curl:
+```bash
+curl http://127.0.0.1:3001/api/health
+curl "http://127.0.0.1:3001/api/weather?latitude=40.7128&longitude=-74.0060"
+```
 
 ### Build for Production
 
@@ -167,6 +220,13 @@ npm run build
 
 ## Available Scripts
 
+### Backend
+- `cargo run` - Start development server (port 3001)
+- `cargo build --release` - Create production binary
+- `cargo test` - Run tests
+- `cargo fmt` - Format code
+- `cargo clippy` - Lint code
+
 ### Frontend
 - `npm run start` - Start Angular dev server
 - `npm run build` - Build for production
@@ -174,8 +234,8 @@ npm run build
 - `npm run test` - Run tests
 
 ### Development
-- `npm run tauri dev` - Run app in development with hot reload
-- `npm run tauri build` - Create production binary
+- `npm run tauri dev` - Run desktop app in development with hot reload
+- `npm run tauri build` - Create production desktop binary
 
 ## Configuration
 
@@ -188,10 +248,26 @@ Edit `src-tauri/tauri.conf.json` to customize:
 
 The **popup window** (320×300) is created programmatically in `src-tauri/src/lib.rs` and cannot be configured via `tauri.conf.json`.
 
-### API Integration
-Weather data is provided through services in `frontend/src/app/shared/services/`:
-- `weather.service.ts` - Handles weather API requests
-- `location.service.ts` - Manages location/search functionality
+### Backend Server
+The backend is a high-performance REST API built with Rust, Axum, and Tokio that handles:
+- **Weather Data**: Fetches current weather conditions via OpenWeather API
+- **Forecasts**: Provides hourly and daily weather predictions
+- **Geocoding**: Converts location names to coordinates for weather lookup
+- **Caching**: Intelligent response caching to minimize external API calls
+- **Personality**: Context-aware weather descriptions based on conditions
+
+**Endpoints** (runs on port 3001):
+- `GET /api/health` - Server health check
+- `GET /api/weather?latitude=0.0&longitude=0.0` - Current weather
+- `GET /api/forecast?latitude=0.0&longitude=0.0` - Forecast data
+- `GET /api/geocode?query=London` - Location search
+
+See **[Backend Documentation](./backend/README.md)** for detailed API specs and architecture.
+
+### Frontend API Integration
+Weather data flows through services in `frontend/src/app/shared/services/`:
+- `weather.service.ts` - Calls backend weather endpoints
+- `location.service.ts` - Manages location/geocoding via backend
 - `weather-store.service.ts` - Central state management; calls `TrayService.updateTray()` after every successful fetch
 - `tray.service.ts` - Invokes the `update_tray_title` Tauri command to update the menu bar label
 

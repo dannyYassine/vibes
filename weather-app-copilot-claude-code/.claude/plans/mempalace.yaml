@@ -1,0 +1,10 @@
+wing: plans
+rooms:
+- name: implementations
+  description: Files from implementations/
+  keywords:
+  - implementations
+  - implementations
+- name: general
+  description: Files that don't fit other rooms
+  keywords: []

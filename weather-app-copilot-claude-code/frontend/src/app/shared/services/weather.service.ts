@@ -29,4 +29,10 @@ export class WeatherService {
       { params: { q: query } }
     );
   }
+
+  geolocate(): Observable<{ lat: number; lon: number; city: string; country: string }> {
+    return this.http.get<{ lat: number; lon: number; city: string; country: string }>(
+      `${this.baseUrl}/geolocate`
+    );
+  }
 }

@@ -1,0 +1,11 @@
+[project]
+name = "weather-app-copilot"
+version = "0.1.0"
+description = "Weather app with AI copilot assistant"
+requires-python = ">=3.10"
+dependencies = [
+    "mempalace @ git+https://github.com/milla-jovovich/mempalace.git",
+]
+
+[tool.uv]
+managed = true

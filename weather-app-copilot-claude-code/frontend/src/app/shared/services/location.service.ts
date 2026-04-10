@@ -46,8 +46,8 @@ export class LocationService {
     });
   }
 
-  // Default fallback: New York
+  // Default fallback: Montreal
   getDefaultLocation(): StoredLocation {
-    return { lat: 40.7128, lon: -74.006, name: 'New York, US' };
+    return { lat: 45.5031824, lon: -73.5698065, name: 'Montreal, CA' };
   }
 }
