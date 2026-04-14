@@ -1,0 +1,30 @@
+@use '@angular/material' as mat;
+
+$ragverse-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$violet-palette,
+  ),
+  density: (
+    scale: -1,
+  ),
+));
+
+html {
+  @include mat.all-component-themes($ragverse-theme);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #FAFAFA;
+  color: #1A1A1A;
+}
+
+* {
+  box-sizing: border-box;
+}

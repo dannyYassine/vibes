@@ -26,14 +26,14 @@ Each phase will be implemented by reading the relevant plan documents, creating 
 
 **Goal:** Docker Compose running with all three services (DB, backend, frontend) communicating.
 
-- [ ] Create `docker-compose.yml` with pgvector, backend, frontend services
-- [ ] Create `.env.example`
-- [ ] Scaffold FastAPI backend (`pyproject.toml`, `app/main.py`, `config.py`)
-- [ ] Set up SQLAlchemy async + Alembic for migrations
-- [ ] Scaffold Angular 19 app (`ng new`, Angular Material, custom theme)
-- [ ] Configure `proxy.conf.json` for dev API proxying
-- [ ] Create Dockerfiles for backend and frontend
-- [ ] Verify all three containers start and communicate
+- [x] Create `docker-compose.yml` with pgvector, backend, frontend services
+- [x] Create `.env.example`
+- [x] Scaffold FastAPI backend (`pyproject.toml`, `app/main.py`, `config.py`)
+- [x] Set up SQLAlchemy async + Alembic for migrations
+- [x] Scaffold Angular 19 app (`ng new`, Angular Material, custom theme)
+- [x] Configure `proxy.conf.json` for dev API proxying
+- [x] Create Dockerfiles for backend and frontend
+- [x] Verify all three containers start and communicate
 
 **Deliverable:** `docker-compose up` boots all services, Angular shows a blank page, FastAPI returns health check.
 
