@@ -1,5 +1,13 @@
 # CLAUDE.md
 
-## MemPalace
+## Project References
 
-When searching for information about this project's files, architecture, components, or services, always use the MemPalace MCP tools first (e.g. `mempalace_search`) before reading files directly. The project has been mined into the `weather_app_copilot_claude_code` wing with rooms: `frontend`, `backend`, `src_tauri`, `inspirations`, `general`.
+Load these on demand based on the area you're working in:
+
+- Overview & goals: @.claude/references/overview.md
+- Architecture: @.claude/references/architecture.md
+- Frontend (Angular): @.claude/references/frontend.md
+- Backend (Rust/Axum): @.claude/references/backend.md
+- Tauri shell: @.claude/references/src-tauri.md
+- Design system: @.claude/references/design-system.md
+- Running in dev: @.claude/references/running-dev.md
