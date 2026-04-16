@@ -10,9 +10,7 @@ A modern, cross-platform desktop weather application built with [Tauri](https://
   <img src="./hero_3.png" alt="Weather App Hero 3" width="300">
 </div>
 
-<div style="display: flex; gap: 10px; margin-bottom: 20px;">
-  <img src="./obsidian.png" alt="obsidian" width="300">
-</div>
+![image](https://github.com/dannyYassine/vibes/blob/main/weather-app-copilot-claude-code/obsidian.png)
 
 **Demo Video:**
 
