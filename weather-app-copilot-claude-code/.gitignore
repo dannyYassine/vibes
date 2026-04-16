@@ -24,5 +24,7 @@ Thumbs.db
 
 
 *.graphify
-graphify-out/
+graphify-out/*
+!graphify-out/obsidian/
+!graphify-out/obsidian/**
 graphify-out/cache
