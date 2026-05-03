@@ -3,8 +3,8 @@ mod models;
 mod routes;
 mod services;
 
-use axum::routing::get;
 use axum::Router;
+use axum::routing::get;
 use services::cache::Cache;
 use services::weather_api::WeatherApiClient;
 use std::sync::Arc;
@@ -23,8 +23,7 @@ async fn main() {
     // Load .env file if present
     let _ = dotenvy::dotenv();
 
-    let api_key = std::env::var("OPENWEATHER_API_KEY")
-        .expect("OPENWEATHER_API_KEY must be set");
+    let api_key = std::env::var("OPENWEATHER_API_KEY").expect("OPENWEATHER_API_KEY must be set");
 
     let state = AppState {
         weather_api: Arc::new(WeatherApiClient::new(api_key)),
