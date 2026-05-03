@@ -105,7 +105,7 @@ async fn test_create_and_get_diagram() {
 
 ```typescript
 describe('DiagramStateService', () => {
-  it('should add a node and emit updated diagram', () => {
+  test('should add a node and emit updated diagram', () => {
     const service = new DiagramStateService();
     service.loadDiagram(mockDiagram);
 
@@ -117,7 +117,7 @@ describe('DiagramStateService', () => {
     });
   });
 
-  it('should undo the last action', () => {
+  test('should undo the last action', () => {
     const service = new DiagramStateService();
     service.loadDiagram(mockDiagram);
     const initialNodeCount = mockDiagram.nodes.length;
@@ -164,7 +164,7 @@ Canvas interactions are difficult to unit test. Focus on:
 
 ```typescript
 describe('Diagram Generation', () => {
-  it('should generate a diagram from natural language', () => {
+  test('should generate a diagram from natural language', () => {
     cy.visit('/diagrams/new');
     cy.get('[data-testid="chat-input"]').type('A VPC with an EC2 instance');
     cy.get('[data-testid="generate-button"]').click();

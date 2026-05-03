@@ -7,12 +7,12 @@ describe('SelectionState', () => {
     state = new SelectionState();
   });
 
-  it('should start with empty selection', () => {
+  test('should start with empty selection', () => {
     expect(state.getSelectedNodeIds()).toEqual([]);
     expect(state.getSelectedEdgeIds()).toEqual([]);
   });
 
-  it('selectNodes should replace current selection', () => {
+  test('selectNodes should replace current selection', () => {
     state.selectNodes(['a', 'b']);
     expect(state.getSelectedNodeIds()).toEqual(expect.arrayContaining(['a', 'b']));
     expect(state.getSelectedNodeIds()).toHaveLength(2);
@@ -21,26 +21,26 @@ describe('SelectionState', () => {
     expect(state.getSelectedNodeIds()).toEqual(['c']);
   });
 
-  it('toggleNode should add node if not selected', () => {
+  test('toggleNode should add node if not selected', () => {
     state.toggleNode('a');
     expect(state.getSelectedNodeIds()).toContain('a');
   });
 
-  it('toggleNode should remove node if already selected', () => {
+  test('toggleNode should remove node if already selected', () => {
     state.selectNodes(['a', 'b']);
     state.toggleNode('a');
     expect(state.getSelectedNodeIds()).not.toContain('a');
     expect(state.getSelectedNodeIds()).toContain('b');
   });
 
-  it('clearSelection should clear all selections', () => {
+  test('clearSelection should clear all selections', () => {
     state.selectNodes(['a', 'b']);
     state.clearSelection();
     expect(state.getSelectedNodeIds()).toEqual([]);
     expect(state.getSelectedEdgeIds()).toEqual([]);
   });
 
-  it('getSelectedEdgeIds should return empty array by default', () => {
+  test('getSelectedEdgeIds should return empty array by default', () => {
     expect(state.getSelectedEdgeIds()).toEqual([]);
   });
 });

@@ -44,31 +44,31 @@ describe('DiagramState', () => {
     state = new DiagramState();
   });
 
-  it('getDiagram should return null initially', () => {
+  test('getDiagram should return null initially', () => {
     expect(state.getDiagram()).toBeNull();
   });
 
-  it('load and getDiagram', () => {
+  test('load and getDiagram', () => {
     const diagram = makeDiagram();
     state.load(diagram);
     expect(state.getDiagram()).toBe(diagram);
   });
 
-  it('ensureDiagram should create default diagram if none loaded', () => {
+  test('ensureDiagram should create default diagram if none loaded', () => {
     const diagram = state.ensureDiagram();
     expect(diagram).toBeDefined();
     expect(diagram.nodes).toEqual([]);
     expect(diagram.edges).toEqual([]);
   });
 
-  it('ensureDiagram should return existing diagram', () => {
+  test('ensureDiagram should return existing diagram', () => {
     const original = makeDiagram({ name: 'Existing' });
     state.load(original);
     const result = state.ensureDiagram();
     expect(result.name).toBe('Existing');
   });
 
-  it('addNode should add node and support undo', () => {
+  test('addNode should add node and support undo', () => {
     state.load(makeDiagram());
     const node = makeNode('n1');
     state.addNode(node);
@@ -79,13 +79,13 @@ describe('DiagramState', () => {
     expect(state.getDiagram()!.nodes).toHaveLength(0);
   });
 
-  it('updateNode should update matching node', () => {
+  test('updateNode should update matching node', () => {
     state.load(makeDiagram({ nodes: [makeNode('n1', 'Old')] }));
     state.updateNode('n1', { label: 'New' });
     expect(state.getDiagram()!.nodes[0].label).toBe('New');
   });
 
-  it('removeNode should cascade remove edges', () => {
+  test('removeNode should cascade remove edges', () => {
     const n1 = makeNode('n1');
     const n2 = makeNode('n2');
     const edge = makeEdge('e1', 'n1', 'n2');
@@ -96,45 +96,45 @@ describe('DiagramState', () => {
     expect(state.getDiagram()!.edges).toHaveLength(0);
   });
 
-  it('addEdge should add edge', () => {
+  test('addEdge should add edge', () => {
     state.load(makeDiagram());
     const edge = makeEdge('e1', 'n1', 'n2');
     state.addEdge(edge);
     expect(state.getDiagram()!.edges).toHaveLength(1);
   });
 
-  it('updateEdge should update matching edge', () => {
+  test('updateEdge should update matching edge', () => {
     const edge = makeEdge('e1', 'n1', 'n2');
     state.load(makeDiagram({ edges: [edge] }));
     state.updateEdge('e1', { label: 'Updated' });
     expect(state.getDiagram()!.edges[0].label).toBe('Updated');
   });
 
-  it('removeEdge should remove matching edge', () => {
+  test('removeEdge should remove matching edge', () => {
     const edge = makeEdge('e1', 'n1', 'n2');
     state.load(makeDiagram({ edges: [edge] }));
     state.removeEdge('e1');
     expect(state.getDiagram()!.edges).toHaveLength(0);
   });
 
-  it('moveNode should update position', () => {
+  test('moveNode should update position', () => {
     state.load(makeDiagram({ nodes: [makeNode('n1')] }));
     state.moveNode('n1', { x: 50, y: 100 });
     expect(state.getDiagram()!.nodes[0].position).toEqual({ x: 50, y: 100 });
   });
 
-  it('setViewport should update viewport', () => {
+  test('setViewport should update viewport', () => {
     state.load(makeDiagram());
     state.setViewport({ x: 10, y: 20, zoom: 2 });
     expect(state.getDiagram()!.viewport).toEqual({ x: 10, y: 20, zoom: 2 });
   });
 
-  it('setViewport should no-op when diagram is null', () => {
+  test('setViewport should no-op when diagram is null', () => {
     state.setViewport({ x: 10, y: 20, zoom: 2 });
     expect(state.getDiagram()).toBeNull();
   });
 
-  it('undo and redo', () => {
+  test('undo and redo', () => {
     state.load(makeDiagram());
     state.addNode(makeNode('n1'));
     state.addNode(makeNode('n2'));
@@ -149,7 +149,7 @@ describe('DiagramState', () => {
     expect(state.getDiagram()!.nodes).toHaveLength(2);
   });
 
-  it('canUndo and canRedo', () => {
+  test('canUndo and canRedo', () => {
     state.load(makeDiagram());
     expect(state.canUndo()).toBe(false);
     expect(state.canRedo()).toBe(false);
@@ -161,7 +161,7 @@ describe('DiagramState', () => {
     expect(state.canRedo()).toBe(true);
   });
 
-  it('batch should group operations as single undo', () => {
+  test('batch should group operations as single undo', () => {
     state.load(makeDiagram());
     state.beginBatch();
     state.addNode(makeNode('n1'));

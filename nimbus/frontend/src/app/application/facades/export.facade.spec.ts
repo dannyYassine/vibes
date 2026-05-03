@@ -30,7 +30,7 @@ describe('ExportFacade', () => {
     jest.restoreAllMocks();
   });
 
-  it('should export terraform as zip', async () => {
+  test('should export terraform as zip', async () => {
     const mockFiles: TerraformFiles = {
       providers_tf: 'provider "aws" {}',
       main_tf: 'resource "aws_instance" "web" {}',
@@ -45,7 +45,7 @@ describe('ExportFacade', () => {
     expect(clickSpy).toHaveBeenCalled();
   });
 
-  it('should export docker compose as yaml', async () => {
+  test('should export docker compose as yaml', async () => {
     const mockBlob = new Blob(['version: "3.8"'], { type: 'application/x-yaml' });
     mockApiGateway.exportDockerCompose.mockResolvedValue(mockBlob);
 
