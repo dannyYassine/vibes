@@ -1,5 +1,5 @@
 ---
-name: clean-architecture
+name: backend-architecture
 description: >
   Enforces clean architecture layer rules during code creation and review.
   All non-framework code — usecases, services (core/domain/service-helper), repositories, models,
