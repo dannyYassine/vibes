@@ -24,5 +24,38 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "mcp__code-review-graph__*"
+    ],
+    "deny": [
+      "Read(**/node_modules/**)",
+      "Read(**/dist/**)",
+      "Read(**/build/**)",
+      "Read(**/.next/**)",
+      "Read(**/.nuxt/**)",
+      "Read(**/out/**)",
+      "Read(**/.output/**)",
+      "Read(**/coverage/**)",
+      "Read(**/.cache/**)",
+      "Read(**/target/**)",
+      "Read(**/vendor/**)",
+      "Read(**/.turbo/**)",
+      "Read(**/.parcel-cache/**)",
+      "Write(**/node_modules/**)",
+      "Write(**/dist/**)",
+      "Write(**/build/**)",
+      "Write(**/.next/**)",
+      "Write(**/.nuxt/**)",
+      "Write(**/out/**)",
+      "Write(**/.output/**)",
+      "Write(**/coverage/**)",
+      "Write(**/.cache/**)",
+      "Write(**/target/**)",
+      "Write(**/vendor/**)",
+      "Write(**/.turbo/**)",
+      "Write(**/.parcel-cache/**)"
+    ]
   }
 }

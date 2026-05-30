@@ -1,6 +1,5 @@
 use crate::models::forecast::{
-    DailyForecast, ForecastResponse, GeoLocation, HourlyForecast, OwmForecastResponse,
-    OwmGeoResult,
+    DailyForecast, ForecastResponse, GeoLocation, HourlyForecast, OwmForecastResponse, OwmGeoResult,
 };
 use crate::models::weather::{CurrentWeatherResponse, OwmCurrentResponse, WeatherCondition};
 use crate::services::personality::generate_personality;
@@ -60,15 +59,21 @@ impl WeatherApiClient {
         // Check for OWM error response first
         if let Ok(err) = serde_json::from_str::<serde_json::Value>(&body) {
             if let Some(cod) = err.get("cod") {
-                let cod_str = cod.as_str().map(|s| s.to_string())
+                let cod_str = cod
+                    .as_str()
+                    .map(|s| s.to_string())
                     .unwrap_or_else(|| cod.to_string());
                 if cod_str != "200" {
-                    let message = err.get("message")
+                    let message = err
+                        .get("message")
                         .and_then(|m| m.as_str())
                         .unwrap_or("Unknown error")
                         .to_string();
                     tracing::error!("OWM API error: cod={}, message={}", cod_str, message);
-                    return Err(ApiClientError::OwmError { cod: cod_str, message });
+                    return Err(ApiClientError::OwmError {
+                        cod: cod_str,
+                        message,
+                    });
                 }
             }
         }
@@ -89,8 +94,7 @@ impl WeatherApiClient {
         // Daytime: icon codes ending in 'd' are day, 'n' are night
         let is_daytime = icon_code.ends_with('d');
 
-        let (headline, subtitle) =
-            generate_personality(&condition, owm.main.temp, is_daytime);
+        let (headline, subtitle) = generate_personality(&condition, owm.main.temp, is_daytime);
 
         let now: DateTime<Utc> = Utc::now();
 
@@ -107,11 +111,7 @@ impl WeatherApiClient {
             is_daytime,
             personality_headline: headline,
             personality_subtitle: subtitle,
-            location_name: format!(
-                "{}, {}",
-                owm.name,
-                owm.sys.country.as_deref().unwrap_or("")
-            ),
+            location_name: format!("{}, {}", owm.name, owm.sys.country.as_deref().unwrap_or("")),
             updated_at: now.to_rfc3339(),
         })
     }
@@ -132,15 +132,25 @@ impl WeatherApiClient {
         // Check for OWM error response first
         if let Ok(err) = serde_json::from_str::<serde_json::Value>(&body) {
             if let Some(cod) = err.get("cod") {
-                let cod_str = cod.as_str().map(|s| s.to_string())
+                let cod_str = cod
+                    .as_str()
+                    .map(|s| s.to_string())
                     .unwrap_or_else(|| cod.to_string());
                 if cod_str != "200" {
-                    let message = err.get("message")
+                    let message = err
+                        .get("message")
                         .and_then(|m| m.as_str())
                         .unwrap_or("Unknown error")
                         .to_string();
-                    tracing::error!("OWM forecast API error: cod={}, message={}", cod_str, message);
-                    return Err(ApiClientError::OwmError { cod: cod_str, message });
+                    tracing::error!(
+                        "OWM forecast API error: cod={}, message={}",
+                        cod_str,
+                        message
+                    );
+                    return Err(ApiClientError::OwmError {
+                        cod: cod_str,
+                        message,
+                    });
                 }
             }
         }
@@ -161,8 +171,7 @@ impl WeatherApiClient {
             .take(16)
             .map(|entry| {
                 let weather = &entry.weather[0];
-                let dt = DateTime::from_timestamp(entry.dt, 0)
-                    .unwrap_or_else(|| Utc::now());
+                let dt = DateTime::from_timestamp(entry.dt, 0).unwrap_or_else(|| Utc::now());
                 HourlyForecast {
                     time: dt.to_rfc3339(),
                     temperature: entry.main.temp,
@@ -174,26 +183,21 @@ impl WeatherApiClient {
             .collect();
 
         // Build daily forecast by grouping entries by date
-        let mut daily_map: std::collections::BTreeMap<
-            String,
-            (f64, f64, String, String, String),
-        > = std::collections::BTreeMap::new();
+        let mut daily_map: std::collections::BTreeMap<String, (f64, f64, String, String, String)> =
+            std::collections::BTreeMap::new();
 
         for entry in &owm.list {
-            let dt = DateTime::from_timestamp(entry.dt, 0)
-                .unwrap_or_else(|| Utc::now());
+            let dt = DateTime::from_timestamp(entry.dt, 0).unwrap_or_else(|| Utc::now());
             let date_key = dt.format("%Y-%m-%d").to_string();
             let weather = &entry.weather[0];
 
-            let record = daily_map
-                .entry(date_key)
-                .or_insert((
-                    entry.main.temp_max,
-                    entry.main.temp_min,
-                    weather.main.clone(),
-                    weather.description.clone(),
-                    weather.icon.clone(),
-                ));
+            let record = daily_map.entry(date_key).or_insert((
+                entry.main.temp_max,
+                entry.main.temp_min,
+                weather.main.clone(),
+                weather.description.clone(),
+                weather.icon.clone(),
+            ));
 
             if entry.main.temp_max > record.0 {
                 record.0 = entry.main.temp_max;

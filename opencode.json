@@ -1,0 +1,74 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "model": "openrouter/deepseek/deepseek-v4-flash",
+  "small_model": "openrouter/deepseek/deepseek-v4-flash",
+
+  "mcp": {
+    "code-review-graph": {
+      "type": "local",
+      "command": ["uvx", "code-review-graph", "serve"],
+      "environment": {}
+    }
+  },
+
+  "provider": {
+    "openrouter": {
+      "models": {
+        "deepseek/deepseek-v4-flash": {
+          "name": "deepseek-v4-flash",
+          "options": {
+            "provider": {
+              "order": ["deepseek", "deepinfra", "gmicloud", "parasail"],
+              "allow_fallbacks": false
+            }
+          },
+          "interleaved": {
+            "field": "reasoning_content"
+          }
+        },
+      "deepseek/deepseek-v4-pro": {
+          "name": "deepseek-v4-pro",
+          "options": {
+            "provider": {
+              "order": ["deepseek", "deepinfra", "gmicloud", "novita"],
+              "allow_fallbacks": false
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "agent": {
+    "pro": {
+      "mode": "primary",
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "description": "Pro as the main driver for hard sessions"
+    },
+    "flash": {
+      "mode": "primary",
+      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "description": "Flash for implementing plans"
+    },
+
+    "explore": {
+      "mode": "subagent",
+      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "description": "Searches and reads the codebase to answer a question or locate code. Returns a concise summary. Use for any task that involves hunting through many files.",
+      "tools": {
+        "write": false,
+        "edit": false
+      },
+      "options": {
+        "reasoning": { "enabled": false }
+      }
+    },
+
+    "deep": {
+      "mode": "subagent",
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "description": "Hard reasoning: architecture decisions, multi-file refactors, tricky debugging. Use only when a problem needs careful step-by-step analysis."
+    }
+  }
+}

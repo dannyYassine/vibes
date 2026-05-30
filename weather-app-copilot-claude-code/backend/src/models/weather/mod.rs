@@ -4,4 +4,4 @@ pub mod owm;
 
 pub use condition::WeatherCondition;
 pub use current_response::CurrentWeatherResponse;
-pub use owm::{OwmCurrentResponse, OwmWeatherEntry, OwmMain, OwmWind, OwmSys};
+pub use owm::OwmCurrentResponse;

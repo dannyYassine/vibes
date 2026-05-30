@@ -37,7 +37,9 @@ pub struct OwmSys {
     #[serde(default)]
     pub country: Option<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     pub sunrise: Option<u64>,
     #[serde(default)]
+    #[allow(dead_code)]
     pub sunset: Option<u64>,
 }
