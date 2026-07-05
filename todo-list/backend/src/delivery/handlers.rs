@@ -6,6 +6,16 @@ use axum::Json;
 
 use crate::delivery::app_state::AppState;
 use crate::dtos::todo::{CompleteTodoDto, CreateTodoDto, TodoResponse};
+use crate::dtos::quote::QuoteResponse;
+
+pub async fn get_quote(
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<QuoteResponse>, StatusCode> {
+    match state.get_quote_usecase.execute().await {
+        Ok(quote) => Ok(Json(quote)),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
+}
 
 pub async fn create_todo(
     State(state): State<Arc<AppState>>,
@@ -69,12 +79,24 @@ mod tests {
     use crate::delivery::app_state::AppState;
     use crate::models::todo::Todo;
     use crate::repositories::todo_repository::SqlTodoRepository;
+    use crate::repositories::quote_repository::QuoteRepository;
     use crate::services::todo::TodoService;
+    use crate::services::quote::QuoteService;
     use crate::usecases::complete_todo::CompleteTodoUseCase;
     use crate::usecases::create_todo::CreateTodoUseCase;
     use crate::usecases::delete_todo::DeleteTodoUseCase;
     use crate::usecases::get_all_todos::GetAllTodosUseCase;
     use crate::usecases::get_todo_by_id::GetTodoByIdUseCase;
+    use crate::usecases::get_quote::GetQuoteUseCase;
+
+    struct StubQuoteRepository;
+
+    #[async_trait::async_trait]
+    impl QuoteRepository for StubQuoteRepository {
+        async fn get_random(&self) -> Result<crate::models::quote::Quote, String> {
+            Err("stub".into())
+        }
+    }
 
     fn test_db_url() -> String {
         std::env::var("DATABASE_URL")
@@ -85,12 +107,16 @@ mod tests {
         let repository = Arc::new(SqlTodoRepository::new(pool));
         let service = Arc::new(TodoService::new(repository));
 
+        let quote_repository: Arc<dyn QuoteRepository> = Arc::new(StubQuoteRepository);
+        let quote_service = Arc::new(QuoteService::new(quote_repository));
+
         let state = Arc::new(AppState {
             create_todo_usecase: Arc::new(CreateTodoUseCase::new(service.clone())),
             get_all_todos_usecase: Arc::new(GetAllTodosUseCase::new(service.clone())),
             get_todo_by_id_usecase: Arc::new(GetTodoByIdUseCase::new(service.clone())),
             complete_todo_usecase: Arc::new(CompleteTodoUseCase::new(service.clone())),
             delete_todo_usecase: Arc::new(DeleteTodoUseCase::new(service.clone())),
+            get_quote_usecase: Arc::new(GetQuoteUseCase::new(quote_service)),
         });
 
         Router::new()

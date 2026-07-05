@@ -36,3 +36,11 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 2. Use `detect_changes` for code review.
 3. Use `get_affected_flows` to understand impact.
 4. Use `query_graph` pattern="tests_for" to check coverage.
+
+## Image Handling
+
+**Whenever you encounter an image file (`.png`, `.jpg`, `.jpeg`, `.gif`,
+`.webp`, etc.) — whether provided by the user, returned from a `Read` tool
+call, or referenced in any form — ALWAYS delegate to the `image` subagent
+immediately.** Never respond that the model cannot read images — use the
+subagent instead.

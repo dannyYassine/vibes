@@ -1,5 +1,6 @@
 import { Presenter } from "@/infra/presenter/Presenter";
 import type { TodoService } from "../domain/TodoService";
+import type { QuoteService } from "../domain/QuoteService";
 import { TodoViewModel } from "./TodoViewModel";
 
 export type TodoState = {
@@ -7,20 +8,25 @@ export type TodoState = {
   todos: TodoViewModel[];
   errorMessage: string | null;
   isCreating: boolean;
+  quote: { content: string; author: string } | null;
 };
 
 export class TodoPresenter extends Presenter<TodoState> {
-  constructor(private readonly todoService: TodoService) {
+  constructor(
+    private readonly todoService: TodoService,
+    private readonly quoteService: QuoteService,
+  ) {
     super({
       status: "idle",
       todos: [],
       errorMessage: null,
       isCreating: false,
+      quote: null,
     });
   }
 
   override async onMounted(): Promise<void> {
-    await this.loadTodos();
+    await Promise.all([this.loadTodos(), this.loadQuote()]);
   }
 
   async loadTodos(): Promise<void> {
@@ -37,6 +43,15 @@ export class TodoPresenter extends Presenter<TodoState> {
         status: "error",
         errorMessage: this.formatError(error),
       });
+    }
+  }
+
+  async loadQuote(): Promise<void> {
+    try {
+      const q = await this.quoteService.getRandomQuote();
+      this.setState({ quote: { content: q.content, author: q.author } });
+    } catch {
+      this.setState({ quote: null });
     }
   }
 
@@ -78,6 +93,10 @@ export class TodoPresenter extends Presenter<TodoState> {
 
   dismissError(): void {
     this.setState({ errorMessage: null });
+  }
+
+  get activeCount(): number {
+    return this.getState().todos.filter((t) => !t.completed).length;
   }
 
   private formatError(error: unknown): string {

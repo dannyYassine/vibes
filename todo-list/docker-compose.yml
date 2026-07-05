@@ -45,6 +45,7 @@ services:
       - ./frontend/package.json:/app/package.json
     depends_on:
       - backend
+    command: sh -c 'npm install && npx vite --host 0.0.0.0'
 
 volumes:
   pgdata:

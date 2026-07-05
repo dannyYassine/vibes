@@ -43,6 +43,7 @@ describe("TodoView", () => {
         todos: [],
         errorMessage: null,
         isCreating: false,
+        quote: null,
       },
       ["loadTodos", "createTodo", "completeTodo", "deleteTodo", "dismissError"],
     );
@@ -61,9 +62,10 @@ describe("TodoView", () => {
       todos: [],
       errorMessage: null,
       isCreating: false,
+      quote: null,
     });
     renderWithContainer(<TodoView />, container);
-    expect(screen.getByText(/no todos yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/no tasks yet/i)).toBeInTheDocument();
   });
 
   it("renders a list of todos", () => {
@@ -75,6 +77,7 @@ describe("TodoView", () => {
       ],
       errorMessage: null,
       isCreating: false,
+      quote: null,
     });
     renderWithContainer(<TodoView />, container);
 
@@ -100,12 +103,13 @@ describe("TodoView", () => {
       todos: [],
       errorMessage: null,
       isCreating: false,
+      quote: null,
     });
     renderWithContainer(<TodoView />, container);
 
-    const input = screen.getByPlaceholderText("What needs to be done?");
+    const input = screen.getByPlaceholderText("Add new task");
     fireEvent.change(input, { target: { value: "New task" } });
-    fireEvent.click(screen.getByText("Add"));
+    fireEvent.click(screen.getByRole("button", { name: "Add" }));
 
     expect(presenter.createTodo).toHaveBeenCalledWith("New task");
   });
@@ -116,10 +120,11 @@ describe("TodoView", () => {
       todos: [],
       errorMessage: null,
       isCreating: false,
+      quote: null,
     });
     renderWithContainer(<TodoView />, container);
 
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByRole("button", { name: "Add" });
     expect(addButton).toBeDisabled();
   });
 
@@ -129,11 +134,12 @@ describe("TodoView", () => {
       todos: [makeTodoViewModel("a1", "Task one")],
       errorMessage: null,
       isCreating: false,
+      quote: null,
     });
     renderWithContainer(<TodoView />, container);
 
-    const checkbox = screen.getByRole("checkbox");
-    fireEvent.click(checkbox);
+    const toggle = screen.getByRole("button", { name: "Complete" });
+    fireEvent.click(toggle);
     expect(presenter.completeTodo).toHaveBeenCalledWith("a1");
   });
 
@@ -143,10 +149,11 @@ describe("TodoView", () => {
       todos: [makeTodoViewModel("d1", "Delete me")],
       errorMessage: null,
       isCreating: false,
+      quote: null,
     });
     renderWithContainer(<TodoView />, container);
 
-    fireEvent.click(screen.getByText("×"));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     expect(presenter.deleteTodo).toHaveBeenCalledWith("d1");
   });
 
@@ -156,10 +163,42 @@ describe("TodoView", () => {
       todos: [makeTodoViewModel("c1", "Done task", true)],
       errorMessage: null,
       isCreating: false,
+      quote: null,
     });
     renderWithContainer(<TodoView />, container);
 
     const span = screen.getByText("Done task");
-    expect(span.style.textDecoration).toBe("line-through");
+    expect(span).toHaveClass("line-through");
+  });
+
+  it("shows active todo count", () => {
+    presenter.replaceStateForTest({
+      status: "loaded",
+      todos: [
+        makeTodoViewModel("1", "Buy milk"),
+        makeTodoViewModel("2", "Clean desk", true),
+        makeTodoViewModel("3", "Walk dog"),
+      ],
+      errorMessage: null,
+      isCreating: false,
+      quote: null,
+    });
+    renderWithContainer(<TodoView />, container);
+
+    expect(screen.getByText("2 items left")).toBeInTheDocument();
+  });
+
+  it("renders the quote when present", () => {
+    presenter.replaceStateForTest({
+      status: "loaded",
+      todos: [],
+      errorMessage: null,
+      isCreating: false,
+      quote: { content: "Do it.", author: "Someone" },
+    });
+    renderWithContainer(<TodoView />, container);
+
+    expect(screen.getByText(/Do it\./)).toBeInTheDocument();
+    expect(screen.getByText(/Someone/)).toBeInTheDocument();
   });
 });

@@ -12,12 +12,15 @@ mod usecases;
 
 use delivery::app_state::AppState;
 use repositories::todo_repository::SqlTodoRepository;
+use repositories::quote_repository::ExternalQuoteRepository;
 use services::todo::TodoService;
+use services::quote::QuoteService;
 use usecases::complete_todo::CompleteTodoUseCase;
 use usecases::create_todo::CreateTodoUseCase;
 use usecases::delete_todo::DeleteTodoUseCase;
 use usecases::get_all_todos::GetAllTodosUseCase;
 use usecases::get_todo_by_id::GetTodoByIdUseCase;
+use usecases::get_quote::GetQuoteUseCase;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -40,12 +43,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let service = Arc::new(TodoService::new(repository));
 
+    let quote_repository: Arc<dyn repositories::quote_repository::QuoteRepository> =
+        Arc::new(ExternalQuoteRepository::new());
+    let quote_service = Arc::new(QuoteService::new(quote_repository));
+
     let state = Arc::new(AppState {
         create_todo_usecase: Arc::new(CreateTodoUseCase::new(service.clone())),
         get_all_todos_usecase: Arc::new(GetAllTodosUseCase::new(service.clone())),
         get_todo_by_id_usecase: Arc::new(GetTodoByIdUseCase::new(service.clone())),
         complete_todo_usecase: Arc::new(CompleteTodoUseCase::new(service.clone())),
         delete_todo_usecase: Arc::new(DeleteTodoUseCase::new(service.clone())),
+        get_quote_usecase: Arc::new(GetQuoteUseCase::new(quote_service)),
     });
 
     let app = router::create_router(state);
@@ -58,6 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   GET    /api/todos/:id");
     println!("   PATCH  /api/todos/:id/complete");
     println!("   DELETE /api/todos/:id");
+    println!("   GET    /api/quote");
     axum::serve(listener, app).await?;
 
     Ok(())

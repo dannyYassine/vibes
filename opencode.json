@@ -3,6 +3,7 @@
 
   "model": "openrouter/deepseek/deepseek-v4-flash",
   "small_model": "openrouter/deepseek/deepseek-v4-flash",
+  "default_agent": "main",
 
   "mcp": {
     "code-review-graph": {
@@ -11,7 +12,7 @@
       "environment": {}
     }
   },
-
+  "instructions": ["AGENTS.md"],
   "provider": {
     "openrouter": {
       "models": {
@@ -19,19 +20,87 @@
           "name": "deepseek-v4-flash",
           "options": {
             "provider": {
-              "order": ["deepseek", "deepinfra", "gmicloud", "parasail"],
+              "order": ["deepinfra", "digitalocean", "siliconflow/fp8"],
               "allow_fallbacks": false
-            }
+            },
+            "reasoning": { "enabled": true }
           },
           "interleaved": {
             "field": "reasoning_content"
           }
         },
-      "deepseek/deepseek-v4-pro": {
+        "google/gemini-3.5-flash": {
+          "name": "gemini-3.5-flash",
+          "options": {
+            "provider": {
+              "order": ["google-ai-studio", "google-vertex/global"],
+              "allow_fallbacks": false
+            }
+          }
+        },
+        "deepseek/deepseek-v4-pro": {
           "name": "deepseek-v4-pro",
           "options": {
             "provider": {
-              "order": ["deepseek", "deepinfra", "gmicloud", "novita"],
+              "order": ["deepinfra", "digitalocean", "siliconflow/fp8"],
+              "allow_fallbacks": false
+            },
+            "reasoning": { "enabled": true }
+          },
+          "interleaved": {
+            "field": "reasoning_content"
+          }
+        },
+        "openai/gpt-5.4-mini": {
+          "name": "gpt-5.4-mini",
+          "options": {
+            "provider": {
+              "order": ["azure", "openai"],
+              "allow_fallbacks": false
+            }
+          }
+        },
+        "moonshotai/kimi-k2.6": {
+          "name": "kimi-k2.6",
+          "options": {
+            "provider": {
+              "order": ["io-net/int4", "cloudflare"],
+              "allow_fallbacks": false
+            }
+          }
+        },
+        "google/gemini-3-flash-preview": {
+          "name": "gemini-3-flash-preview",
+          "options": {
+            "provider": {
+              "order": ["google-ai-studio", "google-vertex/global"],
+              "allow_fallbacks": false
+            }
+          }
+        },
+        "google/gemini-3.1-flash-lite": {
+          "name": "gemini-3.1-flash-lite",
+          "options": {
+            "provider": {
+              "order": ["google-vertex/global", "google-ai-studio"],
+              "allow_fallbacks": false
+            }
+          }
+        },
+        "qwen/qwen3.7-max": {
+          "name": "qwen3.7-max",
+          "options": {
+            "provider": {
+              "order": ["alibaba"],
+              "allow_fallbacks": false
+            }
+          }
+        },
+        "xiaomi/mimo-v2.5": {
+          "name": "mimo-v2.5",
+          "options": {
+            "provider": {
+              "order": ["xiaomi/fp8"],
               "allow_fallbacks": false
             }
           }
@@ -39,9 +108,18 @@
       }
     }
   },
-
   "agent": {
-    "pro": {
+    "plan": {
+      "mode": "primary",
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "description": "Use this agent primarly for planning"
+    },
+    "ultraplan": {
+      "mode": "primary",
+      "model": "openrouter/z-ai/glm-5.2",
+      "description": "Use this agent for doing a ultra deep dive for planning"
+    },
+    "main": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-pro",
       "description": "Pro as the main driver for hard sessions"
@@ -51,24 +129,13 @@
       "model": "openrouter/deepseek/deepseek-v4-flash",
       "description": "Flash for implementing plans"
     },
-
-    "explore": {
-      "mode": "subagent",
-      "model": "openrouter/deepseek/deepseek-v4-flash",
-      "description": "Searches and reads the codebase to answer a question or locate code. Returns a concise summary. Use for any task that involves hunting through many files.",
-      "tools": {
-        "write": false,
-        "edit": false
-      },
-      "options": {
-        "reasoning": { "enabled": false }
-      }
-    },
-
-    "deep": {
-      "mode": "subagent",
+    "ask": {
+      "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-pro",
-      "description": "Hard reasoning: architecture decisions, multi-file refactors, tricky debugging. Use only when a problem needs careful step-by-step analysis."
+      "description": "Use this agent to only ask a question, which will not modify anything",
+      "permission": {
+        "edit": "deny"
+      }
     }
   }
 }

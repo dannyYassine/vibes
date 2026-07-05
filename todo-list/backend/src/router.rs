@@ -18,6 +18,7 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/todos/:id", get(crate::delivery::handlers::get_todo_by_id))
         .route("/api/todos/:id/complete", patch(crate::delivery::handlers::complete_todo))
         .route("/api/todos/:id", delete(crate::delivery::handlers::delete_todo))
+        .route("/api/quote", get(crate::delivery::handlers::get_quote))
         .layer(cors)
         .with_state(state)
 }

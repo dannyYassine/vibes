@@ -4,6 +4,7 @@ import {
   type TodoTestSetup,
 } from "@/__tests__/shared/createTestContainer";
 import { TodoService } from "../domain/TodoService";
+import { QuoteService } from "../domain/QuoteService";
 import { TodoViewModel } from "../presentation/TodoViewModel";
 import { makeTodoDto, makeCompletedTodoDto } from "./fakes/todoDtoFactory";
 
@@ -112,6 +113,28 @@ describe("Todo feature", () => {
       expect(vm.isDone).toBe(true);
       expect(vm.completed).toBe(true);
       expect(vm.id).toBe("vm-1");
+    });
+  });
+
+  describe("Quote feature", () => {
+    let quoteService: QuoteService;
+
+    beforeEach(() => {
+      quoteService = setup.container.resolve(QuoteService);
+    });
+
+    it("returns a quote from the fake data source", async () => {
+      const quote = await quoteService.getRandomQuote();
+
+      expect(quote.content).toContain("Doing what you love");
+      expect(quote.author).toBe("Wayne Dyer");
+    });
+
+    it("quote entity is properly constructed", async () => {
+      const quote = await quoteService.getRandomQuote();
+
+      expect(quote.content).toBeTruthy();
+      expect(quote.author).toBeTruthy();
     });
   });
 });
