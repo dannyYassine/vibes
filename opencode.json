@@ -20,7 +20,13 @@
           "name": "deepseek-v4-flash",
           "options": {
             "provider": {
-              "order": ["deepinfra", "digitalocean", "siliconflow/fp8"],
+              "order": [
+                "parasail/fp8",
+                "novita/fp8",
+                "siliconflow/fp8",
+                "deepinfra",
+                "digitalocean"
+              ],
               "allow_fallbacks": false
             },
             "reasoning": { "enabled": true }
@@ -104,17 +110,31 @@
               "allow_fallbacks": false
             }
           }
+        },
+        "minimax/minimax-m3": {
+          "name": "minimax-m3",
+          "options": {
+            "provider": {
+              "order": ["novita/fp8", "morph", "together", "deepinfra/bf16"],
+              "allow_fallbacks": false
+            }
+          }
         }
       }
     }
   },
   "agent": {
-    "plan": {
+    "plan-flash": {
+      "mode": "primary",
+      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "description": "Use this agent primarly for planning"
+    },
+    "plan-pro": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-pro",
       "description": "Use this agent primarly for planning"
     },
-    "ultraplan": {
+    "plan-ultra": {
       "mode": "primary",
       "model": "openrouter/z-ai/glm-5.2",
       "description": "Use this agent for doing a ultra deep dive for planning"

@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+            }
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Helvetica, Arial, sans-serif;
+                margin: 0;
+                padding: 40px;
+                background-color: #f8fafc;
+                color: #1e293b;
+                font-size: 11pt;
+                line-height: 1.6;
+                max-width: 900px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .document-container {
+                background-color: #ffffff;
+                padding: 50px;
+                border-radius: 8px;
+                box-shadow:
+                    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 2px solid #e2e8f0;
+            }
+            h1 {
+                color: #0f172a;
+                font-size: 22pt;
+                margin: 0 0 10px 0;
+            }
+            .subtitle {
+                color: #64748b;
+                font-size: 12pt;
+                font-weight: 500;
+            }
+            h2 {
+                color: #0f172a;
+                font-size: 15pt;
+                margin-top: 30px;
+                border-left: 4px solid #3b82f6;
+                padding-left: 10px;
+            }
+            h3 {
+                font-size: 12.5pt;
+                color: #334155;
+                margin-top: 20px;
+            }
+            p,
+            ul,
+            ol {
+                margin-bottom: 15px;
+            }
+            li {
+                margin-bottom: 6px;
+            }
+            .highlight {
+                background-color: #eff6ff;
+                border: 1px solid #bfdbfe;
+                border-radius: 6px;
+                padding: 15px;
+                margin: 15px 0;
+            }
+            .highlight strong {
+                color: #1d4ed8;
+            }
+            pre {
+                background-color: #0f172a;
+                color: #f8fafc;
+                padding: 15px;
+                border-radius: 6px;
+                font-family: "Menlo", "Monaco", "Courier New", monospace;
+                font-size: 9.5pt;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            code {
+                font-family: "Menlo", "Monaco", "Courier New", monospace;
+                background-color: #e2e8f0;
+                padding: 2px 5px;
+                border-radius: 4px;
+                font-size: 90%;
+                color: #b91c1c;
+            }
+            pre code {
+                background-color: transparent;
+                color: inherit;
+                padding: 0;
+            }
+            .footer {
+                margin-top: 40px;
+                font-size: 9pt;
+                color: #94a3b8;
+                text-align: center;
+                border-top: 1px solid #e2e8f0;
+                padding-top: 15px;
+            }
+            .two-col {
+                display: flex;
+                gap: 20px;
+                margin-top: 10px;
+            }
+            .col {
+                flex: 1;
+                background: #f8fafc;
+                padding: 20px;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+            }
+            @media (max-width: 768px) {
+                .two-col {
+                    flex-direction: column;
+                }
+                body {
+                    padding: 20px;
+                }
+                .document-container {
+                    padding: 30px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="document-container">
+            <div class="header">
+                <h1>Django Components Testing Strategy</h1>
+                <div class="subtitle">
+                    Architecture & Implementation Handoff Document
+                </div>
+            </div>
+
+            <p>
+                This document outlines the standard operating procedure for
+                testing server-rendered Django components. Adhering to this
+                strategy ensures our test suite remains incredibly fast,
+                deterministic, and highly resilient against flakiness, while
+                still thoroughly testing complex frontend interactions.
+            </p>
+
+            <div class="highlight">
+                <strong>The Core Philosophy:</strong> Divide testing into two
+                distinct layers. We unit test the
+                <em>markup and permutations</em> using native Python tools (90%
+                of tests), and we functionally test the
+                <em>client-side behavior</em> using a real browser via
+                Playwright (10% of tests).
+            </div>
+
+            <h2>1. The Two-Tier Architecture</h2>
+
+            <div class="two-col">
+                <div class="col">
+                    <h3>Tier 1: Unit Rendering (90%)</h3>
+                    <p>
+                        <strong>Goal:</strong> Verify that given specific Python
+                        arguments (props), the component correctly renders the
+                        expected HTML strings, CSS classes, and attributes.
+                    </p>
+                    <ul>
+                        <li>
+                            <strong>Tools:</strong>
+                            <code>django.test.TestCase</code> +
+                            <code>BeautifulSoup4</code>
+                        </li>
+                        <li>
+                            <strong>Speed:</strong> ~5-15 milliseconds per test.
+                        </li>
+                        <li>
+                            <strong>When to use:</strong> Testing size variants,
+                            colors, disabled states, conditional rendering, and
+                            slot injections.
+                        </li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h3>Tier 2: Functional Interaction (10%)</h3>
+                    <p>
+                        <strong>Goal:</strong> Verify that JavaScript-driven
+                        state changes (HTMX, Alpine.js, Vanilla JS) function
+                        correctly when interacting with the DOM.
+                    </p>
+                    <ul>
+                        <li>
+                            <strong>Tools:</strong> <code>pytest</code> +
+                            <code>pytest-playwright</code>
+                        </li>
+                        <li>
+                            <strong>Speed:</strong> ~400-800 milliseconds per
+                            test.
+                        </li>
+                        <li>
+                            <strong>When to use:</strong> Modal toggles,
+                            dropdowns, AJAX/HTMX form submissions, and complex
+                            DOM event listeners.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2>2. Implementation Guide: Tier 1 (Fast Unit Tests)</h2>
+            <p>
+                Do not use a browser for structural assertions. Instead,
+                shallow-render the component using Django's template engine and
+                parse the resulting HTML with BeautifulSoup.
+            </p>
+
+            <pre><code>from django.test import TestCase
+from bs4 import BeautifulSoup
+from myapp.tests.utils import shallow_render_component
+
+class ButtonComponentTest(TestCase):
+    def test_button_danger_variant(self):
+        # 1. Render in isolation
+        html = shallow_render_component(
+            "button",
+            props={"variant": "danger", "disabled": True},
+            slot_content="Delete"
+        )
+
+        # 2. Parse and assert intent
+        soup = BeautifulSoup(html, 'html.parser')
+        btn = soup.find('button')
+
+        self.assertIn('bg-red-500', btn.get('class', []))
+        self.assertTrue(btn.has_attr('disabled'))
+        self.assertEqual(btn.text.strip(), "Delete")
+</code></pre>
+
+            <h2>3. Implementation Guide: Tier 2 (Playwright)</h2>
+            <p>
+                Reserve Playwright exclusively for components that contain
+                client-side interactivity. To keep tests fast, do not load the
+                full application layout; serve the component via a lightweight,
+                isolated dummy route.
+            </p>
+
+            <pre><code>import pytest
+from playwright.sync_api import Page
+
+@pytest.mark.django_db
+def test_alpine_dropdown_opens_on_click(page: Page, live_server):
+    # 1. Mount isolated component
+    # /_test/components/dropdown serves only the component HTML
+    page.goto(f"{live_server.url}/_test/components/dropdown")
+
+    # 2. Locate elements
+    menu = page.locator('.dropdown-menu')
+    trigger = page.locator('text=Options')
+
+    # 3. Assert JS Behavior
+    assert not menu.is_visible()
+    trigger.click()
+    assert menu.is_visible()
+</code></pre>
+
+            <h2>4. Rules and Best Practices for the Team</h2>
+            <ul>
+                <li>
+                    <strong>Rule of Thumb:</strong> If you can test it by
+                    reading the HTML source code, write a Unit Test. If you have
+                    to physically click it to see the result, write a Playwright
+                    Test.
+                </li>
+                <li>
+                    <strong>Parallel Execution:</strong> Always run Playwright
+                    tests using <code>pytest-xdist</code> (e.g.,
+                    <code>pytest -n auto</code>). This dramatically reduces CI
+                    wall-clock time by utilizing all CPU cores.
+                </li>
+                <li>
+                    <strong>Avoid Full Page Loads:</strong> When writing
+                    Playwright component tests, avoid routing through standard
+                    Views if possible. Inject the component into a blank
+                    template to bypass database queries, middleware, and heavy
+                    asset loads.
+                </li>
+                <li>
+                    <strong>Form Submissions without JS:</strong> If a component
+                    is just a standard HTML form (no HTMX/AJAX), test the
+                    submission logic using <code>django-webtest</code> or the
+                    standard Django Test Client, not Playwright.
+                </li>
+            </ul>
+
+            <div class="footer">
+                Generated for Engineering Team • Server-Driven UI Architecture
+            </div>
+        </div>
+    </body>
+</html>
