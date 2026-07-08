@@ -126,6 +126,16 @@ cargo test            # requires DATABASE_URL or localhost PostgreSQL
 
 > Run tests sequentially (`-- --test-threads=1`) to avoid table conflicts.
 
+## Code Knowledge Graph
+
+This repo participates in the monorepo-level `code-review-graph` (MCP server). The graph tracks functions, classes, files, and cross-references across both backend and frontend. Run queries via opencode — the graph auto-updates on file changes.
+
+Key tools available:
+- `detect_changes` — risk-scored review of uncommitted changes
+- `query_graph` — trace callers, callees, imports, tests
+- `get_impact_radius` — blast radius of a change
+- `semantic_search_nodes` — find code by name or keyword
+
 ## API Endpoints
 
 | Method | Path | Description |

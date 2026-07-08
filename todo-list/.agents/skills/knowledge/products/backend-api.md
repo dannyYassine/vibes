@@ -3,7 +3,7 @@ type: Product
 title: Backend API
 description: Rust Axum REST API serving todo management endpoints with PostgreSQL persistence and Clean Architecture layering.
 tags: [rust, axum, postgresql, rest-api, backend]
-timestamp: 2026-07-07T12:00:00Z
+timestamp: 2026-07-08T01:00:00Z
 ---
 
 # Backend API
@@ -40,6 +40,7 @@ RESTful HTTP API built with Rust's Axum framework. Follows Clean Architecture wi
 | `GET` | `/api/todos/:id` | [Get Todo](/features/get-todo.md) |
 | `PATCH` | `/api/todos/:id/complete` | [Complete Todo](/features/complete-todo.md) |
 | `DELETE` | `/api/todos/:id` | [Delete Todo](/features/delete-todo.md) |
+| `GET` | `/api/quote` | [Get Quote](/features/get-quote.md) |
 
 ## Related Features
 
@@ -48,6 +49,7 @@ RESTful HTTP API built with Rust's Axum framework. Follows Clean Architecture wi
 - [Get Todo](/features/get-todo.md)
 - [Complete Todo](/features/complete-todo.md)
 - [Delete Todo](/features/delete-todo.md)
+- [Get Quote](/features/get-quote.md)
 
 ## Citations
 

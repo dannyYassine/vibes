@@ -29,7 +29,7 @@ export function registerTodoModule(container: Container): void {
 
   container.register(
     QuoteDataSource,
-    (c) => new QuoteDataSource(c.resolve(HttpClient)),
+    (c) => new QuoteDataSource(c.resolve(HttpClient), "/api"),
     "singleton",
   );
 

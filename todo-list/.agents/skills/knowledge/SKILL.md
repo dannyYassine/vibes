@@ -1,9 +1,8 @@
 ---
-type: Skill
-title: Maintain Knowledge Base
-description: Keep `.agents/skills/knowledge/` OKF files in sync with source code. Run after every feature change, new endpoint, architecture refactor, or dependency update.
-tags: [okf, knowledge, maintenance, automation]
-timestamp: 2026-07-07T12:00:00Z
+name: knowledge
+description: >
+  Keep `.agents/skills/knowledge/` OKF files in sync with source code. Run after every
+  feature change, new endpoint, architecture refactor, or dependency update.
 ---
 
 # Maintain Knowledge Base

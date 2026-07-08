@@ -13,7 +13,10 @@ pub async fn get_quote(
 ) -> Result<Json<QuoteResponse>, StatusCode> {
     match state.get_quote_usecase.execute().await {
         Ok(quote) => Ok(Json(quote)),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(e) => {
+            eprintln!("get_quote failed: {e:?}");
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }
 
@@ -93,8 +96,8 @@ mod tests {
 
     #[async_trait::async_trait]
     impl QuoteRepository for StubQuoteRepository {
-        async fn get_random(&self) -> Result<crate::models::quote::Quote, String> {
-            Err("stub".into())
+        async fn get_random(&self) -> anyhow::Result<crate::models::quote::Quote> {
+            Err(anyhow::anyhow!("stub"))
         }
     }
 

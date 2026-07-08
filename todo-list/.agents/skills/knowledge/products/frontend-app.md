@@ -3,7 +3,7 @@ type: Product
 title: Frontend App
 description: React TypeScript single-page application following MVP (Model-View-Presenter) architecture with dependency injection.
 tags: [react, typescript, mvp, frontend, spa]
-timestamp: 2026-07-07T12:00:00Z
+timestamp: 2026-07-08T01:00:00Z
 ---
 
 # Frontend App
@@ -46,6 +46,7 @@ TypeScript SPA built with React. Follows Model-View-Presenter architecture with 
 - [Get Todo](/features/get-todo.md)
 - [Complete Todo](/features/complete-todo.md)
 - [Delete Todo](/features/delete-todo.md)
+- [Get Quote](/features/get-quote.md)
 
 ## Citations
 

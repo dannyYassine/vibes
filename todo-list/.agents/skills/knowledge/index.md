@@ -25,6 +25,7 @@ timestamp: 2026-07-07T12:00:00Z
 | [Get Todo](/features/get-todo.md) | Backend + Frontend |
 | [Complete Todo](/features/complete-todo.md) | Backend + Frontend |
 | [Delete Todo](/features/delete-todo.md) | Backend + Frontend |
+| [Get Quote](/features/get-quote.md) | Backend + Frontend |
 
 ## References
 

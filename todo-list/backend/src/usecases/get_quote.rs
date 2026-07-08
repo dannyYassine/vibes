@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use anyhow::Result;
 use crate::dtos::quote::QuoteResponse;
 use crate::services::quote::QuoteService;
 
@@ -12,7 +13,7 @@ impl GetQuoteUseCase {
         Self { service }
     }
 
-    pub async fn execute(&self) -> Result<QuoteResponse, String> {
+    pub async fn execute(&self) -> Result<QuoteResponse> {
         let quote = self.service.get_random().await?;
         Ok(QuoteResponse {
             content: quote.content,

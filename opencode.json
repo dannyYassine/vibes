@@ -127,17 +127,23 @@
     "plan-flash": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
-      "description": "Use this agent primarly for planning"
+      "description": "Use this agent primarly for planning",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "plan-pro": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-pro",
-      "description": "Use this agent primarly for planning"
+      "description": "Use this agent primarly for planning",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "plan-ultra": {
       "mode": "primary",
       "model": "openrouter/z-ai/glm-5.2",
-      "description": "Use this agent for doing a ultra deep dive for planning"
+      "description": "Use this agent for doing a ultra deep dive for planning",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "main": {
       "mode": "primary",
