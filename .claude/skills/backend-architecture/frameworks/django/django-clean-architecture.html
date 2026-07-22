@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Django Clean Architecture — Server-Side HTML Apps</title>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --bg-card: #13161d;
+    --bg-code: #0a0c10;
+    --bg-highlight: #1a1e2a;
+    --border: #1e2330;
+    --border-accent: #2a3050;
+    --text-primary: #e2e4ec;
+    --text-secondary: #8b8fa8;
+    --text-muted: #4a4e63;
+    --accent: #5b8af5;
+    --accent-dim: #1e2d52;
+    --accent-teal: #3ecfb2;
+    --accent-teal-dim: #0e2e2a;
+    --accent-amber: #e8a94a;
+    --accent-amber-dim: #2e220a;
+    --accent-coral: #e86f5b;
+    --accent-coral-dim: #2e140e;
+    --accent-purple: #9b7fe8;
+    --accent-purple-dim: #1e1535;
+    --green: #4caf82;
+    --green-dim: #0e2318;
+    --code-keyword: #c792ea;
+    --code-string: #c3e88d;
+    --code-comment: #546e7a;
+    --code-func: #82aaff;
+    --code-class: #ffcb6b;
+    --code-decorator: #f07178;
+    --code-type: #89ddff;
+    --code-number: #f78c6c;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.7;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  nav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    padding: 2rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .nav-logo {
+    padding: 0 1.5rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .nav-logo h1 { font-size: 13px; font-weight: 600; color: var(--text-primary); letter-spacing: .02em; }
+  .nav-logo p { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-family: var(--mono); }
+  .nav-section { padding: 0 1rem 1.5rem; }
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 0 .5rem;
+    margin-bottom: .5rem;
+  }
+  nav a {
+    display: block;
+    padding: .35rem .5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 5px;
+    transition: all .15s;
+    line-height: 1.4;
+  }
+  nav a:hover { color: var(--text-primary); background: var(--bg-highlight); }
+  nav a.active { color: var(--accent); background: var(--accent-dim); }
+
+  /* MAIN */
+  main { padding: 3rem 3.5rem; max-width: 860px; }
+
+  /* SECTIONS */
+  section { margin-bottom: 5rem; scroll-margin-top: 2rem; }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -.01em;
+  }
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 2rem 0 .75rem;
+    letter-spacing: -.01em;
+  }
+  h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 1.5rem 0 .5rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  p { color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.75; }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--text-primary); font-weight: 600; }
+  code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--bg-highlight);
+    color: var(--accent-teal);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* LEAD */
+  .lead {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+  }
+
+  /* HERO BADGE */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 1.5rem;
+    letter-spacing: .04em;
+  }
+  .badge-blue { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-dim); }
+  .badge-teal { background: var(--accent-teal-dim); color: var(--accent-teal); border: 1px solid var(--accent-teal-dim); }
+  .badge-amber { background: var(--accent-amber-dim); color: var(--accent-amber); border: 1px solid var(--accent-amber-dim); }
+  .badge-purple { background: var(--accent-purple-dim); color: var(--accent-purple); border: 1px solid var(--accent-purple-dim); }
+  .badge-coral { background: var(--accent-coral-dim); color: var(--accent-coral); border: 1px solid var(--accent-coral-dim); }
+
+  /* ARCHITECTURE DIAGRAM */
+  .arch-diagram {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    color: var(--text-secondary);
+  }
+  .arch-layer {
+    border: 1px solid var(--border-accent);
+    border-radius: 6px;
+    padding: .75rem 1rem;
+    margin: .35rem 0;
+    position: relative;
+  }
+  .arch-layer.domain { border-color: var(--accent-teal); background: rgba(62,207,178,.04); }
+  .arch-layer.application { border-color: var(--accent); background: rgba(91,138,245,.04); }
+  .arch-layer.infrastructure { border-color: var(--accent-amber); background: rgba(232,169,74,.04); }
+  .arch-layer.interface { border-color: var(--accent-coral); background: rgba(232,111,91,.04); }
+  .arch-layer.framework { border-color: var(--accent-purple); background: rgba(155,127,232,.04); }
+  .arch-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: .35rem;
+  }
+  .arch-layer.domain .arch-label { color: var(--accent-teal); }
+  .arch-layer.application .arch-label { color: var(--accent); }
+  .arch-layer.infrastructure .arch-label { color: var(--accent-amber); }
+  .arch-layer.interface .arch-label { color: var(--accent-coral); }
+  .arch-layer.framework .arch-label { color: var(--accent-purple); }
+  .arch-items { color: var(--text-secondary); font-size: 12px; }
+  .arch-items span { color: var(--text-primary); }
+  .arch-arrow { text-align: center; color: var(--text-muted); margin: 2px 0; font-size: 14px; }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 1.25rem 0;
+    overflow: hidden;
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .6rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+  .code-filename {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .code-lang {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    background: var(--bg-highlight);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  pre {
+    padding: 1.25rem 1.25rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  pre .kw { color: var(--code-keyword); }
+  pre .str { color: var(--code-string); }
+  pre .cm { color: var(--code-comment); font-style: italic; }
+  pre .fn { color: var(--code-func); }
+  pre .cl { color: var(--code-class); }
+  pre .dc { color: var(--code-decorator); }
+  pre .ty { color: var(--code-type); }
+  pre .nm { color: var(--code-number); }
+  pre .hl { background: rgba(91,138,245,.08); display: block; margin: 0 -1.25rem; padding: 0 1.25rem; }
+
+  /* FLOW DIAGRAM */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    padding: 1rem 0;
+  }
+  .flow-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .6rem 1rem;
+    font-size: 12px;
+    font-family: var(--mono);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .flow-step.accent { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .flow-step.teal { border-color: var(--accent-teal); color: var(--accent-teal); background: var(--accent-teal-dim); }
+  .flow-step.amber { border-color: var(--accent-amber); color: var(--accent-amber); background: var(--accent-amber-dim); }
+  .flow-step.coral { border-color: var(--accent-coral); color: var(--accent-coral); background: var(--accent-coral-dim); }
+  .flow-step.purple { border-color: var(--accent-purple); color: var(--accent-purple); background: var(--accent-purple-dim); }
+  .flow-arrow { color: var(--text-muted); padding: 0 .4rem; font-size: 14px; flex-shrink: 0; }
+
+  /* RESPONSIBILITY TABLE */
+  .resp-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 13px; }
+  .resp-table th {
+    text-align: left;
+    padding: .6rem 1rem;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .resp-table td {
+    padding: .65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .resp-table tr:last-child td { border-bottom: none; }
+  .resp-table .label { font-family: var(--mono); font-size: 12px; color: var(--accent); white-space: nowrap; }
+  .resp-table .desc { color: var(--text-secondary); }
+  .resp-table .owns { color: var(--text-primary); font-size: 13px; }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-dim);
+    padding: .85rem 1.1rem;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 1.5rem 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .callout.teal { border-color: var(--accent-teal); background: var(--accent-teal-dim); }
+  .callout.amber { border-color: var(--accent-amber); background: var(--accent-amber-dim); }
+  .callout.coral { border-color: var(--accent-coral); background: var(--accent-coral-dim); }
+  .callout strong { color: var(--text-primary); }
+
+  /* RULE BLOCK */
+  .rule {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 1.25rem 0;
+    font-size: 13px;
+  }
+  .rule-cell {
+    background: var(--bg-card);
+    padding: .85rem 1rem;
+  }
+  .rule-cell .rule-head {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: .4rem;
+  }
+  .rule-cell.domain .rule-head { color: var(--accent-teal); }
+  .rule-cell.presenter .rule-head { color: var(--accent); }
+  .rule-cell.template .rule-head { color: var(--accent-amber); }
+  .rule-cell ul { list-style: none; padding: 0; }
+  .rule-cell ul li { color: var(--text-secondary); padding: 2px 0; font-size: 13px; }
+  .rule-cell ul li::before { content: '—  '; color: var(--text-muted); }
+
+  /* SPECTRUM */
+  .spectrum { margin: 1.25rem 0; }
+  .spectrum-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 160px;
+    gap: 1rem;
+    padding: .65rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    align-items: start;
+  }
+  .spectrum-row:last-child { border-bottom: none; }
+  .spectrum-label { color: var(--text-secondary); font-family: var(--mono); font-size: 12px; }
+  .spectrum-desc { color: var(--text-secondary); }
+  .spectrum-who { color: var(--text-muted); font-size: 12px; font-style: italic; }
+
+  /* DIVIDER */
+  hr { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+  /* TAG */
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-family: var(--mono);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+
+  /* HEADER SECTION */
+  .doc-header {
+    padding-bottom: 3rem;
+    margin-bottom: 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -.03em;
+    line-height: 1.2;
+    margin-bottom: .75rem;
+  }
+  .doc-meta { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1rem; }
+
+  /* INLINE LAYER TAG */
+  .layer-tag {
+    font-size: 11px;
+    font-family: var(--mono);
+    padding: 1px 7px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .layer-tag.domain { background: var(--accent-teal-dim); color: var(--accent-teal); }
+  .layer-tag.application { background: var(--accent-dim); color: var(--accent); }
+  .layer-tag.infrastructure { background: var(--accent-amber-dim); color: var(--accent-amber); }
+  .layer-tag.interface { background: var(--accent-coral-dim); color: var(--accent-coral); }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.25rem 0; }
+  .two-col-cell { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+  .two-col-cell h5 { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .5rem; }
+  .two-col-cell.left h5 { color: var(--accent-teal); }
+  .two-col-cell.right h5 { color: var(--accent-coral); }
+  .two-col-cell p { font-size: 13px; color: var(--text-secondary); }
+
+  @media (max-width: 900px) {
+    body { grid-template-columns: 1fr; }
+    nav { display: none; }
+    main { padding: 2rem 1.5rem; }
+    .two-col { grid-template-columns: 1fr; }
+    .rule { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <h1>Django Clean Architecture</h1>
+    <p>Server-Side HTML Apps</p>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Philosophy</div>
+    <a href="#philosophy">Server-Side HTML</a>
+    <a href="#prg">PRG Pattern</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Architecture</div>
+    <a href="#layers">The Four Layers</a>
+    <a href="#domain">Domain Layer</a>
+    <a href="#application">Application Layer</a>
+    <a href="#infrastructure">Infrastructure Layer</a>
+    <a href="#adapters">Interface Adapters</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Presentation</div>
+    <a href="#mvp">MVP Pattern</a>
+    <a href="#presenter">The Presenter</a>
+    <a href="#viewmodel">View Model</a>
+    <a href="#components">Django Components</a>
+    <a href="#inline">Inline Templates</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Patterns</div>
+    <a href="#htmx">HTMX & Deep Nesting</a>
+    <a href="#laravel">vs Laravel Resources</a>
+    <a href="#industry">Industry Standard</a>
+    <a href="#summary">Summary</a>
+  </div>
+</nav>
+
+<main>
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <h1>Django Clean Architecture</h1>
+    <p class="lead">A reference for building server-side HTML applications with clean architecture, the MVP presentation pattern, and django-components. Covers the full stack from domain entities to rendered HTML.</p>
+    <div class="doc-meta">
+      <span class="badge badge-blue">Django</span>
+      <span class="badge badge-teal">Clean Architecture</span>
+      <span class="badge badge-amber">django-components</span>
+      <span class="badge badge-purple">MVP Pattern</span>
+      <span class="badge badge-coral">HTMX</span>
+    </div>
+  </div>
+
+  <!-- PHILOSOPHY -->
+  <section id="philosophy">
+    <h2>Server-Side HTML Philosophy</h2>
+    <p>The core rule: <strong>the server owns all state and logic; the browser is just a renderer</strong>. The client sends HTTP requests, gets back HTML (full page or fragment), and displays it. No JSON APIs, no client-side state management.</p>
+
+    <div class="callout teal">
+      <strong>Hypermedia as the Engine of Application State (HATEOAS)</strong> — the server encodes all current state in the HTML it returns, including the actions available. The client needs no prior knowledge of the application.
+    </div>
+
+    <div class="arch-diagram">
+      Browser &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Server<br>
+      &nbsp;&nbsp;│──── GET /cart ─────────► View<br>
+      &nbsp;&nbsp;│◄─── HTML (full page) ───  │<br>
+      &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+      &nbsp;&nbsp;│──── POST /cart/add ──────► Use Case<br>
+      &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;└─ mutates DB<br>
+      &nbsp;&nbsp;│◄─── Redirect 303 ─────── │<br>
+      &nbsp;&nbsp;│──── GET /cart ─────────► View<br>
+      &nbsp;&nbsp;│◄─── HTML (full page) ───  │
+    </div>
+  </section>
+
+  <!-- PRG -->
+  <section id="prg">
+    <h2>PRG Pattern</h2>
+    <p><strong>Post / Redirect / Get</strong> — you never render HTML directly after a POST. This prevents double-submit on browser back, keeps the URL meaningful, and separates mutation from display.</p>
+
+    <div class="flow">
+      <div class="flow-step">Form POST</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step accent">Use Case (mutate)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Redirect 303</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step teal">GET (render)</div>
+    </div>
+
+    <p>With <strong>HTMX</strong>, you swap fragments instead of full pages, but the server still produces HTML — not JSON. The architecture is identical; only the transport changes.</p>
+  </section>
+
+  <!-- LAYERS -->
+  <section id="layers">
+    <h2>The Four Layers</h2>
+    <p>Dependencies only point inward. The domain knows nothing about Django, the DB, or HTTP. Each layer can only import from layers inside it.</p>
+
+    <div style="margin: 1.5rem 0;">
+      <div class="arch-layer framework">
+        <div class="arch-label">Frameworks & Drivers</div>
+        <div class="arch-items">Django, ORM, templates, HTTP, WSGI</div>
+        <div style="margin-top: .75rem;">
+          <div class="arch-layer interface">
+            <div class="arch-label">Interface Adapters</div>
+            <div class="arch-items">Views, Presenters, Components, concrete Repositories</div>
+            <div style="margin-top: .75rem;">
+              <div class="arch-layer application">
+                <div class="arch-label">Application Layer</div>
+                <div class="arch-items">Use Cases, Port interfaces (ABCs), Output DTOs</div>
+                <div style="margin-top: .75rem;">
+                  <div class="arch-layer domain">
+                    <div class="arch-label">Domain Layer</div>
+                    <div class="arch-items"><span>Cart, CartItem, Money</span> — pure Python, zero imports outside stdlib</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Dependency Map</h3>
+    <table class="resp-table">
+      <thead><tr><th>File</th><th>Knows About</th></tr></thead>
+      <tbody>
+        <tr><td class="label">views.py</td><td class="desc">Use cases, presenters, Django request/response</td></tr>
+        <tr><td class="label">presenters.py</td><td class="desc">Use case output dataclasses, Component classes, ViewModels</td></tr>
+        <tr><td class="label">use_cases.py</td><td class="desc">Ports (abstract), domain entities only</td></tr>
+        <tr><td class="label">ports.py</td><td class="desc">Domain entities only</td></tr>
+        <tr><td class="label">entities.py</td><td class="desc">Nothing outside stdlib</td></tr>
+        <tr><td class="label">repositories.py</td><td class="desc">Ports (implements them), Django ORM</td></tr>
+        <tr><td class="label">django_models.py</td><td class="desc">Django ORM only</td></tr>
+      </tbody>
+    </table>
+
+    <h3>File Structure</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart/</span><span class="code-lang">layout</span></div>
+      <pre>cart/
+├── <span class="cl">domain/</span>
+│   ├── entities.py        <span class="cm"># Cart, CartItem, Money — pure Python</span>
+│   └── exceptions.py      <span class="cm"># ProductNotFound, InsufficientStock</span>
+│
+├── <span class="cl">application/</span>
+│   ├── ports.py           <span class="cm"># Abstract interfaces (CartRepository, ProductRepository)</span>
+│   └── use_cases.py       <span class="cm"># All business logic, calls ports, returns output DTOs</span>
+│
+├── <span class="cl">infrastructure/</span>
+│   ├── django_models.py   <span class="cm"># ORM models (CartRecord, CartItemRecord)</span>
+│   └── repositories.py    <span class="cm"># Concrete implementations of ports</span>
+│
+└── <span class="cl">interfaces/</span>
+    ├── views.py           <span class="cm"># Thin Django views — wires everything</span>
+    ├── presenters.py      <span class="cm"># Builds ViewModel, picks Component</span>
+    ├── urls.py
+    └── <span class="cl">components/</span>
+        ├── cart_summary/
+        │   └── cart_summary.py
+        └── cart_empty/
+            └── cart_empty.py</pre>
+    </div>
+  </section>
+
+  <!-- DOMAIN -->
+  <section id="domain">
+    <h2>Domain Layer <span class="layer-tag domain">domain</span></h2>
+    <p>Zero framework imports. Pure Python. This is where domain knowledge lives — business rules, invariants, domain language. The <code>Cart</code> entity knows the Quebec tax rate because that's a business fact, not a Django fact.</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart/domain/entities.py</span><span class="code-lang">python</span></div>
+      <pre><span class="kw">from</span> __future__ <span class="kw">import</span> annotations
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
+<span class="kw">from</span> decimal <span class="kw">import</span> Decimal
+
+<span class="dc">@dataclass</span>(frozen=<span class="kw">True</span>)
+<span class="kw">class</span> <span class="cl">Money</span>:
+    amount: <span class="ty">Decimal</span>
+    currency: <span class="ty">str</span> = <span class="str">"CAD"</span>
+
+    <span class="kw">def</span> <span class="fn">__add__</span>(<span class="kw">self</span>, other: <span class="cl">Money</span>) -> <span class="cl">Money</span>:
+        <span class="kw">assert</span> <span class="kw">self</span>.currency == other.currency
+        <span class="kw">return</span> <span class="cl">Money</span>(<span class="kw">self</span>.amount + other.amount, <span class="kw">self</span>.currency)
+
+    <span class="kw">def</span> <span class="fn">__mul__</span>(<span class="kw">self</span>, scalar: <span class="ty">int</span> | <span class="ty">Decimal</span>) -> <span class="cl">Money</span>:
+        <span class="kw">return</span> <span class="cl">Money</span>(<span class="kw">self</span>.amount * <span class="ty">Decimal</span>(scalar), <span class="kw">self</span>.currency)
+
+<span class="dc">@dataclass</span>
+<span class="kw">class</span> <span class="cl">Cart</span>:
+    session_key: <span class="ty">str</span>
+    items: <span class="ty">list</span>[<span class="cl">CartItem</span>] = field(default_factory=<span class="ty">list</span>)
+
+    TAX_RATE = <span class="ty">Decimal</span>(<span class="str">"0.14975"</span>)  <span class="cm"># Quebec HST+QST — domain knowledge</span>
+
+    <span class="kw">def</span> <span class="fn">add</span>(<span class="kw">self</span>, product_id: <span class="ty">int</span>, name: <span class="ty">str</span>, price: <span class="cl">Money</span>, quantity: <span class="ty">int</span> = <span class="nm">1</span>):
+        <span class="kw">for</span> item <span class="kw">in</span> <span class="kw">self</span>.items:
+            <span class="kw">if</span> item.product_id == product_id:
+                item.quantity += quantity
+                <span class="kw">return</span>
+        <span class="kw">self</span>.items.append(<span class="cl">CartItem</span>(product_id, name, price, quantity))
+
+    <span class="dc">@property</span>
+    <span class="kw">def</span> <span class="fn">subtotal</span>(<span class="kw">self</span>) -> <span class="cl">Money</span>:
+        <span class="kw">if not</span> <span class="kw">self</span>.items:
+            <span class="kw">return</span> <span class="cl">Money</span>(<span class="ty">Decimal</span>(<span class="str">"0"</span>))
+        <span class="kw">return</span> <span class="ty">sum</span>((i.subtotal <span class="kw">for</span> i <span class="kw">in</span> <span class="kw">self</span>.items), <span class="cl">Money</span>(<span class="ty">Decimal</span>(<span class="str">"0"</span>)))
+
+    <span class="dc">@property</span>
+    <span class="kw">def</span> <span class="fn">tax</span>(<span class="kw">self</span>) -> <span class="cl">Money</span>:
+        <span class="kw">return</span> <span class="cl">Money</span>((<span class="kw">self</span>.subtotal.amount * <span class="kw">self</span>.TAX_RATE).quantize(<span class="ty">Decimal</span>(<span class="str">"0.01"</span>)))
+
+    <span class="dc">@property</span>
+    <span class="kw">def</span> <span class="fn">total</span>(<span class="kw">self</span>) -> <span class="cl">Money</span>:
+        <span class="kw">return</span> <span class="kw">self</span>.subtotal + <span class="kw">self</span>.tax</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart/domain/exceptions.py</span><span class="code-lang">python</span></div>
+      <pre><span class="kw">class</span> <span class="cl">ProductNotFound</span>(<span class="cl">Exception</span>): <span class="kw">pass</span>
+<span class="kw">class</span> <span class="cl">InsufficientStock</span>(<span class="cl">Exception</span>): <span class="kw">pass</span>
+<span class="kw">class</span> <span class="cl">InvalidQuantity</span>(<span class="cl">Exception</span>): <span class="kw">pass</span></pre>
+    </div>
+  </section>
+
+  <!-- APPLICATION -->
+  <section id="application">
+    <h2>Application Layer <span class="layer-tag application">application</span></h2>
+    <p>Ports define what the use case needs as abstract interfaces. Use cases orchestrate domain logic. Neither imports Django, SQLAlchemy, or any framework.</p>
+
+    <h3>Ports (Interfaces)</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart/application/ports.py</span><span class="code-lang">python</span></div>
+      <pre><span class="kw">from</span> abc <span class="kw">import</span> ABC, abstractmethod
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> decimal <span class="kw">import</span> Decimal
+<span class="kw">from</span> ..domain.entities <span class="kw">import</span> Cart
+
+<span class="dc">@dataclass</span>
+<span class="kw">class</span> <span class="cl">ProductData</span>:
+    <span class="cm">"""What the use case needs — not the ORM model."""</span>
+    id: <span class="ty">int</span>
+    name: <span class="ty">str</span>
+    price: <span class="ty">Decimal</span>
+    stock: <span class="ty">int</span>
+
+<span class="kw">class</span> <span class="cl">CartRepository</span>(ABC):
+    <span class="dc">@abstractmethod</span>
+    <span class="kw">def</span> <span class="fn">find_by_session</span>(<span class="kw">self</span>, session_key: <span class="ty">str</span>) -> <span class="cl">Cart</span> | <span class="kw">None</span>: ...
+
+    <span class="dc">@abstractmethod</span>
+    <span class="kw">def</span> <span class="fn">save</span>(<span class="kw">self</span>, cart: <span class="cl">Cart</span>) -> <span class="kw">None</span>: ...
+
+<span class="kw">class</span> <span class="cl">ProductRepository</span>(ABC):
+    <span class="dc">@abstractmethod</span>
+    <span class="kw">def</span> <span class="fn">find_by_id</span>(<span class="kw">self</span>, product_id: <span class="ty">int</span>) -> <span class="cl">ProductData</span> | <span class="kw">None</span>: ...</pre>
+    </div>
+
+    <h3>Use Cases</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart/application/use_cases.py</span><span class="code-lang">python</span></div>
+      <pre><span class="dc">@dataclass</span>
+<span class="kw">class</span> <span class="cl">CartOutput</span>:
+    <span class="cm">"""Output DTO — framework-free, handed to the presenter."""</span>
+    items: <span class="ty">list</span>[<span class="cl">CartItemOutput</span>]
+    subtotal: <span class="ty">Decimal</span>
+    tax: <span class="ty">Decimal</span>
+    total: <span class="ty">Decimal</span>
+    is_empty: <span class="ty">bool</span>
+
+<span class="kw">class</span> <span class="cl">AddToCartUseCase</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, cart_repo: <span class="cl">CartRepository</span>, product_repo: <span class="cl">ProductRepository</span>):
+        <span class="kw">self</span>.cart_repo = cart_repo
+        <span class="kw">self</span>.product_repo = product_repo
+
+    <span class="kw">def</span> <span class="fn">execute</span>(<span class="kw">self</span>, session_key: <span class="ty">str</span>, product_id: <span class="ty">int</span>, quantity: <span class="ty">int</span> = <span class="nm">1</span>):
+        product = <span class="kw">self</span>.product_repo.find_by_id(product_id)
+        <span class="kw">if</span> product <span class="kw">is None</span>:
+            <span class="kw">raise</span> <span class="cl">ProductNotFound</span>(f<span class="str">"Product {product_id} not found"</span>)
+        <span class="kw">if</span> product.stock < quantity:
+            <span class="kw">raise</span> <span class="cl">InsufficientStock</span>(f<span class="str">"Only {product.stock} in stock"</span>)
+
+        cart = <span class="kw">self</span>.cart_repo.find_by_session(session_key) <span class="kw">or</span> <span class="cl">Cart</span>(session_key)
+        cart.add(product.id, product.name, <span class="cl">Money</span>(product.price), quantity)
+        <span class="kw">self</span>.cart_repo.save(cart)
+
+<span class="kw">class</span> <span class="cl">GetCartUseCase</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, cart_repo: <span class="cl">CartRepository</span>):
+        <span class="kw">self</span>.cart_repo = cart_repo
+
+    <span class="kw">def</span> <span class="fn">execute</span>(<span class="kw">self</span>, session_key: <span class="ty">str</span>) -> <span class="cl">CartOutput</span>:
+        cart = <span class="kw">self</span>.cart_repo.find_by_session(session_key) <span class="kw">or</span> <span class="cl">Cart</span>(session_key)
+        <span class="kw">return</span> <span class="cl">CartOutput</span>(
+            items=[<span class="cl">CartItemOutput</span>(...) <span class="kw">for</span> item <span class="kw">in</span> cart.items],
+            subtotal=cart.subtotal.amount,
+            tax=cart.tax.amount,
+            total=cart.total.amount,
+            is_empty=cart.is_empty,
+        )</pre>
+    </div>
+  </section>
+
+  <!-- INFRASTRUCTURE -->
+  <section id="infrastructure">
+    <h2>Infrastructure Layer <span class="layer-tag infrastructure">infrastructure</span></h2>
+    <p>Concrete implementations of the ports. This is where Django ORM lives. It maps between the ORM world and the domain entity world — the <strong>anti-corruption layer</strong>.</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart/infrastructure/repositories.py</span><span class="code-lang">python</span></div>
+      <pre><span class="kw">class</span> <span class="cl">DjangoCartRepository</span>(<span class="cl">CartRepository</span>):
+    <span class="kw">def</span> <span class="fn">find_by_session</span>(<span class="kw">self</span>, session_key: <span class="ty">str</span>) -> <span class="cl">Cart</span> | <span class="kw">None</span>:
+        <span class="kw">try</span>:
+            record = <span class="cl">CartRecord</span>.objects.prefetch_related(<span class="str">'items'</span>).get(
+                session_key=session_key
+            )
+        <span class="kw">except</span> <span class="cl">CartRecord</span>.DoesNotExist:
+            <span class="kw">return None</span>
+
+        <span class="cm"># ORM → domain entity mapping (anti-corruption layer)</span>
+        cart = <span class="cl">Cart</span>(session_key=session_key)
+        <span class="kw">for</span> item_record <span class="kw">in</span> record.items.all():
+            product = <span class="cl">Product</span>.objects.get(pk=item_record.product_id)
+            cart.items.append(<span class="cl">CartItem</span>(
+                product_id=item_record.product_id,
+                name=product.name,
+                unit_price=<span class="cl">Money</span>(product.price),
+                quantity=item_record.quantity,
+            ))
+        <span class="kw">return</span> cart
+
+    <span class="kw">def</span> <span class="fn">save</span>(<span class="kw">self</span>, cart: <span class="cl">Cart</span>) -> <span class="kw">None</span>:
+        record, _ = <span class="cl">CartRecord</span>.objects.get_or_create(session_key=cart.session_key)
+        record.items.all().delete()
+        <span class="cl">CartItemRecord</span>.objects.bulk_create([
+            <span class="cl">CartItemRecord</span>(cart=record, product_id=item.product_id, quantity=item.quantity)
+            <span class="kw">for</span> item <span class="kw">in</span> cart.items
+        ])</pre>
+    </div>
+  </section>
+
+  <!-- ADAPTERS -->
+  <section id="adapters">
+    <h2>Interface Adapters <span class="layer-tag interface">interface</span></h2>
+    <p>Views, presenters, and components. This is the translation zone between the application and the outside world. Views wire everything together and make no decisions.</p>
+
+    <div class="callout">
+      <strong>The view's four-step job:</strong> (1) parse the request, (2) call the use case, (3) call the presenter, (4) render what comes back. Nothing else.
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart/interfaces/views.py</span><span class="code-lang">python</span></div>
+      <pre><span class="kw">class</span> <span class="cl">CartView</span>(<span class="cl">View</span>):
+    <span class="kw">def</span> <span class="fn">get</span>(<span class="kw">self</span>, request):
+        <span class="cm"># 1. parse</span>
+        session_key = request.session.session_key
+
+        <span class="cm"># 2. call use case</span>
+        output = <span class="cl">GetCartUseCase</span>(cart_repo).execute(session_key)
+
+        <span class="cm"># 3. present (picks component + builds view model)</span>
+        component = <span class="cl">CartPresenter</span>().present(output)
+
+        <span class="cm"># 4. render whatever comes back — zero decisions</span>
+        <span class="kw">return</span> component.render_to_response(request=request)</pre>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- MVP -->
+  <section id="mvp">
+    <h2>MVP Pattern</h2>
+    <p>Model-View-Presenter. The <strong>View is passive</strong> — it has no logic, makes no decisions, knows nothing about the model. The Presenter mediates everything between domain output and rendered HTML.</p>
+
+    <div class="two-col">
+      <div class="two-col-cell left">
+        <h5>Frontend MVP (view-first)</h5>
+        <p>View is created first, then the presenter is injected into it. The presenter holds a reference back and calls methods on the live view over time. Bidirectional, ongoing binding.</p>
+      </div>
+      <div class="two-col-cell right">
+        <h5>Server-Side MVP (presenter-first)</h5>
+        <p>The presenter is called first and constructs the view. The view renders once and dies. No callbacks, no binding — a single pass. Stateless HTTP collapses the lifecycle.</p>
+      </div>
+    </div>
+
+    <div class="callout amber">
+      <strong>The naming collision:</strong> Django's <code>View</code> class is not the MVP "View". It's the coordinator/controller. The <strong>Component</strong> is the MVP View — it's the passive renderer. The Django View wires the three MVP actors together.
+    </div>
+
+    <table class="resp-table">
+      <thead><tr><th>MVP Actor</th><th>Our Implementation</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td class="label">Model</td><td class="owns">Domain entities + <code>CartOutput</code></td><td class="desc">The business outcome. What happened.</td></tr>
+        <tr><td class="label">Presenter</td><td class="owns"><code>CartPresenter</code></td><td class="desc">Transforms model, picks view, builds view model.</td></tr>
+        <tr><td class="label">View</td><td class="owns">Component + Template</td><td class="desc">Passive renderer. Receives view model, outputs HTML.</td></tr>
+        <tr><td class="label">(Coordinator)</td><td class="owns">Django <code>View</code> class</td><td class="desc">Wires the three actors. Not an MVP actor itself.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- PRESENTER -->
+  <section id="presenter">
+    <h2>The Presenter</h2>
+    <p>The presenter is the <strong>bridge</strong> between the domain world and the UI world. It is the only class that speaks both languages. It owns three decisions:</p>
+
+    <div class="rule" style="grid-template-columns: 1fr 1fr 1fr;">
+      <div class="rule-cell domain">
+        <div class="rule-head">Which component?</div>
+        <ul><li>Based on output state</li><li>Empty → <code>CartEmptyComponent</code></li><li>Error → <code>CartErrorComponent</code></li><li>Full → <code>CartSummaryComponent</code></li></ul>
+      </div>
+      <div class="rule-cell presenter">
+        <div class="rule-head">What data shape?</div>
+        <ul><li>Builds the ViewModel</li><li>Formats Decimal → string</li><li>Pluralises labels</li><li>Computes display flags</li></ul>
+      </div>
+      <div class="rule-cell template">
+        <div class="rule-head">Returns</div>
+        <ul><li>A configured Component</li><li>ViewModel injected in</li><li>Ready to render</li><li>No further decisions</li></ul>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart/interfaces/presenters.py</span><span class="code-lang">python</span></div>
+      <pre><span class="kw">class</span> <span class="cl">CartPresenter</span>:
+    <span class="kw">def</span> <span class="fn">present</span>(<span class="kw">self</span>, output: <span class="cl">CartOutput</span>) -> <span class="cl">Component</span>:
+        <span class="kw">if</span> output.is_empty:
+            <span class="kw">return</span> <span class="cl">CartEmptyComponent</span>(
+                vm=<span class="cl">CartEmptyViewModel</span>(message=<span class="str">"Your cart is empty"</span>)
+            )
+
+        <span class="kw">if</span> output.has_error:
+            <span class="kw">return</span> <span class="cl">CartErrorComponent</span>(
+                vm=<span class="cl">CartErrorViewModel</span>(message=output.error)
+            )
+
+        <span class="kw">return</span> <span class="cl">CartSummaryComponent</span>(
+            vm=<span class="cl">CartSummaryViewModel</span>(
+                items=[
+                    <span class="cl">CartItemViewModel</span>(
+                        product_id=item.product_id,
+                        name=item.name,
+                        unit_price=f<span class="str">"${item.unit_price:.2f}"</span>,
+                        quantity=item.quantity,
+                        subtotal=f<span class="str">"${item.subtotal:.2f}"</span>,
+                    )
+                    <span class="kw">for</span> item <span class="kw">in</span> output.items
+                ],
+                subtotal=f<span class="str">"${output.subtotal:.2f}"</span>,
+                tax=f<span class="str">"${output.tax:.2f}"</span>,
+                total=f<span class="str">"${output.total:.2f}"</span>,
+                item_count=<span class="ty">sum</span>(i.quantity <span class="kw">for</span> i <span class="kw">in</span> output.items),
+                item_label=<span class="fn">_pluralise</span>(item_count, <span class="str">"item"</span>),
+                show_checkout=<span class="kw">not</span> output.is_locked,
+                show_free_shipping_nudge=output.shipping_delta > <span class="nm">0</span>,
+                nudge_message=f<span class="str">"Add ${output.shipping_delta:.2f} for free shipping"</span>,
+            )
+        )</pre>
+    </div>
+
+    <p>Adding a new cart state (locked during checkout, fraud review, etc.) means adding one component and one branch in the presenter. <strong>The view never changes.</strong></p>
+  </section>
+
+  <!-- VIEW MODEL -->
+  <section id="viewmodel">
+    <h2>View Model</h2>
+    <p>The view model is the <strong>typed contract</strong> between the presenter and the template. It lives co-located with its component. The template reads <code>vm.*</code> only — it never computes, formats, or makes decisions.</p>
+
+    <h3>What belongs in the view model</h3>
+    <p>Not business logic — that stays in the domain. View logic is anything that exists purely because of how the UI works:</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart/interfaces/components/cart_summary/cart_summary.py</span><span class="code-lang">python</span></div>
+      <pre><span class="dc">@dataclass</span>
+<span class="kw">class</span> <span class="cl">CartSummaryViewModel</span>:
+    <span class="cm"># Formatted for display — domain has Decimal, view needs string</span>
+    subtotal: <span class="ty">str</span>           <span class="cm"># "$12.50"</span>
+    tax: <span class="ty">str</span>               <span class="cm"># "$1.87"</span>
+    total: <span class="ty">str</span>             <span class="cm"># "$14.37"</span>
+
+    <span class="cm"># Computed display values — derived from domain, meaningless outside UI</span>
+    item_count: <span class="ty">int</span>
+    item_label: <span class="ty">str</span>        <span class="cm"># "1 item" vs "3 items" — pluralisation is a view concern</span>
+
+    <span class="cm"># Display flags — template conditions as named booleans</span>
+    show_checkout: <span class="ty">bool</span>
+    show_free_shipping_nudge: <span class="ty">bool</span>
+
+    <span class="cm"># UI-specific labels — copy that depends on state</span>
+    nudge_message: <span class="ty">str</span>     <span class="cm"># "Add $5 more for free shipping"</span>
+    checkout_label: <span class="ty">str</span>    <span class="cm"># "Checkout" vs "Continue to Payment"</span>
+
+    items: <span class="ty">list</span>[<span class="cl">CartItemViewModel</span>]</pre>
+    </div>
+
+    <div class="rule">
+      <div class="rule-cell domain">
+        <div class="rule-head">Domain asks</div>
+        <ul><li>What is true?</li><li><code>is_empty</code></li><li><code>shipping_delta</code> (Decimal)</li><li><code>is_locked</code></li></ul>
+      </div>
+      <div class="rule-cell presenter">
+        <div class="rule-head">Presenter answers</div>
+        <ul><li>What should appear?</li><li><code>show_nudge</code></li><li><code>nudge_message</code> (str)</li><li><code>checkout_label</code></li></ul>
+      </div>
+    </div>
+
+    <p>The template has no questions left to answer. It just reads <code>vm.*</code>.</p>
+  </section>
+
+  <!-- COMPONENTS -->
+  <section id="components">
+    <h2>Django Components</h2>
+    <p>Each component owns its view model, its template, its CSS, and its JS — all in one file. The component is the unit of UI. The presenter picks which one to instantiate and injects the view model.</p>
+
+    <div class="flow">
+      <div class="flow-step coral">CartOutput</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step accent">CartPresenter</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step teal">CartSummaryComponent(vm=…)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step purple">Template reads vm.*</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart/interfaces/components/cart_summary/cart_summary.py</span><span class="code-lang">python</span></div>
+      <pre><span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> django_components <span class="kw">import</span> Component, register
+
+<span class="dc">@dataclass</span>
+<span class="kw">class</span> <span class="cl">CartItemViewModel</span>:
+    product_id: <span class="ty">int</span>
+    name: <span class="ty">str</span>
+    unit_price: <span class="ty">str</span>
+    quantity: <span class="ty">int</span>
+    subtotal: <span class="ty">str</span>
+
+<span class="dc">@dataclass</span>
+<span class="kw">class</span> <span class="cl">CartSummaryViewModel</span>:
+    items: <span class="ty">list</span>[<span class="cl">CartItemViewModel</span>]
+    subtotal: <span class="ty">str</span>
+    tax: <span class="ty">str</span>
+    total: <span class="ty">str</span>
+    item_count: <span class="ty">int</span>
+    item_label: <span class="ty">str</span>
+    show_checkout: <span class="ty">bool</span>
+    show_free_shipping_nudge: <span class="ty">bool</span>
+    nudge_message: <span class="ty">str</span>
+
+<span class="dc">@register</span>(<span class="str">"cart-summary"</span>)
+<span class="kw">class</span> <span class="cl">CartSummaryComponent</span>(<span class="cl">Component</span>):
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, vm: <span class="cl">CartSummaryViewModel</span>, **kwargs):
+        <span class="ty">super</span>().__init__(**kwargs)
+        <span class="kw">self</span>.vm = vm
+
+    <span class="cm"># @property allows dynamic templates based on presentation variants</span>
+    <span class="dc">@property</span>
+    <span class="kw">def</span> <span class="fn">template</span>(<span class="kw">self</span>) -> <span class="ty">str</span>:
+        <span class="kw">return</span> <span class="str">"""
+        &lt;div class="cart-summary"&gt;
+          &lt;p&gt;{{ vm.item_label }}&lt;/p&gt;
+
+          {% for item in vm.items %}
+            &lt;div class="cart-item"&gt;
+              &lt;span&gt;{{ item.name }}&lt;/span&gt;
+              &lt;span&gt;{{ item.quantity }} × {{ item.unit_price }}&lt;/span&gt;
+              &lt;span&gt;{{ item.subtotal }}&lt;/span&gt;
+            &lt;/div&gt;
+          {% endfor %}
+
+          {% if vm.show_free_shipping_nudge %}
+            &lt;p class="nudge"&gt;{{ vm.nudge_message }}&lt;/p&gt;
+          {% endif %}
+
+          &lt;div class="totals"&gt;
+            &lt;p&gt;Subtotal: {{ vm.subtotal }}&lt;/p&gt;
+            &lt;p&gt;Tax: {{ vm.tax }}&lt;/p&gt;
+            &lt;p&gt;&lt;strong&gt;Total: {{ vm.total }}&lt;/strong&gt;&lt;/p&gt;
+          &lt;/div&gt;
+
+          {% if vm.show_checkout %}
+            &lt;a href="{% url 'checkout:start' %}"&gt;Checkout&lt;/a&gt;
+          {% endif %}
+        &lt;/div&gt;
+        """</span>
+
+    css = <span class="str">"""
+        .cart-summary { padding: 1rem; }
+        .cart-item { display: flex; gap: 1rem; padding: .5rem 0; }
+        .totals { border-top: 1px solid #eee; margin-top: 1rem; padding-top: 1rem; }
+        .nudge { color: var(--green, green); font-size: 13px; }
+    """</span>
+
+    <span class="kw">def</span> <span class="fn">get_context_data</span>(<span class="kw">self</span>, **kwargs):
+        <span class="kw">return</span> {<span class="str">"vm"</span>: <span class="kw">self</span>.vm}</pre>
+    </div>
+
+    <div class="callout">
+      <strong>@property template rule:</strong> Use <code>@property</code> for <strong>presentation variants</strong> (compact vs full layout) — not for state branching. State branching belongs in the presenter. If the property is checking <code>vm.is_empty</code>, move that decision upstream.
+    </div>
+  </section>
+
+  <!-- INLINE -->
+  <section id="inline">
+    <h2>Inline Templates</h2>
+    <p>Everything co-located in one file. The view model, component logic, HTML, CSS, and JS live together. Close to how Vue single-file components work.</p>
+
+    <table class="resp-table">
+      <thead><tr><th>When to inline</th><th>When to split to a file</th></tr></thead>
+      <tbody>
+        <tr><td class="owns">Template under ~20 lines</td><td class="owns">Template over ~20 lines</td></tr>
+        <tr><td class="owns">Self-contained, focused component</td><td class="owns">Complex CSS/JS needing editor support</td></tr>
+        <tr><td class="owns">Internal/private component</td><td class="owns">Designers touching the template</td></tr>
+        <tr><td class="owns">Rapid iteration</td><td class="owns">Template shared across multiple components</td></tr>
+      </tbody>
+    </table>
+
+    <p>django-components deduplicates CSS and JS automatically — even if a component renders 10 times, the styles load once in <code>&lt;head&gt;</code> and the script once before <code>&lt;/body&gt;</code>.</p>
+  </section>
+
+  <hr>
+
+  <!-- HTMX -->
+  <section id="htmx">
+    <h2>HTMX & Deep Nesting</h2>
+    <p>Deep component nesting is the signal to split the render into separate HTTP calls. Each HTMX endpoint is its own full stack — use case → presenter → component.</p>
+
+    <h3>The nesting decision tree</h3>
+    <table class="resp-table">
+      <thead><tr><th>Question</th><th>Yes</th><th>No</th></tr></thead>
+      <tbody>
+        <tr><td class="desc">Is data already in scope from parent use case?</td><td class="owns">Nest the component</td><td class="owns">HTMX call</td></tr>
+        <tr><td class="desc">Is this component always visible on load?</td><td class="owns">Nest it</td><td class="owns">HTMX with <code>hx-trigger="revealed"</code></td></tr>
+        <tr><td class="desc">Is fetching this data expensive?</td><td class="owns">HTMX call, show skeleton</td><td class="owns">Nest it</td></tr>
+        <tr><td class="desc">Is this a different domain concern?</td><td class="owns">HTMX call, own presenter chain</td><td class="owns">Nest it</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">cart_summary template — HTMX for separate concerns</span><span class="code-lang">html</span></div>
+      <pre><span class="cm">&lt;!-- Cart renders immediately --&gt;</span>
+&lt;div class=<span class="str">"cart-summary"</span>&gt;
+  {% for item in vm.items %}
+    &lt;div class=<span class="str">"cart-item"</span>&gt;
+      {{ item.name }} — {{ item.subtotal }}
+
+      <span class="cm">&lt;!-- Inventory badge is a different domain concern — loads independently --&gt;</span>
+      &lt;span hx-get=<span class="str">"{% url 'inventory:badge' item.product_id %}"</span>
+            hx-trigger=<span class="str">"load"</span>
+            hx-swap=<span class="str">"outerHTML"</span>&gt;
+        &lt;span class=<span class="str">"skeleton"</span>&gt;...&lt;/span&gt;
+      &lt;/span&gt;
+    &lt;/div&gt;
+  {% endfor %}
+
+  <span class="cm">&lt;!-- Recommendations: separate concern, loads after cart --&gt;</span>
+  &lt;div hx-get=<span class="str">"{% url 'cart:recommendations' %}"</span>
+       hx-trigger=<span class="str">"load"</span>
+       hx-swap=<span class="str">"outerHTML"</span>&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">inventory/interfaces/views.py — each HTMX target is its own stack</span><span class="code-lang">python</span></div>
+      <pre><span class="kw">class</span> <span class="cl">InventoryBadgeView</span>(<span class="cl">View</span>):
+    <span class="kw">def</span> <span class="fn">get</span>(<span class="kw">self</span>, request, product_id: <span class="ty">int</span>):
+        output = <span class="cl">GetInventoryUseCase</span>(...).execute(product_id)
+        component = <span class="cl">InventoryPresenter</span>().present(output)
+        <span class="kw">return</span> component.render_to_response(request=request)
+
+<span class="kw">class</span> <span class="cl">InventoryPresenter</span>:
+    <span class="kw">def</span> <span class="fn">present</span>(<span class="kw">self</span>, output: <span class="cl">InventoryOutput</span>) -> <span class="cl">Component</span>:
+        <span class="kw">if</span> output.in_stock:
+            <span class="kw">return</span> <span class="cl">InStockBadgeComponent</span>(vm=<span class="cl">InStockViewModel</span>(count=output.count))
+        <span class="kw">if</span> output.low_stock:
+            <span class="kw">return</span> <span class="cl">LowStockBadgeComponent</span>(vm=<span class="cl">LowStockViewModel</span>(count=output.count))
+        <span class="kw">return</span> <span class="cl">OutOfStockBadgeComponent</span>(vm=<span class="cl">OutOfStockViewModel</span>())</pre>
+    </div>
+
+    <p>The page becomes a composition of independent vertical slices. Each slice is independently testable, independently cacheable, and has no knowledge of the others. The browser assembles the page; the server handles clean isolated requests.</p>
+  </section>
+
+  <!-- LARAVEL -->
+  <section id="laravel">
+    <h2>vs Laravel Resources</h2>
+    <p>The presenter and a Laravel API Resource are the same concept — they just produce different representations. The presenter's job is <em>take domain output, return the right representation</em>.</p>
+
+    <div class="rule">
+      <div class="rule-cell domain">
+        <div class="rule-head">Django Presenter → HTML</div>
+        <ul>
+          <li>Picks the Component (which template)</li>
+          <li>Builds the ViewModel (formatted data)</li>
+          <li>Conditional via different component class</li>
+          <li>Nested via child components</li>
+        </ul>
+      </div>
+      <div class="rule-cell presenter">
+        <div class="rule-head">Laravel Resource → JSON</div>
+        <ul>
+          <li>Defines the JSON array shape</li>
+          <li>Formats via <code>number_format</code>, etc.</li>
+          <li>Conditional via <code>when()</code>, <code>mergeWhen()</code></li>
+          <li>Nested via <code>CartItemResource::collection()</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">CartResource.php (Laravel)</span><span class="code-lang">php</span></div>
+      <pre><span class="kw">class</span> <span class="cl">CartResource</span> <span class="kw">extends</span> <span class="cl">JsonResource</span>
+{
+    <span class="kw">public function</span> <span class="fn">toArray</span>($request): <span class="ty">array</span>
+    {
+        <span class="kw">return</span> [
+            <span class="str">'items'</span>    => <span class="cl">CartItemResource</span>::collection($this->items),
+            <span class="str">'subtotal'</span> => <span class="str">'$'</span> . number_format($this->subtotal, <span class="nm">2</span>),
+            <span class="str">'tax'</span>      => <span class="str">'$'</span> . number_format($this->tax, <span class="nm">2</span>),
+            <span class="str">'total'</span>    => <span class="str">'$'</span> . number_format($this->total, <span class="nm">2</span>),
+        ];
+    }
+}</pre>
+    </div>
+
+    <p>The Laravel controller calling <code>CartResource</code> is identical in role to the Django view calling <code>CartPresenter</code>. Same pattern, different output format.</p>
+  </section>
+
+  <!-- INDUSTRY -->
+  <section id="industry">
+    <h2>Industry Standard</h2>
+    <p>Full clean architecture with a presenter layer is not the Django default — but it's a well-reasoned choice for complex domains. Here's where teams actually land:</p>
+
+    <div class="spectrum">
+      <div class="spectrum-row">
+        <div class="spectrum-label">Rails / Django default</div>
+        <div class="spectrum-desc">Controller calls service, dict passed to template. Template filters for formatting.</div>
+        <div class="spectrum-who">Small/medium teams, moving fast</div>
+      </div>
+      <div class="spectrum-row">
+        <div class="spectrum-label">Cosmic Python</div>
+        <div class="spectrum-desc">Service layer, repository pattern, domain model. View maps inline. No formal presenter.</div>
+        <div class="spectrum-who">Python/Django shops with discipline</div>
+      </div>
+      <div class="spectrum-row">
+        <div class="spectrum-label">What we built</div>
+        <div class="spectrum-desc">Use case → Presenter → ViewModel → Component. Middle ground with typed view models.</div>
+        <div class="spectrum-who">django-components, larger teams</div>
+      </div>
+      <div class="spectrum-row">
+        <div class="spectrum-label">ASP.NET standard</div>
+        <div class="spectrum-desc">Controller → Presenter → ViewModel → Razor. Typed templates require explicit view models.</div>
+        <div class="spectrum-who">C# shops, Razor templates</div>
+      </div>
+      <div class="spectrum-row">
+        <div class="spectrum-label">Strict Uncle Bob</div>
+        <div class="spectrum-desc">Use case calls presenter via output port interface. Full dependency inversion.</div>
+        <div class="spectrum-who">Java/Spring, .NET enterprise</div>
+      </div>
+    </div>
+
+    <div class="callout amber">
+      <strong>The honest take:</strong> The formal presenter class as a distinct layer is more a Java/C# convention. In Python it's a deliberate choice, not a default. The part that has broad consensus is: use cases, repositories, domain entities. The presenter question is answered by most Django teams with template filters. We add it explicitly because <strong>django-components creates natural component boundaries</strong> that make the presenter-builds-the-component pattern a clean fit.
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="summary">
+    <h2>Summary</h2>
+    <p>The complete responsibility map for every class in the system:</p>
+
+    <table class="resp-table">
+      <thead><tr><th>Class</th><th>Knows About</th><th>Decides</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="label">Domain Entities</td>
+          <td class="desc">stdlib only. Business rules, invariants, tax rates.</td>
+          <td class="owns">What is true in the domain.</td>
+        </tr>
+        <tr>
+          <td class="label">Ports (ABCs)</td>
+          <td class="desc">Domain entities only.</td>
+          <td class="owns">The interface contract between layers.</td>
+        </tr>
+        <tr>
+          <td class="label">Use Case</td>
+          <td class="desc">Ports (abstract), domain entities.</td>
+          <td class="owns">Business outcome. Returns <code>CartOutput</code>.</td>
+        </tr>
+        <tr>
+          <td class="label">Repository (concrete)</td>
+          <td class="desc">Port it implements, Django ORM.</td>
+          <td class="owns">How to persist and retrieve domain entities.</td>
+        </tr>
+        <tr>
+          <td class="label">Presenter</td>
+          <td class="desc">Use case output, ViewModels, Component classes.</td>
+          <td class="owns">Which component renders. How data is formatted.</td>
+        </tr>
+        <tr>
+          <td class="label">ViewModel</td>
+          <td class="desc">Nothing (it's a dataclass).</td>
+          <td class="owns">Typed contract between presenter and template.</td>
+        </tr>
+        <tr>
+          <td class="label">Component</td>
+          <td class="desc">Its ViewModel. Its template, CSS, JS.</td>
+          <td class="owns">How the HTML is structured.</td>
+        </tr>
+        <tr>
+          <td class="label">Template</td>
+          <td class="desc"><code>vm.*</code> only.</td>
+          <td class="owns">Nothing. Just renders.</td>
+        </tr>
+        <tr>
+          <td class="label">Django View</td>
+          <td class="desc">Use case, presenter, Django request/response.</td>
+          <td class="owns">Nothing. Wires and renders what comes back.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>The mental model</h3>
+    <div class="arch-diagram">
+      HTTP Request<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;│<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;▼<br>
+      Django View &nbsp;&nbsp;&nbsp;← parses request, calls use case, calls presenter, renders component<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;│<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;├── Use Case &nbsp;&nbsp;&nbsp;← what happened? (business logic) → CartOutput<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;│<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;└── Presenter &nbsp;&nbsp;← what should render? → Component(vm=ViewModel)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── Component &nbsp;← how does it look? → Template reads vm.*
+    </div>
+
+    <div class="callout teal">
+      <strong>Use Case asks:</strong> "what is true?" &nbsp;·&nbsp; <strong>Presenter asks:</strong> "what should appear?" &nbsp;·&nbsp; <strong>Template asks:</strong> nothing — vm.* is already answered.
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('nav a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`nav a[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+</script>
+
+</body>
+</html>

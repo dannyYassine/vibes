@@ -35,6 +35,19 @@
             "field": "reasoning_content"
           }
         },
+        "z-ai/glm-5.2": {
+          "name": "glm-5.2",
+          "options": {
+            "provider": {
+              "order": ["z-ai/glm-5.2"],
+              "allow_fallbacks": true
+            },
+            "reasoning": { "enabled": true }
+          },
+          "interleaved": {
+            "field": "reasoning_content"
+          }
+        },
         "google/gemini-3.5-flash": {
           "name": "gemini-3.5-flash",
           "options": {

@@ -42,6 +42,10 @@ delivery mechanisms → new VerbNounDto() → usecase.execute(dto) → services 
 | Repositories        | Registered          | DI container                            | Models (hydration only)                                   |
 | Models              | Not registered      | `new(...)` or `Model.fromDatabase(row)` | — (domain logic only)                                     |
 | Factories           | Registered          | DI container                            | Models, other factories                                   |
+| Views (coordinator) | Not registered      | Framework-owned (per request)           | Usecases, presenters                                      |
+| Presenters          | Not registered      | `new` in view                           | ViewModels, Components (constructs them)                  |
+| ViewModels          | Not registered      | `new` in presenter                      | — (data only)                                             |
+| Components          | Not registered      | `new` in presenter                      | Template renders `vm.*` only                              |
 
 ## Core Rules
 
@@ -53,6 +57,10 @@ delivery mechanisms → new VerbNounDto() → usecase.execute(dto) → services 
 6. **DI-injected**: usecases, services (all sub-types), repositories, factories. Everything else is plain instantiation.
 7. **Single usecase rule**: each usecase does exactly one thing. No usecase calls another usecase.
 8. **Models**: created via `new Model(...)` for new entities, or `Model.fromDatabase(row)` when hydrated from storage.
+9. **Views (coordinator)**: parse request, call use case, call presenter, render component. Zero decisions. Root views follow PRG; fragment views serve HTMX.
+10. **Presenters**: bridge domain to UI. Pick component based on output state, build ViewModel with formatted data. Never call services or repositories.
+11. **ViewModels**: typed dataclass contract. Template reads `vm.*` only — never computes, formats, or decides.
+12. **Components**: passive MVP View. Receives ViewModel, owns template/CSS/JS. Presenter picks which one; `@property template` for layout variants only, never state branching.
 
 ## Service Sub-Types
 
@@ -82,6 +90,11 @@ delivery mechanisms → new VerbNounDto() → usecase.execute(dto) → services 
 | Represents a domain entity                       | Model                 | `layers/models.md`              |
 | Creates complex model instances                  | Factory               | `layers/factories.md`           |
 | Wires everything together                        | DI container          | `layers/di-container.md`        |
+| Translates domain output for display             | Presenter             | `layers/presenters.md`          |
+| Typed contract between presenter and template    | ViewModel             | `layers/view-models.md`         |
+| Self-contained UI unit (VM + template + CSS/JS)  | Component             | `layers/components.md`          |
+| Passive view, no logic in template               | MVP pattern           | `layers/mvp.md`                 |
+| Wires usecase→presenter→component, renders HTML  | View (coordinator)    | `layers/views.md`               |
 
 ## Behavior Modes
 
@@ -119,6 +132,10 @@ delivery mechanisms → new VerbNounDto() → usecase.execute(dto) → services 
 | Factories           | Integration (via usecase)         | `testing/factories.md`           |
 | Delivery mechanisms | Functional                        | `testing/delivery-mechanisms.md` |
 | Events              | Integration (spy in usecase test) | `testing/events.md`              |
+| Presenters          | **Unit**                          | —                               |
+| ViewModels          | **Unit** (data validation)        | —                               |
+| Components          | Integration (render smoke test)   | —                               |
+| Views (coordinator) | Functional                        | `testing/delivery-mechanisms.md` |
 
 Test type philosophy: `testing/types/`
 
@@ -137,6 +154,11 @@ Load on demand:
 - `layers/events.md`
 - `layers/delivery-mechanisms.md`
 - `layers/di-container.md`
+- `layers/views.md` — root vs fragment views, PRG pattern
+- `layers/presenters.md` — bridge domain→UI
+- `layers/view-models.md` — typed contract between presenter and template
+- `layers/components.md` — self-contained UI unit (template + CSS + JS)
+- `layers/mvp.md` — Model-View-Presenter pattern (server-side)
 - `testing/types/integration.md`
 - `testing/types/functional.md`
 - `testing/types/unit.md`
