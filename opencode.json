@@ -26,7 +26,7 @@
                 "deepinfra",
                 "digitalocean"
               ],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             },
             "reasoning": { "enabled": true }
           },
@@ -52,7 +52,7 @@
           "options": {
             "provider": {
               "order": ["google-ai-studio", "google-vertex/global"],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             }
           }
         },
@@ -61,7 +61,7 @@
           "options": {
             "provider": {
               "order": ["google-ai-studio", "google-vertex/global"],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             },
             "reasoning": { "enabled": true, "reasoning_effort": "high" }
           },
@@ -74,7 +74,7 @@
           "options": {
             "provider": {
               "order": ["deepinfra", "digitalocean", "siliconflow/fp8"],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             },
             "reasoning": { "enabled": true }
           },
@@ -87,7 +87,7 @@
           "options": {
             "provider": {
               "order": ["azure", "openai"],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             }
           }
         },
@@ -96,7 +96,7 @@
           "options": {
             "provider": {
               "order": ["moonshotai"],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             },
             "reasoning": { "enabled": true, "reasoning_effort": "high" }
           },
@@ -109,7 +109,7 @@
           "options": {
             "provider": {
               "order": ["google-ai-studio", "google-vertex/global"],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             }
           }
         },
@@ -118,7 +118,7 @@
           "options": {
             "provider": {
               "order": ["google-vertex/global", "google-ai-studio"],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             }
           }
         },
@@ -127,7 +127,7 @@
           "options": {
             "provider": {
               "order": ["alibaba"],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             }
           }
         },
@@ -136,7 +136,7 @@
           "options": {
             "provider": {
               "order": ["xiaomi/fp8"],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             }
           }
         },
@@ -145,7 +145,7 @@
           "options": {
             "provider": {
               "order": ["novita/fp8", "morph", "together", "deepinfra/bf16"],
-              "allow_fallbacks": false
+              "allow_fallbacks": true
             }
           }
         }
@@ -177,61 +177,57 @@
     "plan-ultra": {
       "mode": "primary",
       "model": "openrouter/moonshotai/kimi-k3",
-      "description": "Ultra deep dive planning for the hardest problems",
+      "description": "Ultra deep planning agent",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "main-flash": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
-      "description": "Fastest editing for routine tasks"
+      "description": "Fastest main agent"
     },
     "main": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-pro",
-      "description": "Fast editing for routine tasks"
+      "description": "Fast main agent"
     },
     "main-high": {
       "mode": "primary",
       "model": "openrouter/z-ai/glm-5.2",
-      "description": "High-quality main agent for hard sessions"
+      "description": "High-quality main agent"
     },
     "main-ultra": {
       "mode": "primary",
       "model": "openrouter/moonshotai/kimi-k3",
-      "description": "Ultra deep reasoning for the hardest coding sessions"
+      "description": "Ultra deep main agent"
     },
     "ask-flash": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
       "description": "Fastest question-only agent",
-      "permission": {
-        "edit": "deny"
-      }
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "prompt": "You are a question-answering agent. Answer questions about the codebase using search and read tools. Do NOT write code, make edits, or run commands. Explain, do not execute."
     },
     "ask": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-pro",
       "description": "Fast question-only agent",
-      "permission": {
-        "edit": "deny"
-      }
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "prompt": "You are a question-answering agent. Answer questions about the codebase using search and read tools. Do NOT write code, make edits, or run commands. Explain, do not execute."
     },
     "ask-high": {
       "mode": "primary",
       "model": "openrouter/z-ai/glm-5.2",
       "description": "High-quality question-only agent",
-      "permission": {
-        "edit": "deny"
-      }
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "prompt": "You are a question-answering agent. Answer questions about the codebase using search and read tools. Do NOT write code, make edits, or run commands. Explain, do not execute."
     },
     "ask-ultra": {
       "mode": "primary",
       "model": "openrouter/moonshotai/kimi-k3",
-      "description": "Ultra deep reasoning for the hardest questions",
-      "permission": {
-        "edit": "deny"
-      }
+      "description": "Ultra deep question-only agent",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "prompt": "You are a question-answering agent. Answer questions about the codebase using search and read tools. Do NOT write code, make edits, or run commands. Explain, do not execute."
     }
   }
 }
