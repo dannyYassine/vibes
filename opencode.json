@@ -162,14 +162,14 @@
     },
     "plan": {
       "mode": "primary",
-      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "model": "openrouter/deepseek/deepseek-v4-pro",
       "description": "Fast planning agent",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "plan-high": {
       "mode": "primary",
-      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "model": "openrouter/z-ai/glm-5.2",
       "description": "High-quality planning agent",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
@@ -188,12 +188,12 @@
     },
     "main": {
       "mode": "primary",
-      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "model": "openrouter/deepseek/deepseek-v4-pro",
       "description": "Fast editing for routine tasks"
     },
     "main-high": {
       "mode": "primary",
-      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "model": "openrouter/z-ai/glm-5.2",
       "description": "High-quality main agent for hard sessions"
     },
     "main-ultra": {
@@ -211,7 +211,7 @@
     },
     "ask": {
       "mode": "primary",
-      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "model": "openrouter/deepseek/deepseek-v4-pro",
       "description": "Fast question-only agent",
       "permission": {
         "edit": "deny"
@@ -219,7 +219,7 @@
     },
     "ask-high": {
       "mode": "primary",
-      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "model": "openrouter/z-ai/glm-5.2",
       "description": "High-quality question-only agent",
       "permission": {
         "edit": "deny"
