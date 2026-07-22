@@ -153,6 +153,13 @@
     }
   },
   "agent": {
+    "plan-flash": {
+      "mode": "primary",
+      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "description": "Fastest planning agent",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
+    },
     "plan": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
@@ -160,10 +167,10 @@
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
-    "plan-pro": {
+    "plan-high": {
       "mode": "primary",
-      "model": "openrouter/z-ai/glm-5.2",
-      "description": "Deep reasoning for complex planning",
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "description": "High-quality planning agent",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
@@ -174,20 +181,33 @@
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
+    "main-flash": {
+      "mode": "primary",
+      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "description": "Fastest editing for routine tasks"
+    },
     "main": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
       "description": "Fast editing for routine tasks"
     },
-    "main-pro": {
+    "main-high": {
       "mode": "primary",
-      "model": "openrouter/z-ai/glm-5.2",
-      "description": "Deep-reasoning main agent for hard sessions"
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "description": "High-quality main agent for hard sessions"
     },
     "main-ultra": {
       "mode": "primary",
       "model": "openrouter/moonshotai/kimi-k3",
       "description": "Ultra deep reasoning for the hardest coding sessions"
+    },
+    "ask-flash": {
+      "mode": "primary",
+      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "description": "Fastest question-only agent",
+      "permission": {
+        "edit": "deny"
+      }
     },
     "ask": {
       "mode": "primary",
@@ -197,10 +217,10 @@
         "edit": "deny"
       }
     },
-    "ask-pro": {
+    "ask-high": {
       "mode": "primary",
-      "model": "openrouter/z-ai/glm-5.2",
-      "description": "Deep-reasoning question-only agent",
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "description": "High-quality question-only agent",
       "permission": {
         "edit": "deny"
       }
