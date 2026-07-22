@@ -42,7 +42,7 @@
               "order": ["z-ai/glm-5.2"],
               "allow_fallbacks": true
             },
-            "reasoning": { "enabled": true }
+            "reasoning": { "enabled": true, "reasoning_effort": "xhigh" }
           },
           "interleaved": {
             "field": "reasoning_content"
@@ -55,6 +55,19 @@
               "order": ["google-ai-studio", "google-vertex/global"],
               "allow_fallbacks": false
             }
+          }
+        },
+        "google/gemini-3.6-flash": {
+          "name": "gemini-3.6-flash",
+          "options": {
+            "provider": {
+              "order": ["google-ai-studio", "google-vertex/global"],
+              "allow_fallbacks": false
+            },
+            "reasoning": { "enabled": true, "reasoning_effort": "high" }
+          },
+          "interleaved": {
+            "field": "reasoning_content"
           }
         },
         "deepseek/deepseek-v4-pro": {
@@ -79,13 +92,17 @@
             }
           }
         },
-        "moonshotai/kimi-k2.6": {
-          "name": "kimi-k2.6",
+        "moonshotai/kimi-k3": {
+          "name": "kimi-k3",
           "options": {
             "provider": {
-              "order": ["io-net/int4", "cloudflare"],
+              "order": ["moonshotai"],
               "allow_fallbacks": false
-            }
+            },
+            "reasoning": { "enabled": true, "reasoning_effort": "high" }
+          },
+          "interleaved": {
+            "field": "reasoning_content"
           }
         },
         "google/gemini-3-flash-preview": {
@@ -137,41 +154,62 @@
     }
   },
   "agent": {
-    "plan-flash": {
+    "plan": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
-      "description": "Use this agent primarly for planning",
+      "description": "Fast planning agent",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "plan-pro": {
       "mode": "primary",
-      "model": "openrouter/deepseek/deepseek-v4-pro",
-      "description": "Use this agent primarly for planning",
+      "model": "openrouter/z-ai/glm-5.2",
+      "description": "Deep reasoning for complex planning",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "plan-ultra": {
       "mode": "primary",
-      "model": "openrouter/z-ai/glm-5.2",
-      "description": "Use this agent for doing a ultra deep dive for planning",
+      "model": "openrouter/moonshotai/kimi-k3",
+      "description": "Ultra deep dive planning for the hardest problems",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "main": {
       "mode": "primary",
-      "model": "openrouter/deepseek/deepseek-v4-pro",
-      "description": "Pro as the main driver for hard sessions"
-    },
-    "flash": {
-      "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
-      "description": "Flash for implementing plans"
+      "description": "Fast editing for routine tasks"
+    },
+    "main-pro": {
+      "mode": "primary",
+      "model": "openrouter/z-ai/glm-5.2",
+      "description": "Deep-reasoning main agent for hard sessions"
+    },
+    "main-ultra": {
+      "mode": "primary",
+      "model": "openrouter/moonshotai/kimi-k3",
+      "description": "Ultra deep reasoning for the hardest coding sessions"
     },
     "ask": {
       "mode": "primary",
-      "model": "openrouter/deepseek/deepseek-v4-pro",
-      "description": "Use this agent to only ask a question, which will not modify anything",
+      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "description": "Fast question-only agent",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "ask-pro": {
+      "mode": "primary",
+      "model": "openrouter/z-ai/glm-5.2",
+      "description": "Deep-reasoning question-only agent",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "ask-ultra": {
+      "mode": "primary",
+      "model": "openrouter/moonshotai/kimi-k3",
+      "description": "Ultra deep reasoning for the hardest questions",
       "permission": {
         "edit": "deny"
       }
