@@ -4,7 +4,6 @@
   "model": "openrouter/deepseek/deepseek-v4-flash",
   "small_model": "openrouter/deepseek/deepseek-v4-flash",
   "default_agent": "main",
-
   "mcp": {
     "code-review-graph": {
       "type": "local",

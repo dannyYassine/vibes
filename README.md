@@ -2,6 +2,29 @@
 
 A collection of projects built entirely through "vibe coding" — an experimental approach where every project is created using only AI-assisted development. The goal is to explore how far you can take vibes coding to plan, build, and maintain full projects while still following the same best practices you'd expect from traditional development.
 
+## Skills
+
+Use third-party AI skills (like [Anthropic's skill library](https://github.com/anthropics/skills) or [Matt Pocock's skills](https://github.com/mattpocock/skills/tree/main/skills)) to give agents domain-specific instructions — e.g. the [frontend-design skill](https://github.com/anthropics/skills/tree/main/skills/frontend-design):
+
+```bash
+# Clone skills repo
+git clone https://github.com/anthropics/skills ~/anthropic-skills
+
+# Symlink a skill into opencode's auto-load path
+ln -s ~/anthropic-skills/skills/frontend-design ~/.claude/skills/frontend-design
+
+# Or register via opencode.json
+# "skills": { "paths": ["~/anthropic-skills/skills"] }
+```
+
+After restarting opencode, it finds `**/SKILL.md` files in auto-load paths (`~/.claude/skills/`, `~/.agents/skills/`) or configured `skills.paths`. The model triggers on matching keywords from the skill's description.
+
+## Design Tools
+
+- [DaisyUI Blueprint](https://daisyui.com/blueprint/) — UI component blueprints for rapid prototyping
+- [Mobbin](https://mobbin.com) — Real-world mobile & web design inspiration library
+- [Open Design AI](https://open-design.ai) — AI-powered design engineering assistant
+
 ## Projects
 
 ### [Weather App](weather-app-copilot-claude-code/)
