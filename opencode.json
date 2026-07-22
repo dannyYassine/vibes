@@ -1,9 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
-
   "model": "openrouter/deepseek/deepseek-v4-flash",
   "small_model": "openrouter/deepseek/deepseek-v4-flash",
-  "default_agent": "main",
+  "default_agent": "main-flash",
   "mcp": {
     "code-review-graph": {
       "type": "local",
@@ -156,76 +155,75 @@
     "plan-flash": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
-      "description": "Fastest planning agent",
+      "description": "Fastest planning agent (deepseek-v4-flash)",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "plan": {
-      "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-pro",
-      "description": "Fast planning agent",
+      "description": "Fast planning agent (deepseek-v4-pro)",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "plan-high": {
       "mode": "primary",
       "model": "openrouter/z-ai/glm-5.2",
-      "description": "High-quality planning agent",
+      "description": "High-quality planning agent (glm-5.2)",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "plan-ultra": {
       "mode": "primary",
       "model": "openrouter/moonshotai/kimi-k3",
-      "description": "Ultra deep planning agent",
+      "description": "Ultra deep planning agent (kimi-k3)",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
     "main-flash": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
-      "description": "Fastest main agent"
+      "description": "Fastest main agent (deepseek-v4-flash)"
     },
     "main": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-pro",
-      "description": "Fast main agent"
+      "description": "Fast main agent (deepseek-v4-pro)"
     },
     "main-high": {
       "mode": "primary",
       "model": "openrouter/z-ai/glm-5.2",
-      "description": "High-quality main agent"
+      "description": "High-quality main agent (glm-5.2)"
     },
     "main-ultra": {
       "mode": "primary",
       "model": "openrouter/moonshotai/kimi-k3",
-      "description": "Ultra deep main agent"
+      "description": "Ultra deep main agent (kimi-k3)"
     },
     "ask-flash": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
-      "description": "Fastest question-only agent",
+      "description": "Fastest question-only agent (deepseek-v4-flash)",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a question-answering agent. Answer questions about the codebase using search and read tools. Do NOT write code, make edits, or run commands. Explain, do not execute."
     },
     "ask": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-pro",
-      "description": "Fast question-only agent",
+      "description": "Fast question-only agent (deepseek-v4-pro)",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a question-answering agent. Answer questions about the codebase using search and read tools. Do NOT write code, make edits, or run commands. Explain, do not execute."
     },
     "ask-high": {
       "mode": "primary",
       "model": "openrouter/z-ai/glm-5.2",
-      "description": "High-quality question-only agent",
+      "description": "High-quality question-only agent (glm-5.2)",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a question-answering agent. Answer questions about the codebase using search and read tools. Do NOT write code, make edits, or run commands. Explain, do not execute."
     },
     "ask-ultra": {
       "mode": "primary",
       "model": "openrouter/moonshotai/kimi-k3",
-      "description": "Ultra deep question-only agent",
+      "description": "Ultra deep question-only agent (kimi-k3)",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a question-answering agent. Answer questions about the codebase using search and read tools. Do NOT write code, make edits, or run commands. Explain, do not execute."
     }
