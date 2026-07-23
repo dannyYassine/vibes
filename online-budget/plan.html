@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RBC Household Budget — Build Plan, Reconciled</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E9E6DD;
+    --paper-2:#E1DCCF;
+    --paper-3:#D8D2C2;
+    --ink:#1A1F2B;
+    --navy:#002B5C;
+    --navy-soft:#33507F;
+    --oxblood:#7A1F2B;
+    --oxblood-soft:#9E3644;
+    --ledger:#C9C4B6;
+    --ledger-faint:rgba(122,114,95,.12);
+    --mute:#6B6759;
+    --rule:#B8B2A2;
+    --maxw:960px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 35px,var(--ledger-faint) 35px,var(--ledger-faint) 36px);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--oxblood);color:var(--paper)}
+  :focus-visible{outline:2px solid var(--navy);outline-offset:3px;border-radius:2px}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px 120px}
+
+  .micr{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:10.5px;
+    letter-spacing:.32em;
+    color:var(--mute);
+    text-transform:uppercase;
+    padding:10px 0 8px;
+    border-bottom:1px solid var(--ledger);
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .micr b{color:var(--navy);font-weight:600}
+
+  .hero{padding:48px 0 0;border-bottom:1px solid var(--rule)}
+  .hero__eyebrow{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--mute);margin:0 0 18px;
+  }
+  .hero__title{
+    font-family:"Fraunces",serif;font-weight:600;
+    font-variation-settings:"opsz" 144,"SOFT" 50;
+    font-size:clamp(40px,7vw,76px);line-height:.98;letter-spacing:-.02em;
+    margin:0;color:var(--ink);
+  }
+  .hero__title em{font-style:italic;font-weight:500;color:var(--navy)}
+  .hero__meta{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    gap:24px;flex-wrap:wrap;margin-top:28px;
+  }
+  .hero__thesis{max-width:52ch;font-size:18px;line-height:1.5;color:var(--ink);margin:0}
+  .hero__thesis strong{color:var(--oxblood);font-weight:600}
+  .hero__stmt{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--mute);
+    text-align:right;line-height:1.8;
+  }
+  .hero__stmt b{color:var(--ink);display:block;font-weight:600}
+
+  .tear{position:relative;height:34px;margin-top:40px}
+  .tear::before{content:"";position:absolute;inset:0 0 auto 0;height:0;border-top:2px dashed var(--ledger)}
+  .tear::after{content:"";position:absolute;top:-9px;left:-6px;width:18px;height:18px;background:var(--paper);border:2px solid var(--ledger);border-radius:50%}
+  .tear__right{position:absolute;top:-9px;right:-6px;width:18px;height:18px;background:var(--paper);border:2px solid var(--ledger);border-radius:50%}
+  .tear__label{
+    position:absolute;left:0;right:0;top:14px;text-align:center;
+    font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.3em;
+    text-transform:uppercase;color:var(--mute);
+  }
+  @keyframes tearSettle{from{transform:translateY(-6px);opacity:0}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:no-preference){.tear{animation:tearSettle .6s ease-out both}}
+
+  .sect{padding:44px 0 8px;border-bottom:1px solid var(--ledger)}
+  .sect:last-of-type{border-bottom:0}
+  .sect__head{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:18px;margin-bottom:22px}
+  .sect__no{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--oxblood);letter-spacing:.05em;font-weight:600}
+  .sect__title{
+    font-family:"Fraunces",serif;font-weight:600;font-variation-settings:"opsz" 60;
+    font-size:clamp(24px,3.4vw,32px);line-height:1.1;letter-spacing:-.01em;margin:0;color:var(--ink);
+  }
+  .sect__total{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--mute);white-space:nowrap}
+  .sect__total .num{color:var(--ink);font-weight:600}
+  .num{font-variant-numeric:tabular-nums}
+
+  .sect__body p{margin:0 0 14px;max-width:78ch}
+  .sect__body strong{color:var(--navy);font-weight:600}
+  .lead{font-size:18px;line-height:1.55;color:var(--ink)}
+
+  .code{
+    font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.65;
+    background:var(--paper-2);border-left:3px solid var(--navy);border-radius:0 4px 4px 0;
+    padding:16px 18px;margin:16px 0 22px;overflow-x:auto;white-space:pre;color:var(--ink);
+  }
+  .code .c{color:var(--mute)}
+  .code .k{color:var(--navy);font-weight:600}
+  .code .s{color:var(--oxblood)}
+  .code .d{color:var(--navy-soft)}
+
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0 22px;font-size:14px}
+  .tbl th{
+    text-align:left;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--mute);font-weight:500;
+    padding:6px 14px 6px 0;border-bottom:1px solid var(--rule);vertical-align:bottom;
+  }
+  .tbl td{padding:11px 14px 11px 0;border-bottom:1px solid var(--ledger);vertical-align:top;line-height:1.5}
+  .tbl tr:last-child td{border-bottom:0}
+  .tbl code{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--navy)}
+
+  .card{background:var(--paper-2);border:1px solid var(--ledger);border-radius:4px;padding:18px 20px;margin:16px 0 22px}
+  .card__t{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--navy);font-weight:600;margin:0 0 8px}
+  .card ol,.card ul{margin:6px 0 0;padding-left:22px}
+  .card li{margin-bottom:6px}
+
+  .rules{counter-reset:rule;margin:16px 0 22px;padding:0;list-style:none}
+  .rules li{
+    counter-increment:rule;position:relative;padding:10px 0 10px 42px;
+    border-bottom:1px dotted var(--ledger);line-height:1.55;
+  }
+  .rules li:last-child{border-bottom:0}
+  .rules li::before{
+    content:counter(rule,decimal-leading-zero);
+    position:absolute;left:0;top:12px;
+    font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--oxblood);
+  }
+  .rules li b{color:var(--ink)}
+
+  .exc{margin:30px 0 10px}
+  .exc__head{
+    font-family:"Fraunces",serif;font-weight:600;font-variation-settings:"opsz" 60;
+    font-size:22px;color:var(--oxblood);margin:0 0 4px;display:flex;align-items:center;gap:12px;
+  }
+  .exc__head::before{content:"\2717";font-family:"IBM Plex Mono",monospace;font-size:16px}
+  .exc__sub{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin:0 0 16px}
+  .exc__list{list-style:none;padding:0;margin:0}
+  .exc__list li{border-left:3px solid var(--oxblood);padding:10px 0 10px 16px;margin-bottom:10px}
+  .exc__list li::before{content:attr(data-n);font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--oxblood);margin-right:10px}
+  .exc__list b{color:var(--ink)}
+
+  .fn{margin-top:40px;padding-top:22px;border-top:2px solid var(--ink)}
+  .fn__t{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);font-weight:600;margin:0 0 14px}
+  .fn__list{list-style:none;padding:0;margin:0;font-size:13.5px;line-height:1.55}
+  .fn__list li{display:grid;grid-template-columns:28px 1fr;gap:6px;padding:9px 0;border-bottom:1px dotted var(--ledger)}
+  .fn__list li:last-child{border-bottom:0}
+  .fn__list .n{font-family:"IBM Plex Mono",monospace;color:var(--oxblood);font-weight:600}
+  .fn__list b{color:var(--navy);font-weight:600}
+
+  .foot{
+    margin-top:64px;padding-top:20px;border-top:1px solid var(--ledger);
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--mute);
+    display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  }
+
+  @media (max-width:640px){
+    .wrap{padding:0 18px 80px}
+    .hero{padding:32px 0 0}
+    .hero__meta{align-items:flex-start}
+    .hero__stmt{text-align:left}
+    .sect__head{grid-template-columns:auto 1fr;gap:12px}
+    .sect__total{grid-column:1/3;text-align:left}
+    .tbl{font-size:13px}
+    .tbl td,.tbl th{padding-right:8px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="micr">
+    <span>Routing <b>00030168</b> &middot; Acct <b>&bull;&bull;&bull;&bull; 2026</b></span>
+    <span>Stmt <b>07 / 26</b> &middot; Page <b>01 / 01</b></span>
+  </div>
+
+  <header class="hero">
+    <p class="hero__eyebrow">Build plan &mdash; reconciled, verbose</p>
+    <h1 class="hero__title">RBC Household Budget,<br><em>line by line</em></h1>
+    <div class="hero__meta">
+      <p class="hero__thesis">A self-hosted tool for two &mdash; no open banking yet, no third-party fit. This plan is written for an automated implementer (deepseek-v4-flash) to execute top-to-bottom. <strong>Every file, every command, every verification step is spelled out.</strong> No architectural judgment calls. Follow the layering rules; stop on any failing check.</p>
+      <div class="hero__stmt">
+        <b>Period</b>
+        Bootstrap &rarr; Pi deploy
+        <br>Prepared 23 Jul 2026
+        <br>For: Danny &amp; spouse
+      </div>
+    </div>
+    <div class="tear" aria-hidden="true">
+      <span class="tear__right"></span>
+      <span class="tear__label">&mdash; detach above this line &mdash;</span>
+    </div>
+  </header>
+
+  <!-- Layering Rules -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 00</span>
+      <h2 class="sect__title">Layering rules &mdash; read before writing code</h2>
+      <span class="sect__total"><span class="num">10</span> rules</span>
+    </header>
+    <div class="sect__body">
+      <p class="lead">The codebase follows strict clean-architecture layering. Dependencies flow one direction only:</p>
+<pre class="code">delivery mechanisms (views, jobs, commands)
+        &darr; build DTO, call one usecase
+application (use cases)
+        &darr; call
+services (core/domain)
+        &darr; call
+repositories, factories, handlers
+        &darr; hydrate / create
+models (domain entities)</pre>
+      <p>Hard rules &mdash; violate these and the build is wrong:</p>
+      <ol class="rules">
+        <li><b>One use case per request.</b> A view or job builds exactly one DTO and calls exactly one <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">usecase.execute(dto)</code>. Never two.</li>
+        <li><b>Views never touch repositories.</b> Views call use cases only.</li>
+        <li><b>Use cases never import Django.</b> They take ports (ABCs) as constructor args. Django lives only in <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">infrastructure/</code>.</li>
+        <li><b>Repositories return domain entities</b>, never ORM models. Hydrate via <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">Entity.fromDatabase(row)</code>.</li>
+        <li><b>Handlers are pure functions</b>, constructed with plain vars, never DI-registered. For v1, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">ExactMatcher</code> / <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">TitleNormalizer</code> are handlers called by <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CategorizationService</code>.</li>
+        <li><b>DTOs are data only.</b> No methods. Built by the delivery mechanism, passed to <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">usecase.execute(dto)</code>.</li>
+        <li><b>Presenters never call services/repositories.</b> They take use-case output, build a ViewModel, pick a Component.</li>
+        <li><b>Templates read <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">vm.*</code> only.</b> No computation, no formatting in templates.</li>
+        <li><b><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">AUTO_APPROVE_THRESHOLD</code> is a class attribute on <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">AutoCategorizeUseCase</code></b>, not a Django setting.</li>
+        <li><b>Credentials never committed, never logged.</b> <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">.env</code> only, gitignored.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Tech stack -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 01</span>
+      <h2 class="sect__title">Tech stack &mdash; locked</h2>
+      <span class="sect__total"><span class="num">&mdash;</span></span>
+    </header>
+    <div class="sect__body">
+      <table class="tbl">
+        <thead><tr><th>Choice</th><th>What</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Python 3.12</td><td>language</td><td>matched across host + Pi</td></tr>
+          <tr><td>Django 5.x LTS</td><td>framework</td><td>long support, matches existing skill</td></tr>
+          <tr><td>django-q2</td><td>jobs</td><td>ORM broker, no Redis</td></tr>
+          <tr><td>django-components</td><td>UI fragments</td><td>matches skill Component layer</td></tr>
+          <tr><td>django-environ</td><td>settings</td><td>env-driven, no secrets in code</td></tr>
+          <tr><td>HTMX 2.x + Alpine.js 3.x + DaisyUI 4.x</td><td>frontend</td><td>server-driven, no SPA</td></tr>
+          <tr><td>Playwright &ge;1.40</td><td>RBC scraper</td><td>ARM64 chromium stable</td></tr>
+          <tr><td>Postgres 16</td><td>DB</td><td>match prod</td></tr>
+          <tr><td>pytest + pytest-django + factory-boy</td><td>tests</td><td>per skill testing matrix</td></tr>
+          <tr><td>uv</td><td>packaging</td><td>fast, modern lockfiles</td></tr>
+          <tr><td>manual Provider dict</td><td>DI</td><td>4 use cases is small; no extra dep</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Execution order -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 02</span>
+      <h2 class="sect__title">Execution order &mdash; top to bottom</h2>
+      <span class="sect__total"><span class="num">16</span> steps</span>
+    </header>
+    <div class="sect__body">
+      <p>Steps 2&ndash;5 have zero Django imports and can be unit-tested in isolation. Do them first and run their tests before touching Django.</p>
+<pre class="code"><span class="k">Step 0</span>   Repo bootstrap
+<span class="k">Step 1</span>   Django project skeleton + settings
+<span class="k">Step 2</span>   Domain layer (pure Python)
+<span class="k">Step 3</span>   Application layer (ports, DTOs, use cases, matching handlers)
+<span class="k">Step 4</span>   Services layer
+<span class="k">Step 5</span>   DI container
+<span class="k">Step 6</span>   Infrastructure: Django models + migrations
+<span class="k">Step 7</span>   Infrastructure: repositories
+<span class="k">Step 8</span>   Infrastructure: RBC scraper (Playwright) + CSV parser
+<span class="k">Step 9</span>   Infrastructure: Django-Q2 jobs
+<span class="k">Step 10</span>  Interface: presenters + view models
+<span class="k">Step 11</span>  Interface: django-components
+<span class="k">Step 12</span>  Interface: views + URL routing
+<span class="k">Step 13</span>  Auth wiring
+<span class="k">Step 14</span>  docker-compose
+<span class="k">Step 15</span>  Tests
+<span class="k">Step 16</span>  Final verification</pre>
+    </div>
+  </section>
+
+  <!-- Step 0 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 03 &middot; S0</span>
+      <h2 class="sect__title">Repo bootstrap</h2>
+      <span class="sect__total"><span class="num">1</span> day</span>
+    </header>
+    <div class="sect__body">
+      <p>Repo root: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">/Users/dannyyassine/dev/vibes/online-budget</code>. <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">plan.html</code> + <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">plan.md</code> already exist &mdash; do not delete.</p>
+      <p>Create the tree below (empty files unless a content block is given):</p>
+<pre class="code">mkdir -p budget/budget/settings \
+         budget/budget/domain \
+         budget/budget/application/matching \
+         budget/budget/services \
+         budget/budget/infrastructure/rbc \
+         budget/budget/infrastructure/jobs \
+         budget/budget/interfaces/views \
+         budget/budget/interfaces/components/templates \
+         budget/budget/templates \
+         budget/budget/static/budget \
+         tests/unit tests/integration tests/functional \
+         samples \
+         compose/db</pre>
+      <p>Files to create: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">.gitignore</code> (Python + venv + .env + playwright + postgres-data), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">.env.example</code> (DJANGO_SETTINGS_MODULE, SECRET_KEY, DATABASE_URL, RBC_USERNAME, RBC_PASSWORD, Q_CLUSTER_NAME), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">pyproject.toml</code> (with project deps + dev extras + pytest + ruff config), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">requirements/</code> (base, dev, prod &mdash; thin or compiled via <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">uv pip compile</code>).</p>
+      <div class="card">
+        <p class="card__t">Verify</p>
+<pre class="code" style="margin:0">uv sync
+uv run python -c "import django; print(django.get_version())"
+uv run playwright install chromium</pre>
+        <p style="margin:8px 0 0;font-size:13.5px;color:var(--mute)">Expect Django version printed, chromium downloaded.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 1 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 04 &middot; S1</span>
+      <h2 class="sect__title">Django project skeleton + settings</h2>
+      <span class="sect__total"><span class="num">1</span> day</span>
+    </header>
+    <div class="sect__body">
+      <p>Create: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">manage.py</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget/budget/__init__.py</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">settings/{__init__,base,dev,prod,test}.py</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">urls.py</code> (placeholder), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">wsgi.py</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">asgi.py</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">apps.py</code>.</p>
+      <p><strong>base.py</strong> uses django-environ to read <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">.env</code>. INSTALLED_APPS includes <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">django_components</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">django_q</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget.budget</code>. <strong>Q_CLUSTER</strong> set with ORM broker, workers=2, timeout=600, retry=120.</p>
+<pre class="code">Q_CLUSTER = {
+    <span class="s">"name"</span>: env(<span class="s">"Q_CLUSTER_NAME"</span>, default=<span class="s">"budget-cluster"</span>),
+    <span class="s">"workers"</span>: <span class="num">2</span>, <span class="s">"recycle"</span>: <span class="num">500</span>,
+    <span class="s">"timeout"</span>: <span class="num">600</span>,   <span class="c"># Playwright login can be slow</span>
+    <span class="s">"retry"</span>: <span class="num">120</span>,
+    <span class="s">"broker"</span>: <span class="s">"djangoorm"</span>,   <span class="c"># no Redis</span>
+    <span class="s">"queue_limit"</span>: <span class="num">10</span>, <span class="s">"bulk"</span>: <span class="num">5</span>, <span class="s">"orm"</span>: <span class="s">"default"</span>,
+}</pre>
+      <p><strong>apps.py</strong> BudgetConfig with <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">ready()</code> that calls <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">register_schedules(Schedule)</code> (Step 9).</p>
+      <div class="card">
+        <p class="card__t">Verify</p>
+<pre class="code" style="margin:0">uv run python manage.py check</pre>
+        <p style="margin:8px 0 0;font-size:13.5px;color:var(--mute)">Expect: no issues.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 2 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 05 &middot; S2</span>
+      <h2 class="sect__title">Domain layer &mdash; pure Python</h2>
+      <span class="sect__total"><span class="num">2</span> days</span>
+    </header>
+    <div class="sect__body">
+      <p>All files in <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget/budget/domain/</code>. No Django imports. No <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">models.Model</code>.</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">value_objects.py</code></strong> &mdash; frozen dataclasses: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">Money</code> (Decimal, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">from_str</code> strips thousands commas, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">is_credit</code> property), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">NormalizedTitle</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">TransactionDate</code>.</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">entities.py</code></strong> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">Category</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CategoryRule</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">Transaction</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">MonthlySummary</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CategoryTotal</code>. Each has a <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">fromDatabase(row)</code> classmethod to hydrate from ORM rows without leaking ORM.</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">exceptions.py</code></strong> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">BudgetError</code> base, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CategoryNotFound</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">RuleConflict</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SyncFailed</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">RBCLoginError(SyncFailed)</code>.</p>
+      <div class="card">
+        <p class="card__t">Verify</p>
+<pre class="code" style="margin:0">uv run python -c "from budget.budget.domain.entities import Transaction, Category, CategoryRule; print('ok')"</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 3 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 06 &middot; S3</span>
+      <h2 class="sect__title">Application layer</h2>
+      <span class="sect__total"><span class="num">2</span> days</span>
+    </header>
+    <div class="sect__body">
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget/budget/application/</code>. No Django imports.</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">ports.py</code></strong> &mdash; ABCs: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">TransactionRepository</code> (save, get, list_pending, list_for_month, update_category, exists), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CategoryRuleRepository</code> (find_by_match_key, save, increment_confirmed, all_rules), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CategoryRepository</code> (get, list_all), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">RBCScraper</code> (scrape(since) -&gt; list[dict]).</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">dtos.py</code></strong> &mdash; dataclasses: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SyncTransactionsDto</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">AutoCategorizeDto</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">ApproveCategorizationDto</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">GetMonthlySummaryDto</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">GetReviewQueueDto</code>.</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">matching/normalizer.py</code></strong> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">normalize(raw) -&gt; NormalizedTitle</code>. v1 returns identity (lowercased). A <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">normalize_strict</code> variant with store-number/ref-code stripping is kept ready, enabled only after samples validate.</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">matching/exact_matcher.py</code></strong> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">match(normalized, rules, categories) -&gt; (rule, category) | None</code>. Pure dict lookup.</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">use_cases.py</code></strong> &mdash; one class per use case:</p>
+      <table class="tbl">
+        <thead><tr><th>Class</th><th>DTO</th><th>Returns</th><th>Calls</th></tr></thead>
+        <tbody>
+          <tr><td><code>SyncTransactionsUseCase</code></td><td>sync_since</td><td>SyncResult</td><td>RBCScraper, TransactionRepository, CategorizationService</td></tr>
+          <tr><td><code>AutoCategorizeUseCase</code></td><td>&mdash;</td><td>AutoCategorizeResult</td><td>CategorizationService, TransactionRepository</td></tr>
+          <tr><td><code>ApproveCategorizationUseCase</code></td><td>tx_id, category_id</td><td>ApproveResult</td><td>TransactionRepository, CategoryRuleRepository, CategorizationService</td></tr>
+          <tr><td><code>GetMonthlySummaryUseCase</code></td><td>year, month</td><td>MonthlySummary</td><td>SummaryService</td></tr>
+          <tr><td><code>GetReviewQueueUseCase</code> <span style="color:var(--oxblood)">*</span></td><td>&mdash;</td><td>(pending, categories)</td><td>TransactionRepository, CategoryRepository</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13px;color:var(--mute)"><span style="color:var(--oxblood)">*</span> Added: handoff listed four use cases; review queue needs a list-pending use case.</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">AUTO_APPROVE_THRESHOLD = 1</code></strong> as class attribute on <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">AutoCategorizeUseCase</code>. For exact-match v1, "match found" = auto-approve.</p>
+    </div>
+  </section>
+
+  <!-- Step 4 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 07 &middot; S4</span>
+      <h2 class="sect__title">Services layer</h2>
+      <span class="sect__total"><span class="num">1</span> day</span>
+    </header>
+    <div class="sect__body">
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget/budget/services/</code>. No Django imports.</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">categorization_service.py</code></strong> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CategorizationService(tx_repo, rule_repo, cat_repo)</code>. Methods: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">build_new_transaction(raw)</code> (applies normalizer), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">auto_categorize_pending()</code> (loads rules + categories into dicts, calls <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">match()</code>, updates tx status, increments confirmed), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">reinforce_rule(key, cat_id)</code> (creates or increments).</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">summary_service.py</code></strong> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SummaryService(tx_repo, cat_repo)</code>. <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">build(year, month) -&gt; MonthlySummary</code>: aggregates income/expense/net and per-category totals with percentages.</p>
+    </div>
+  </section>
+
+  <!-- Step 5 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 08 &middot; S5</span>
+      <h2 class="sect__title">DI container</h2>
+      <span class="sect__total"><span class="num">&frac12;</span> day</span>
+    </header>
+    <div class="sect__body">
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget/budget/application/container.py</code> &mdash; manual <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">Provider</code> dict. No <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">django-injector</code> dep (4 use cases is small). Lazily imports infrastructure so domain/application stay Django-free.</p>
+<pre class="code">def build_container():
+    from budget.budget.infrastructure.repositories import (
+        DjangoCategoryRepository, DjangoCategoryRuleRepository, DjangoTransactionRepository,
+    )
+    from budget.budget.infrastructure.rbc.scraper import PlaywrightRBCScraper
+    ...
+    return {
+        <span class="s">"sync"</span>:              lambda: SyncTransactionsUseCase(scraper, tx_repo, categorizer),
+        <span class="s">"auto_categorize"</span>:   lambda: AutoCategorizeUseCase(categorizer, tx_repo),
+        <span class="s">"approve"</span>:           lambda: ApproveCategorizationUseCase(tx_repo, rule_repo, categorizer),
+        <span class="s">"monthly_summary"</span>:   lambda: GetMonthlySummaryUseCase(summarizer),
+        <span class="s">"review_queue"</span>:       lambda: GetReviewQueueUseCase(tx_repo, cat_repo),
+    }</pre>
+      <p>Module-level <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">container()</code> accessor memoizes the dict. Views call e.g. <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">container()["sync"]()</code> to get a wired use case.</p>
+    </div>
+  </section>
+
+  <!-- Step 6 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 09 &middot; S6</span>
+      <h2 class="sect__title">Infrastructure: Django models + migrations</h2>
+      <span class="sect__total"><span class="num">2&ndash;3</span> days</span>
+    </header>
+    <div class="sect__body">
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget/budget/infrastructure/django_models.py</code> &mdash; ORM models (app label <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget</code>):</p>
+<pre class="code"><span class="k">class</span> CategoryModel(models.Model):
+    name  = CharField(max_length=80, unique=True)
+    color = CharField(max_length=7, default=<span class="s">"#999999"</span>)
+
+<span class="k">class</span> CategoryRuleModel(models.Model):
+    match_key        = CharField(max_length=200, unique=True, db_index=True)
+    category         = ForeignKey(CategoryModel, PROTECT, related_name=<span class="s">"rules"</span>)
+    times_confirmed  = PositiveIntegerField(default=0)
+    created_at       = DateTimeField(auto_now_add=True)
+    updated_at       = DateTimeField(auto_now=True)
+
+<span class="k">class</span> TransactionModel(models.Model):
+    <span class="k">class</span> Status(models.TextChoices):
+        AUTO = <span class="s">"auto"</span>; MANUAL = <span class="s">"manual"</span>; PENDING = <span class="s">"pending"</span>
+    rbc_transaction_id     = CharField(max_length=120, unique=True)
+    posted_date            = DateField(db_index=True)
+    description_raw        = TextField()
+    description_normalized = CharField(max_length=200, db_index=True)
+    amount                 = DecimalField(max_digits=10, decimal_places=2)
+    category               = ForeignKey(CategoryModel, null=True, SET_NULL)
+    categorization_status  = CharField(max_length=10, choices=Status.choices, default=PENDING)
+    approved_at            = DateTimeField(null=True)
+    imported_at            = DateTimeField(auto_now_add=True)</pre>
+      <div class="card">
+        <p class="card__t">Run (after Postgres up &mdash; Step 14)</p>
+<pre class="code" style="margin:0">uv run python manage.py makemigrations budget
+uv run python manage.py migrate</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 7 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 10 &middot; S7</span>
+      <h2 class="sect__title">Infrastructure: repositories</h2>
+      <span class="sect__total"><span class="num">1</span> day</span>
+    </header>
+    <div class="sect__body">
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget/budget/infrastructure/repositories.py</code> &mdash; three classes implementing the application ports. Repos return domain entities (hydrate via <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">Transaction.fromDatabase(row)</code>), never ORM models. <strong>Important</strong>: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">increment_confirmed</code> must use <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">from django.db.models import F</code> and <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">F("times_confirmed") + 1</code> &mdash; atomic DB-side increment, not Python-side.</p>
+      <p>Repositories implement every method on their port ABC. Add <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">all_rules()</code> on <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">DjangoCategoryRuleRepository</code> &mdash; preloads all rules into a dict for the matcher.</p>
+    </div>
+  </section>
+
+  <!-- Step 8 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 11 &middot; S8</span>
+      <h2 class="sect__title">Infrastructure: RBC scraper + CSV parser</h2>
+      <span class="sect__total"><span class="num">2&ndash;3</span> days</span>
+    </header>
+    <div class="sect__body">
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">infrastructure/rbc/selectors.py</code> &mdash; all RBC CSS selectors centralized here. When RBC changes its UI, one file is patched.</p>
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">infrastructure/rbc/scraper.py</code> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">PlaywrightRBCScraper</code> implementing <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">RBCScraper</code>. Creds from env (<code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">RBC_USERNAME</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">RBC_PASSWORD</code>) &mdash; never logged. Flow: login &rarr; accounts &rarr; joint chequing &rarr; export &rarr; CSV &rarr; download &rarr; parse. Explicit timeouts (<code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">wait_for_selector(..., timeout=15000)</code>), no implicit waits. MFA prompt &rarr; raise <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">RBCLoginError</code> (first login must be manual). Failure &rarr; raise <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SyncFailed</code>.</p>
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">infrastructure/rbc/csv_parser.py</code> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">parse_csv(path) -&gt; list[dict]</code>. Validates <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">EXPECTED_HEADERS</code> against the export; raises <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SyncFailed</code> if schema changed. Derives <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">rbc_transaction_id</code> from date+description+amount (dedup key). Normalizes date from MM/DD/YYYY to ISO.</p>
+      <div class="card">
+        <p class="card__t">Note</p>
+        <p style="margin:0;font-size:13.5px"><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">EXPECTED_HEADERS</code> and date format assumption must be confirmed against a real RBC export &mdash; see Exceptions.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 9 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 12 &middot; S9</span>
+      <h2 class="sect__title">Infrastructure: Django-Q2 jobs</h2>
+      <span class="sect__total"><span class="num">1</span> day</span>
+    </header>
+    <div class="sect__body">
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">infrastructure/jobs/sync_job.py</code> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">run_scheduled_sync()</code> (daily 6am, syncs last 7 days overlap), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">run_sync_now(sync_since)</code> (enqueues async_task, fire-and-forget), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">_run_sync_task(sync_since)</code> (worker body).</p>
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">infrastructure/jobs/schedule.py</code> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">register_schedules(ScheduleModel)</code> idempotent: creates <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">rbc-daily-sync</code> cron <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">0 6 * * *</code> only if not present.</p>
+      <p>Jobs follow the same rule as views: build DTO, call one use case, no presenter (no UI). Use the DI container &mdash; instantiate in job body, not class-level.</p>
+    </div>
+  </section>
+
+  <!-- Step 10 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 13 &middot; S10</span>
+      <h2 class="sect__title">Interface: presenters + view models</h2>
+      <span class="sect__total"><span class="num">1</span> day</span>
+    </header>
+    <div class="sect__body">
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget/budget/interfaces/</code>. Import domain entities only &mdash; no services, no repos.</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">view_models.py</code></strong> &mdash; dataclasses: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">MonthlySummaryVM</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CategoryTotalVM</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">ReviewQueueVM</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">ReviewQueueItemVM</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CategoryOptionVM</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SyncResultVM</code>. All strings pre-formatted (<code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">"$1,234.56"</code>).</p>
+      <p><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">presenters.py</code></strong> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">DashboardPresenter</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">ReviewQueuePresenter</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SyncResultPresenter</code>. Each takes use-case output, builds a VM. <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">_money()</code> helper formats Decimal as <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">$X,XXX.XX</code> with sign.</p>
+    </div>
+  </section>
+
+  <!-- Step 11 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 14 &middot; S11</span>
+      <h2 class="sect__title">Interface: django-components</h2>
+      <span class="sect__total"><span class="num">1</span> day</span>
+    </header>
+    <div class="sect__body">
+      <p>Three <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">django_components.Component</code> subclasses in <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">interfaces/components/</code>: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SummaryCardComponent</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">ReviewRowComponent</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SyncButtonComponent</code>. Each owns its HTML template in <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">components/templates/</code>. DaisyUI classes baked in. HTMX attributes in templates only &mdash; no JS fetch.</p>
+      <p>Register components in <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">apps.py ready()</code> via <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">component.register(...)</code>.</p>
+      <p><strong>review_row.html</strong> contains the approve form: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">&lt;form hx-post="/review/{{ vm.transaction_id }}/approve/" hx-target="closest tr" hx-swap="outerHTML"&gt;</code> with category <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">&lt;select&gt;</code> + Approve button + <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">{% csrf_token %}</code>.</p>
+    </div>
+  </section>
+
+  <!-- Step 12 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 15 &middot; S12</span>
+      <h2 class="sect__title">Interface: views + URL routing</h2>
+      <span class="sect__total"><span class="num">2</span> days</span>
+    </header>
+    <div class="sect__body">
+      <p>Each request = exactly one use case + one presenter. Root views follow PRG; fragment views serve HTMX.</p>
+      <table class="tbl">
+        <thead><tr><th>Route</th><th>Method</th><th>Kind</th><th>Use case</th><th>Presenter</th></tr></thead>
+        <tbody>
+          <tr><td><code>/</code></td><td>GET</td><td>root</td><td>GetMonthlySummary</td><td>DashboardPresenter</td></tr>
+          <tr><td><code>/login/</code></td><td>GET/POST</td><td>root</td><td>&mdash;</td><td>Django LoginView</td></tr>
+          <tr><td><code>/logout/</code></td><td>POST</td><td>root</td><td>&mdash;</td><td>Django LogoutView</td></tr>
+          <tr><td><code>/sync/</code></td><td>POST</td><td>fragment</td><td>enqueues run_sync_now</td><td>&mdash; (toast)</td></tr>
+          <tr><td><code>/review/</code></td><td>GET</td><td>fragment</td><td>GetReviewQueue</td><td>ReviewQueuePresenter</td></tr>
+          <tr><td><code>/review/&lt;id&gt;/approve/</code></td><td>POST</td><td>fragment</td><td>ApproveCategorization</td><td>&mdash; (empty row swap)</td></tr>
+        </tbody>
+      </table>
+      <p>All views use <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">@login_required</code>. <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">LOGIN_URL = "/login/"</code> set in base settings.</p>
+      <p>Templates: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">dashboard.html</code> (loads DaisyUI/HTMX/Alpine via CDN, renders <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">{% component "sync_button" %}</code> + <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">{% component "summary_card" vm=vm %}</code> + <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">&lt;div id="review-queue" hx-get="/review/" hx-trigger="load"&gt;</code>), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">review_queue.html</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">registration/login.html</code>.</p>
+    </div>
+  </section>
+
+  <!-- Step 13 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 16 &middot; S13</span>
+      <h2 class="sect__title">Auth wiring</h2>
+      <span class="sect__total"><span class="num">&frac12;</span> day</span>
+    </header>
+    <div class="sect__body">
+      <p>Auth is Django built-in. Create two users (you + spouse) via:</p>
+<pre class="code">uv run python manage.py createsuperuser   <span class="c"># repeat for spouse</span></pre>
+      <p>All views already use <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">@login_required</code>. <strong>No signup flow. No password reset flow for v1</strong> &mdash; out of scope.</p>
+    </div>
+  </section>
+
+  <!-- Step 14 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 17 &middot; S14</span>
+      <h2 class="sect__title">docker-compose</h2>
+      <span class="sect__total"><span class="num">1</span> day</span>
+    </header>
+    <div class="sect__body">
+      <p>Three services: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">db</code> (Postgres 16-alpine), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">web</code> (Django runserver), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">qcluster</code> (Django-Q2 worker). No broker container.</p>
+      <p><strong>One shared Dockerfile</strong> for web + qcluster (two services, two commands) &mdash; reduces drift. Base <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">python:3.12-slim</code>, installs uv, syncs deps, runs <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">playwright install --with-deps chromium</code>.</p>
+      <p><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">compose/db/init.sql</code> &mdash; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CREATE EXTENSION IF NOT EXISTS pg_trgm;</code></p>
+      <div class="card">
+        <p class="card__t">First run</p>
+<pre class="code" style="margin:0">cp .env.example .env          <span class="c"># then fill SECRET_KEY</span>
+docker compose up -d db
+docker compose run --rm web python manage.py migrate
+docker compose run --rm web python manage.py createsuperuser
+docker compose up -d</pre>
+        <p style="margin:8px 0 0;font-size:13.5px;color:var(--mute)">Visit <code>http://localhost:8000/</code>, sign in.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 15 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 18 &middot; S15</span>
+      <h2 class="sect__title">Tests</h2>
+      <span class="sect__total"><span class="num">parallel</span></span>
+    </header>
+    <div class="sect__body">
+      <p>Per skill testing matrix:</p>
+      <table class="tbl">
+        <thead><tr><th>Layer</th><th>Type</th><th>Scope</th></tr></thead>
+        <tbody>
+          <tr><td>Use cases</td><td>Integration</td><td>real repos, test DB (pytest-django)</td></tr>
+          <tr><td>Categorization / Summary services</td><td>Integration</td><td>via use case</td></tr>
+          <tr><td><code>ExactMatcher</code>, <code>TitleNormalizer</code></td><td><strong style="color:var(--oxblood)">Unit</strong></td><td>pure functions, fast</td></tr>
+          <tr><td>Repositories</td><td>Integration</td><td>test DB + migrations</td></tr>
+          <tr><td>RBCScraper</td><td>Integration</td><td>mocked Playwright &mdash; never hit live RBC in CI</td></tr>
+          <tr><td>Views</td><td>Functional</td><td>Django test client &mdash; HTTP + context</td></tr>
+          <tr><td>Presenters</td><td><strong style="color:var(--oxblood)">Unit</strong></td><td>domain &rarr; ViewModel</td></tr>
+          <tr><td>ViewModels</td><td><strong style="color:var(--oxblood)">Unit</strong></td><td>dataclass validation</td></tr>
+          <tr><td>Components</td><td>Integration</td><td>render smoke</td></tr>
+          <tr><td>Jobs</td><td>Integration</td><td>async_task sync=False, then call directly</td></tr>
+        </tbody>
+      </table>
+      <p>Files: <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">tests/conftest.py</code> (container + user + client_logged fixtures), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">tests/unit/</code> (test_title_normalizer, test_exact_matcher, test_presenters), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">tests/integration/</code> (one per use case + test_repositories + test_rbc_scraper mocked), <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">tests/functional/</code> (test_dashboard: requires login + logged-in 200). Pytest config in <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">pyproject.toml</code> sets <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">DJANGO_SETTINGS_MODULE = budget.settings.test</code>.</p>
+      <div class="card">
+        <p class="card__t">Run</p>
+<pre class="code" style="margin:0">uv run pytest -q</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 16 -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 19 &middot; S16</span>
+      <h2 class="sect__title">Final verification</h2>
+      <span class="sect__total"><span class="num">&mdash;</span></span>
+    </header>
+    <div class="sect__body">
+      <p>Run each command in order. Stop and fix on any failure before moving on:</p>
+<pre class="code">uv run ruff check budget tests                       <span class="c"># 1. Lint</span>
+uv run ruff check budget tests --select E,F,UP        <span class="c"># 2. Type hints</span>
+uv run python manage.py check                         <span class="c"># 3. Django system check</span>
+uv run python manage.py makemigrations --check --dry-run  <span class="c"># 4. Migrations drift</span>
+uv run pytest -q                                     <span class="c"># 5. Tests green</span>
+uv run python manage.py runserver                     <span class="c"># 6. Dev server boots</span>
+<span class="c"># visit http://localhost:8000/ — redirect to /login/, sign in, see dashboard</span></pre>
+      <p>Build is complete when:</p>
+      <ul style="margin:8px 0 0;padding-left:22px">
+        <li><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">uv run pytest -q</code> green</li>
+        <li><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">docker compose up</code> starts db + web + qcluster cleanly</li>
+        <li><code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">http://localhost:8000/</code> redirects to login, then shows dashboard after auth</li>
+        <li>HTMX "Sync now" button enqueues a Django-Q2 task (visible in <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">django_q.orm</code> table)</li>
+        <li>Review queue fragment loads at <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">GET /review/</code></li>
+        <li>Approving a row removes it from the queue and creates / reinforces a <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">CategoryRule</code></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- After build -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 20</span>
+      <h2 class="sect__title">After the build &mdash; first real action</h2>
+      <span class="sect__total"><span class="num">human</span></span>
+    </header>
+    <div class="sect__body">
+      <p>Per the handoff, the matcher cannot be trusted until samples are in. Once the app boots:</p>
+      <ol style="margin:8px 0 0;padding-left:22px">
+        <li>Log into RBC manually, export the last 60 days of joint chequing transactions as CSV.</li>
+        <li>Drop the file at <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">samples/rbc_export_real.csv</code>.</li>
+        <li>Copy 30&ndash;50 description strings into <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">samples/rbc_descriptions.txt</code> (one per line).</li>
+        <li>Inspect the patterns (store numbers, ref codes, dates embedded in description).</li>
+        <li>Update <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">budget/budget/application/matching/normalizer.py</code> <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">normalize()</code> to apply the validated pipeline &mdash; swap <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">normalize_strict</code> into <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">normalize</code>.</li>
+        <li>Re-run <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">tests/unit/test_title_normalizer.py</code> with cases derived from the samples.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Reference tables -->
+  <section class="sect">
+    <header class="sect__head">
+      <span class="sect__no">&sect; 21</span>
+      <h2 class="sect__title">Reference &mdash; use-case &amp; dependency map</h2>
+      <span class="sect__total"><span class="num">&mdash;</span></span>
+    </header>
+    <div class="sect__body">
+      <table class="tbl">
+        <thead><tr><th>Use case</th><th>File</th><th>View route</th></tr></thead>
+        <tbody>
+          <tr><td><code>SyncTransactionsUseCase</code></td><td><code>application/use_cases.py</code></td><td><code>POST /sync/</code> (via job)</td></tr>
+          <tr><td><code>AutoCategorizeUseCase</code></td><td><code>application/use_cases.py</code></td><td>(called by sync)</td></tr>
+          <tr><td><code>ApproveCategorizationUseCase</code></td><td><code>application/use_cases.py</code></td><td><code>POST /review/&lt;id&gt;/approve/</code></td></tr>
+          <tr><td><code>GetMonthlySummaryUseCase</code></td><td><code>application/use_cases.py</code></td><td><code>GET /</code></td></tr>
+          <tr><td><code>GetReviewQueueUseCase</code></td><td><code>application/use_cases.py</code></td><td><code>GET /review/</code></td></tr>
+        </tbody>
+      </table>
+      <table class="tbl">
+        <thead><tr><th>Layer</th><th>May import</th></tr></thead>
+        <tbody>
+          <tr><td><code>domain/</code></td><td>stdlib only</td></tr>
+          <tr><td><code>application/</code></td><td><code>domain/</code>, stdlib</td></tr>
+          <tr><td><code>services/</code></td><td><code>application/</code>, <code>domain/</code>, stdlib</td></tr>
+          <tr><td><code>infrastructure/</code></td><td><code>application/</code>, <code>domain/</code>, Django, Playwright</td></tr>
+          <tr><td><code>interfaces/views/</code></td><td><code>application/container</code>, <code>interfaces/presenters</code>, Django</td></tr>
+          <tr><td><code>interfaces/presenters/</code></td><td><code>domain/</code>, <code>interfaces/view_models</code></td></tr>
+          <tr><td><code>interfaces/components/</code></td><td>django-components, templates</td></tr>
+          <tr><td><code>tests/</code></td><td>everything</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Exceptions -->
+  <div class="exc">
+    <h3 class="exc__head">Exceptions</h3>
+    <p class="exc__sub">Flagged in red pencil &mdash; resolve before the matcher ships</p>
+    <ul class="exc__list">
+      <li data-n="01"><b>Normalization samples missing.</b> Pull 30&ndash;50 real RBC transaction descriptions into <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">samples/rbc_descriptions.txt</code>. RBC embeds store numbers / ref codes / dates in descriptions (<code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">TIM HORTONS #4521</code> vs <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">#0192</code>) &mdash; the normalization rule must be locked against real samples before the matcher is built. Until then, <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">TitleNormalizer</code> returns identity (raw string match).</li>
+      <li data-n="02"><b>CSV parser schema assumed.</b> <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">EXPECTED_HEADERS</code> and date format (MM/DD/YYYY) are assumptions &mdash; confirm against a real RBC export before relying on them. If the export uses different column names, update <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">csv_parser.py</code> and its test.</li>
+      <li data-n="03"><b>RBC selectors unverified.</b> The selectors in <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">selectors.py</code> are placeholders &mdash; the implementer must inspect the real RBC online banking DOM (via Playwright headed mode) and patch the file. This is expected; the scraper is designed so this is the only file to touch.</li>
+    </ul>
+  </div>
+
+  <!-- Footnotes / risks -->
+  <div class="fn">
+    <p class="fn__t">Footnotes &mdash; risk register</p>
+    <ol class="fn__list">
+      <li><span class="n">01</span><span><b>RBC login UI breaks.</b> Selectors in one file; Playwright downloads CSV not DOM-scrapes; alert on <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SyncFailed</code>.</span></li>
+      <li><span class="n">02</span><span><b>RBC changes CSV format.</b> <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">csv_parser.py</code> schema-validated; fail loudly with <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">SyncFailed</code>, not silently.</span></li>
+      <li><span class="n">03</span><span><b>RBC blocks headless automation.</b> Spoof user-agent, disable <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">AutomationControlled</code>. If persistent, fall back to manual CSV upload endpoint (out of v1 scope).</span></li>
+      <li><span class="n">04</span><span><b>ORM broker lost job on crash.</b> Django-Q2 ORM broker persists to DB; <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">retry=120</code> requeues. Acceptable for a 2-person tool.</span></li>
+      <li><span class="n">05</span><span><b>Pi SD card corruption.</b> USB SSD boot only; daily pg_dump + rclone.</span></li>
+      <li><span class="n">06</span><span><b>Spouse can't reach Pi when traveling.</b> Tailscale on phones; Tailscale Funnel if public HTTPS is ever needed.</span></li>
+      <li><span class="n">07</span><span><b>Credential leak.</b> <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">.env</code> only, gitignored; django-environ; never logged; Pi filesystem encryption optional.</span></li>
+      <li><span class="n">08</span><span><b>Exact match under-matches.</b> <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy)">times_confirmed</code> counter + manual approve reinforces rules over time. Revisit fuzzy matching only if hit rate &lt;60% after 3 months.</span></li>
+    </ol>
+  </div>
+
+  <footer class="foot">
+    <span>RBC Household Budget &middot; Verbose build plan</span>
+    <span>Reconciled 23 Jul 2026</span>
+  </footer>
+
+</div>
+</body>
+</html>
