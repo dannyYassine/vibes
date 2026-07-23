@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Env / secrets
+.env
+.env.local
+*.local
+
+# DB
+*.sqlite3
+db.sqlite3
+postgres-data/
+
+# Playwright
+.playwright/
+playwright-report/
+test-results/
+
+# Editors
+.vscode/
+.idea/
+.DS_Store
+
+# Django
+*.log
+local_settings.py
+media/

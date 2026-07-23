@@ -1,0 +1,35 @@
+[project]
+name = "online-budget"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "Django>=5.0,<5.2",
+    "django-environ>=0.11",
+    "django-q2>=1.6",
+    "django-components>=0.60",
+    "psycopg[binary]>=3.1",
+    "playwright>=1.40",
+    "python-money>=0.5",
+    "dependency-injector>=4.41",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.8",
+    "pytest-playwright>=0.4",
+    "factory-boy>=3.3",
+    "ruff>=0.5",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "budget.settings.test"
+python_files = ["test_*.py"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E","F","I","B","UP"]
