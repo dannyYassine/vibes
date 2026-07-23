@@ -1,6 +1,10 @@
 # RBC Household Budget App — Verbose Implementation Plan
 
 > Audience: an automated coding model (deepseek-v4-flash) implementing this with minimal human judgment. Every step below specifies the exact files to create, their full contents, and the shell command to verify. Execute in order. Do not skip steps. Do not improvise architecture — follow the layering rules exactly.
+>
+> **Two conventions run through every step:**
+> 1. **Local development uses `docker-compose.yml`.** Docker compose is set up in Step 1 and is the canonical dev environment from then on. All `manage.py` commands run inside the `web` container via `docker compose exec web ...` (running container) or `docker compose run --rm web ...` (one-off). Steps 2–5 are pure Python and MAY run via `uv run` directly on the host for speed, but the docker environment is always available.
+> 2. **After every step, update the `.okf/` knowledge graph** (Open Knowledge Format v0.1). Each step ends with an `### Update .okf/` subsection specifying exactly which concept files to create or touch, and a log entry to append. The graph must reflect the codebase state at all times.
 
 ---
 
@@ -50,42 +54,122 @@ Reference (for humans): `.claude/skills/backend-architecture/SKILL.md` — frame
 - pytest + pytest-django + factory-boy
 - uv for Python packaging
 - DI: **manual `Provider` dict** in `budget/budget/application/container.py` (no `django-injector` dep — 4 use cases is small)
+- **OKF v0.1** knowledge graph in `.okf/` — markdown + YAML frontmatter, updated after every step
+
+---
+
+## OKF Knowledge Graph — convention
+
+The `.okf/` folder at repo root is an [Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) v0.1 bundle. It is the project's living architecture doc — a graph of markdown concept files that mirrors the codebase.
+
+### Structure
+
+```
+.okf/
+├── index.md                        # root index, declares okf_version
+├── log.md                          # chronological update history (one entry per step)
+├── architecture/
+│   ├── index.md
+│   ├── layering-rules.md           # the 10 rules
+│   ├── domain-layer.md
+│   ├── application-layer.md
+│   ├── services-layer.md
+│   ├── infrastructure-layer.md
+│   ├── interface-layer.md
+│   ├── di-container.md
+│   ├── dev-environment.md
+│   └── testing.md
+├── use-cases/
+│   ├── index.md
+│   ├── sync-transactions.md
+│   ├── auto-categorize.md
+│   ├── approve-categorization.md
+│   ├── get-monthly-summary.md
+│   └── get-review-queue.md
+├── data-models/
+│   ├── index.md
+│   ├── transaction.md
+│   ├── category.md
+│   └── category-rule.md
+├── endpoints/
+│   ├── index.md
+│   ├── dashboard.md
+│   ├── sync.md
+│   ├── review-queue.md
+│   └── approve.md
+├── jobs/
+│   ├── index.md
+│   └── daily-sync.md
+└── references/
+    ├── index.md
+    ├── rbc-scraper.md
+    └── csv-parser.md
+```
+
+### Rules
+
+1. **Every concept file** is markdown with YAML frontmatter. The `type` field is **required**. Example:
+   ```markdown
+   ---
+   type: Use Case
+   title: Sync Transactions
+   description: Pulls new transactions from RBC and auto-categorizes them.
+   tags: [sync, rbc, scraper]
+   timestamp: 2026-07-23T12:00:00Z
+   ---
+
+   # Sync Transactions
+
+   ## Input
+   `SyncTransactionsDto(sync_since: date)`
+
+   ## Calls
+   - [RBC Scraper](/references/rbc-scraper.md)
+   - [Transaction Repository](/data-models/transaction.md)
+
+   ## Output
+   `SyncResult(new_count, skipped_count, errors)`
+   ```
+2. **`index.md` files** are directory listings (no frontmatter except the root, which declares `okf_version: "0.1"`).
+3. **`log.md`** gets one date-grouped entry per completed step. Newest first.
+4. **Cross-links** use bundle-relative paths starting with `/` (e.g. `[Transaction](/data-models/transaction.md)`).
+5. **After each step**: create/update the concept files listed in that step's `### Update .okf/` subsection, then append a `log.md` entry.
+6. **OKF is committed to git** alongside code — it is not generated artifact. It IS the architecture record.
 
 ---
 
 ## Execution Order (follow top to bottom)
 
 ```
-Step 0  Repo bootstrap
-Step 1  Django project skeleton + settings
-Step 2  Domain layer (pure Python)
-Step 3  Application layer (ports, DTOs, use cases, matching handlers)
-Step 4  Services layer
-Step 5  DI container
-Step 6  Infrastructure: Django models + migrations
-Step 7  Infrastructure: repositories
-Step 8  Infrastructure: RBC scraper (Playwright) + CSV parser
-Step 9  Infrastructure: Django-Q2 jobs
-Step 10 Interface: presenters + view models
-Step 11 Interface: django-components
-Step 12 Interface: views + URL routing
-Step 13 Auth wiring
-Step 14 docker-compose
-Step 15 Tests
-Step 16 Final verification
+Step 0   Repo bootstrap + .okf scaffold
+Step 1   Django project skeleton + settings + docker-compose
+Step 2   Domain layer (pure Python)
+Step 3   Application layer (ports, DTOs, use cases, matching handlers)
+Step 4   Services layer
+Step 5   DI container
+Step 6   Infrastructure: Django models + migrations
+Step 7   Infrastructure: repositories
+Step 8   Infrastructure: RBC scraper (Playwright) + CSV parser
+Step 9   Infrastructure: Django-Q2 jobs
+Step 10  Interface: presenters + view models
+Step 11  Interface: django-components
+Step 12  Interface: views + URL routing
+Step 13  Auth wiring
+Step 14  Tests
+Step 15  Final verification
 ```
 
-Steps 2–5 have zero Django imports and can be unit-tested in isolation. Do them first and run their tests before touching Django.
+Steps 2–5 have zero Django imports and can be unit-tested in isolation. Do them first and run their tests before touching Django. From Step 6 onward, all `manage.py` commands run inside docker.
 
 ---
 
-# Step 0 — Repo Bootstrap
+# Step 0 — Repo Bootstrap + .okf Scaffold
 
 ## 0.1 Directory
 
 The repo root is `/Users/dannyyassine/dev/vibes/online-budget`. `plan.html` and `plan.md` already exist there. Do not delete them.
 
-Create the tree below (empty files unless a content block is given). Run:
+Create the tree below (empty files unless a content block is given):
 
 ```bash
 mkdir -p budget/budget/settings \
@@ -100,7 +184,13 @@ mkdir -p budget/budget/settings \
          budget/budget/static/budget \
          tests/unit tests/integration tests/functional \
          samples \
-         compose/db
+         compose/db \
+         .okf/architecture \
+         .okf/use-cases \
+         .okf/data-models \
+         .okf/endpoints \
+         .okf/jobs \
+         .okf/references
 ```
 
 ## 0.2 `.gitignore`
@@ -151,7 +241,7 @@ DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
 # Database
-DATABASE_URL=postgres://budget:budget_dev@localhost:5432/budget
+DATABASE_URL=postgres://budget:budget_dev@db:5432/budget
 
 # RBC scraper — fill in dev, never commit
 RBC_USERNAME=
@@ -160,6 +250,8 @@ RBC_PASSWORD=
 # Django-Q2
 Q_CLUSTER_NAME=budget-cluster
 ```
+
+> Note: `DATABASE_URL` host is `db` (the compose service name), not `localhost`. Inside the container, Docker's DNS resolves `db` to the Postgres container.
 
 ## 0.4 `pyproject.toml`
 
@@ -200,36 +292,79 @@ target-version = "py312"
 select = ["E","F","I","B","UP"]
 ```
 
-## 0.5 `requirements/` (mirror of pyproject for Docker layer caching)
-
-Create `requirements/base.txt`, `requirements/dev.txt`, `requirements/prod.txt` — but since `uv` reads from `pyproject.toml`, these can be thin re-exports. Minimal:
-
-`requirements/base.txt`:
-```
--r base via uv sync --no-dev
-```
-
-If you prefer pip-based Docker builds, instead list each package with `==` pins resolved via `uv pip compile pyproject.toml -o requirements/base.txt`. The implementer may choose either path as long as Docker builds.
-
-## 0.6 Install + verify
+## 0.5 Install + verify
 
 ```bash
 uv sync
-uv run python -c "import django; print(django.get_version())"
 uv run playwright install chromium
 ```
 
-Expected: Django version printed, chromium browser downloaded.
+## 0.6 `.okf/` scaffold
+
+Create the root index and log files now (empty stubs that will grow):
+
+`.okf/index.md`:
+```markdown
+---
+okf_version: "0.1"
+---
+
+# RBC Household Budget — Knowledge Graph
+
+This bundle documents the architecture, use cases, data models, endpoints,
+and jobs of the RBC Household Budget app. Updated after each build step.
+
+## Architecture
+* [Layering Rules](/architecture/layering-rules.md) - the 10 hard rules
+* [Domain Layer](/architecture/domain-layer.md)
+* [Application Layer](/architecture/application-layer.md)
+* [Services Layer](/architecture/services-layer.md)
+* [Infrastructure Layer](/architecture/infrastructure-layer.md)
+* [Interface Layer](/architecture/interface-layer.md)
+
+## Use Cases
+* See [use-cases index](/use-cases/index.md)
+
+## Data Models
+* See [data-models index](/data-models/index.md)
+
+## Endpoints
+* See [endpoints index](/endpoints/index.md)
+
+## Jobs
+* See [jobs index](/jobs/index.md)
+
+## References
+* See [references index](/references/index.md)
+```
+
+`.okf/log.md`:
+```markdown
+# Bundle Update Log
+
+## 2026-07-23
+* **Initialization**: Created .okf bundle structure (Step 0).
+```
+
+Create empty `index.md` files in each subdirectory (architecture, use-cases, data-models, endpoints, jobs, references) with a heading and placeholder listing. These will be filled as concepts are added.
+
+### Update .okf/
+
+- Create `.okf/index.md` (root, declares `okf_version: "0.1"`)
+- Create `.okf/log.md` (initialization entry)
+- Create `.okf/architecture/index.md`, `.okf/use-cases/index.md`, `.okf/data-models/index.md`, `.okf/endpoints/index.md`, `.okf/jobs/index.md`, `.okf/references/index.md` (empty stubs)
+- Append to `log.md`: `**Initialization**: Created .okf bundle structure (Step 0).`
 
 ---
 
-# Step 1 — Django Project Skeleton + Settings
+# Step 1 — Django Project Skeleton + Settings + docker-compose
+
+docker-compose is set up NOW so it is available for every subsequent step. From Step 6 onward, all `manage.py` commands run inside the `web` container.
 
 ## 1.1 `budget/budget/__init__.py`
 
 ```python
 ```
-(empty — package marker)
 
 ## 1.2 `budget/manage.py`
 
@@ -384,12 +519,11 @@ DATABASES = {
         "NAME": "budget_test",
         "USER": env("DATABASE_URL").split("//")[1].split(":")[0] if "DATABASE_URL" in os.environ else "budget",
         "PASSWORD": "budget_dev",
-        "HOST": "localhost",
+        "HOST": "db",
         "PORT": "5432",
     }
 }
 
-# Faster password hashing for tests
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 ```
 
@@ -441,13 +575,123 @@ class BudgetConfig(AppConfig):
         register_schedules(Schedule)
 ```
 
-## 1.11 Verify
+## 1.11 `docker-compose.yml`
 
-```bash
-uv run python manage.py check
+```yaml
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: budget
+      POSTGRES_USER: budget
+      POSTGRES_PASSWORD: budget_dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./compose/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports: ["5432:5432"]
+
+  web:
+    build: { context: ., dockerfile: Dockerfile }
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes: ["./:/app"]
+    env_file: .env
+    depends_on: [db]
+    ports: ["8000:8000"]
+
+  qcluster:
+    build: { context: ., dockerfile: Dockerfile }
+    command: python manage.py qcluster
+    env_file: .env
+    depends_on: [db, web]
+
+volumes:
+  pgdata:
 ```
 
-Expected: `System check identified no issues`. If migrations for `django_q` are missing, run `uv run python manage.py migrate` against a running Postgres first (Step 14 sets up compose). For now, `check` should pass for code errors.
+## 1.12 `compose/db/init.sql`
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+```
+
+## 1.13 `Dockerfile` (shared by web + qcluster)
+
+```dockerfile
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN pip install --upgrade uv
+
+COPY pyproject.toml ./
+RUN uv sync
+
+# Playwright + chromium deps (ARM64-ok on >=1.40)
+RUN uv run playwright install --with-deps chromium
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+```
+
+## 1.14 `.dockerignore`
+
+```
+.git
+.venv
+__pycache__
+*.pyc
+postgres-data
+.playwright
+test-results
+*.log
+.env
+```
+
+## 1.15 First compose up
+
+```bash
+cp .env.example .env          # then fill SECRET_KEY
+docker compose up -d db
+docker compose build web
+docker compose run --rm web python manage.py check
+```
+
+Expected: `System check identified no issues`. (Django-Q2 and budget app migrations will be created in Step 6 — `check` passes for code errors even without migrations applied.)
+
+## 1.16 Docker command cheat sheet (used throughout the rest of this plan)
+
+```bash
+# Running container (web is already up via `docker compose up -d`):
+docker compose exec web python manage.py <command>
+
+# One-off (spins up a temporary container, removed after exit):
+docker compose run --rm web python manage.py <command>
+
+# Run tests:
+docker compose exec web pytest -q
+
+# Rebuild after dependency change:
+docker compose build web && docker compose up -d
+```
+
+> **Steps 2–5** (pure Python, no Django): may run `uv run pytest tests/unit -q` directly on the host for speed. The docker environment also works. Either is fine. From **Step 6** onward, always use docker.
+
+### Update .okf/
+
+- Create `.okf/architecture/layering-rules.md` (type: `Architecture`, the 10 rules from above)
+- Create `.okf/architecture/dev-environment.md` (type: `Reference`, documents docker-compose: 3 services, shared Dockerfile, command cheat sheet)
+- Append to `log.md`: `**Creation**: Layering rules + dev environment concepts (Step 1).`
 
 ---
 
@@ -473,7 +717,6 @@ class Money:
 
     @classmethod
     def from_str(cls, raw: str) -> "Money":
-        # RBC CSV uses "1,234.56" or "-1,234.56" — strip thousands separators
         cleaned = raw.replace(",", "")
         return cls(Decimal(cleaned))
 
@@ -517,7 +760,7 @@ class Category:
 @dataclass
 class CategoryRule:
     id: Optional[int] = None
-    match_key: str = ""               # NormalizedTitle.value
+    match_key: str = ""
     category_id: int = 0
     times_confirmed: int = 0
 
@@ -541,7 +784,7 @@ class Transaction:
     amount: Money = field(default_factory=lambda: Money(Decimal("0")))
     category: Optional[Category] = None
     categorization_status: str = "pending"   # "auto" | "manual" | "pending"
-    approved_at: Optional[str] = None        # ISO timestamp
+    approved_at: Optional[str] = None
 
     @classmethod
     def fromDatabase(cls, row) -> "Transaction":
@@ -600,10 +843,22 @@ class RBCLoginError(SyncFailed):
 ## 2.5 Verify (no Django yet)
 
 ```bash
+# Host (fast) or docker:
 uv run python -c "from budget.budget.domain.entities import Transaction, Category, CategoryRule; print('ok')"
+# or:
+docker compose exec web python -c "from budget.budget.domain.entities import Transaction, Category, CategoryRule; print('ok')"
 ```
 
 Expected: `ok`.
+
+### Update .okf/
+
+- Create `.okf/architecture/domain-layer.md` (type: `Architecture`, lists entities, value objects, exceptions, dependency rule: stdlib only)
+- Create `.okf/data-models/transaction.md` (type: `Domain Entity`, schema table of Transaction fields)
+- Create `.okf/data-models/category.md` (type: `Domain Entity`)
+- Create `.okf/data-models/category-rule.md` (type: `Domain Entity`)
+- Update `.okf/data-models/index.md` to list the three concepts
+- Append to `log.md`: `**Creation**: Domain layer + 3 entity concepts (Step 2).`
 
 ---
 
@@ -650,6 +905,8 @@ class CategoryRuleRepository(ABC):
     def save(self, rule: CategoryRule) -> CategoryRule: ...
     @abstractmethod
     def increment_confirmed(self, rule_id: int) -> None: ...
+    @abstractmethod
+    def all_rules(self) -> list[CategoryRule]: ...
 
 
 class CategoryRepository(ABC):
@@ -662,8 +919,6 @@ class CategoryRepository(ABC):
 class RBCScraper(ABC):
     @abstractmethod
     def scrape(self, since: date) -> list[dict]: ...
-        # returns list of raw dicts:
-        # {rbc_transaction_id, posted_date, description_raw, amount_str}
 ```
 
 ## 3.3 `dtos.py`
@@ -680,7 +935,7 @@ class SyncTransactionsDto:
 
 @dataclass
 class AutoCategorizeDto:
-    pass  # no args; processes all pending
+    pass
 
 
 @dataclass
@@ -721,8 +976,6 @@ from budget.budget.domain.value_objects import NormalizedTitle
 #   2. strip store numbers: r"#\d+"
 #   3. strip trailing reference codes / dates
 #   4. collapse whitespace
-#
-# Confirm normalization rule against samples, then enable below.
 
 _STORE_NUM = re.compile(r"#\d+")
 _REF_CODES = re.compile(r"\b[A-Z]{2,}\d{4,}\b")
@@ -730,22 +983,15 @@ _MULTI_WS = re.compile(r"\s+")
 
 
 def normalize(raw: str) -> NormalizedTitle:
-    """Normalize a raw RBC transaction description for exact-match lookup.
-
-    v1: identity (lowercased raw). Will be tightened once samples are in.
-    """
+    """v1: identity (lowercased raw). Tightened once samples are in."""
     if not raw:
         return NormalizedTitle("")
-    # Identity for now — see TODO above. Lowercasing is safe and reversible-ish.
     value = raw.strip().lower()
     return NormalizedTitle(value)
 
 
 def normalize_strict(raw: str) -> NormalizedTitle:
-    """Strict normalization — ENABLE ONLY after validating against samples.
-
-    Kept here ready to swap in once samples/rbc_descriptions.txt is filled.
-    """
+    """ENABLE ONLY after validating against samples."""
     s = raw.lower()
     s = _STORE_NUM.sub("", s)
     s = _REF_CODES.sub("", s)
@@ -767,13 +1013,8 @@ def match(
     rules: dict[str, CategoryRule],
     categories: dict[int, Category],
 ) -> Optional[tuple[CategoryRule, Category]]:
-    """Return (rule, category) if an exact match_key hit, else None.
-
-    `rules` is a dict of match_key -> CategoryRule (preloaded by the service).
-    `categories` is a dict of category_id -> Category.
-    """
-    key = normalized.value
-    rule = rules.get(key)
+    """Return (rule, category) if exact match_key hit, else None."""
+    rule = rules.get(normalized.value)
     if rule is None:
         return None
     category = categories.get(rule.category_id)
@@ -787,18 +1028,16 @@ def match(
 ```python
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional
 
 from budget.budget.application.dtos import (
     ApproveCategorizationDto, AutoCategorizeDto, GetMonthlySummaryDto,
     GetReviewQueueDto, SyncTransactionsDto,
 )
-from budget.budget.application.matching.normalizer import normalize
 from budget.budget.application.ports import (
     CategoryRepository, CategoryRuleRepository, RBCScraper, TransactionRepository,
 )
 from budget.budget.domain.entities import Transaction
-from budget.budget.domain.exceptions import CategoryNotFound, SyncFailed
+from budget.budget.domain.exceptions import SyncFailed
 from budget.budget.services.categorization_service import CategorizationService
 from budget.budget.services.summary_service import SummaryService
 
@@ -811,12 +1050,7 @@ class SyncResult:
 
 
 class SyncTransactionsUseCase:
-    def __init__(
-        self,
-        scraper: RBCScraper,
-        repo: TransactionRepository,
-        categorizer: CategorizationService,
-    ):
+    def __init__(self, scraper: RBCScraper, repo: TransactionRepository, categorizer: CategorizationService):
         self._scraper = scraper
         self._repo = repo
         self._categorizer = categorizer
@@ -826,19 +1060,16 @@ class SyncTransactionsUseCase:
             raw_txs = self._scraper.scrape(dto.sync_since)
         except Exception as exc:
             raise SyncFailed(f"RBC scrape failed: {exc}") from exc
-
         new_ids = []
         skipped = 0
         errors = []
         for raw in raw_txs:
-            rbc_id = raw["rbc_transaction_id"]
-            if self._repo.exists(rbc_id):
+            if self._repo.exists(raw["rbc_transaction_id"]):
                 skipped += 1
                 continue
             tx = self._categorizer.build_new_transaction(raw)
             saved = self._repo.save(tx)
             new_ids.append(saved.id)
-        # Auto-categorize the newly imported batch
         self._categorizer.auto_categorize_pending()
         return SyncResult(new_count=len(new_ids), skipped_count=skipped, errors=errors)
 
@@ -850,11 +1081,7 @@ class AutoCategorizeResult:
 
 
 class AutoCategorizeUseCase:
-    # Per handoff: fixed code constant. For exact-match-only v1, "match found"
-    # = auto-approve; "no match" = queue. This constant is the threshold for
-    # times_confirmed at which a rule auto-approves without manual review.
-    # With exact-match-only, any existing rule auto-approves (threshold = 1).
-    AUTO_APPROVE_THRESHOLD = 1
+    AUTO_APPROVE_THRESHOLD = 1  # fixed code constant, not a setting
 
     def __init__(self, categorizer: CategorizationService, repo: TransactionRepository):
         self._categorizer = categorizer
@@ -871,23 +1098,14 @@ class ApproveResult:
 
 
 class ApproveCategorizationUseCase:
-    def __init__(
-        self,
-        tx_repo: TransactionRepository,
-        rule_repo: CategoryRuleRepository,
-        categorizer: CategorizationService,
-    ):
+    def __init__(self, tx_repo: TransactionRepository, rule_repo: CategoryRuleRepository, categorizer: CategorizationService):
         self._tx_repo = tx_repo
         self._rule_repo = rule_repo
         self._categorizer = categorizer
 
     def execute(self, dto: ApproveCategorizationDto) -> ApproveResult:
-        tx = self._tx_repo.update_category(
-            dto.transaction_id, dto.category_id, status="manual"
-        )
-        reinforced = self._categorizer.reinforce_rule(
-            tx.description_normalized, dto.category_id
-        )
+        tx = self._tx_repo.update_category(dto.transaction_id, dto.category_id, status="manual")
+        reinforced = self._categorizer.reinforce_rule(tx.description_normalized, dto.category_id)
         return ApproveResult(transaction=tx, rule_reinforced=reinforced)
 
 
@@ -910,6 +1128,17 @@ class GetReviewQueueUseCase:
         return pending, categories
 ```
 
+### Update .okf/
+
+- Create `.okf/architecture/application-layer.md` (type: `Architecture`, lists ports, DTOs, matching handlers, dependency rule: domain + stdlib only)
+- Create `.okf/use-cases/sync-transactions.md` (type: `Use Case`, documents DTO, calls, output, links to [RBC Scraper](/references/rbc-scraper.md) and [Transaction](/data-models/transaction.md))
+- Create `.okf/use-cases/auto-categorize.md` (type: `Use Case`, notes `AUTO_APPROVE_THRESHOLD = 1`)
+- Create `.okf/use-cases/approve-categorization.md` (type: `Use Case`)
+- Create `.okf/use-cases/get-monthly-summary.md` (type: `Use Case`)
+- Create `.okf/use-cases/get-review-queue.md` (type: `Use Case`)
+- Update `.okf/use-cases/index.md` to list all five
+- Append to `log.md`: `**Creation**: Application layer + 5 use-case concepts (Step 3).`
+
 ---
 
 # Step 4 — Services Layer
@@ -925,25 +1154,18 @@ class GetReviewQueueUseCase:
 
 ```python
 from datetime import date
-from decimal import Decimal
-from typing import Optional
 
 from budget.budget.application.matching.exact_matcher import match
 from budget.budget.application.matching.normalizer import normalize
 from budget.budget.application.ports import (
     CategoryRepository, CategoryRuleRepository, TransactionRepository,
 )
-from budget.budget.domain.entities import Category, CategoryRule, Transaction
-from budget.budget.domain.value_objects import Money
+from budget.budget.domain.entities import CategoryRule, Transaction
+from budget.budget.domain.value_objects import Money, NormalizedTitle
 
 
 class CategorizationService:
-    def __init__(
-        self,
-        tx_repo: TransactionRepository,
-        rule_repo: CategoryRuleRepository,
-        cat_repo: CategoryRepository,
-    ):
+    def __init__(self, tx_repo: TransactionRepository, rule_repo: CategoryRuleRepository, cat_repo: CategoryRepository):
         self._tx_repo = tx_repo
         self._rule_repo = rule_repo
         self._cat_repo = cat_repo
@@ -960,14 +1182,14 @@ class CategorizationService:
         )
 
     def auto_categorize_pending(self):
+        from budget.budget.application.use_cases import AutoCategorizeResult
         pending = self._tx_repo.list_pending()
-        rules = {r.match_key: r for r in self._rule_repo.all_rules()} if hasattr(self._rule_repo, "all_rules") else self._load_rules()
+        rules = {r.match_key: r for r in self._rule_repo.all_rules()}
         categories = {c.id: c for c in self._cat_repo.list_all()}
         auto_approved = 0
         queued = 0
         for tx in pending:
-            norm = type(normalize(""))(tx.description_normalized)
-            hit = match(norm, rules, categories)
+            hit = match(NormalizedTitle(tx.description_normalized), rules, categories)
             if hit is None:
                 queued += 1
                 continue
@@ -975,12 +1197,7 @@ class CategorizationService:
             self._tx_repo.update_category(tx.id, category.id, status="auto")
             self._rule_repo.increment_confirmed(rule.id)
             auto_approved += 1
-        from budget.budget.application.use_cases import AutoCategorizeResult
         return AutoCategorizeResult(auto_approved=auto_approved, queued=queued)
-
-    def _load_rules(self) -> dict:
-        # Fallback if repo doesn't expose all_rules(); see Step 7 which adds it.
-        return {}
 
     def reinforce_rule(self, normalized_key: str, category_id: int) -> bool:
         existing = self._rule_repo.find_by_match_key(normalized_key)
@@ -988,7 +1205,7 @@ class CategorizationService:
             self._rule_repo.save(CategoryRule(
                 match_key=normalized_key, category_id=category_id, times_confirmed=1
             ))
-            return False  # new rule created, not reinforced
+            return False
         self._rule_repo.increment_confirmed(existing.id)
         return True
 ```
@@ -997,7 +1214,6 @@ class CategorizationService:
 
 ```python
 from decimal import Decimal
-from typing import List
 
 from budget.budget.application.ports import CategoryRepository, TransactionRepository
 from budget.budget.domain.entities import CategoryTotal, MonthlySummary
@@ -1023,10 +1239,16 @@ class SummaryService:
         for cat in self._cat_repo.list_all():
             amt = by_cat.get(cat.id, Decimal("0"))
             totals.append(CategoryTotal(
-                category=cat, amount=Money(amt), percentage=Decimal("0") if denom == 0 else (abs(amt) / denom * 100),
+                category=cat, amount=Money(amt),
+                percentage=Decimal("0") if denom == 0 else (abs(amt) / denom * 100),
             ))
         return MonthlySummary(year=year, month=month, total_income=total_income, total_expense=total_expense, categories=totals)
 ```
+
+### Update .okf/
+
+- Create `.okf/architecture/services-layer.md` (type: `Architecture`, documents CategorizationService + SummaryService, dependency rule: application + domain + stdlib)
+- Append to `log.md`: `**Creation**: Services layer (Step 4).`
 
 ---
 
@@ -1035,29 +1257,19 @@ class SummaryService:
 `budget/budget/application/container.py`:
 
 ```python
-"""Manual DI container. Build per request in views/jobs; one-shot at import for jobs.
-
-Why not django-injector: 4 use cases is small; a manual dict is enough and
-avoids an extra dependency. Revisit if the graph grows.
-"""
-from budget.budget.application.use_cases import (
-    ApproveCategorizationUseCase, AutoCategorizeUseCase, GetMonthlySummaryUseCase,
-    GetReviewQueueUseCase, SyncTransactionsUseCase,
-)
-from budget.budget.services.categorization_service import CategorizationService
-from budget.budget.services.summary_service import SummaryService
-
+"""Manual DI container. 4 use cases is small; avoids django-injector dep."""
 
 def build_container():
-    """Return a dict of use-case factories.
-
-    Lazily imports infrastructure so domain/application stay Django-free.
-    Views call e.g. container()["sync"](...) to get a wired use case.
-    """
     from budget.budget.infrastructure.repositories import (
         DjangoCategoryRepository, DjangoCategoryRuleRepository, DjangoTransactionRepository,
     )
     from budget.budget.infrastructure.rbc.scraper import PlaywrightRBCScraper
+    from budget.budget.application.use_cases import (
+        ApproveCategorizationUseCase, AutoCategorizeUseCase, GetMonthlySummaryUseCase,
+        GetReviewQueueUseCase, SyncTransactionsUseCase,
+    )
+    from budget.budget.services.categorization_service import CategorizationService
+    from budget.budget.services.summary_service import SummaryService
 
     tx_repo = DjangoTransactionRepository()
     rule_repo = DjangoCategoryRuleRepository()
@@ -1077,7 +1289,6 @@ def build_container():
 
 _container = None
 
-
 def container():
     global _container
     if _container is None:
@@ -1085,13 +1296,18 @@ def container():
     return _container
 ```
 
+### Update .okf/
+
+- Create `.okf/architecture/di-container.md` (type: `Architecture`, documents the Provider dict pattern, 5 keys, why not django-injector)
+- Append to `log.md`: `**Creation**: DI container (Step 5).`
+
 ---
 
 # Step 6 — Infrastructure: Django Models + Migrations
 
-`budget/budget/infrastructure/`. These files DO import Django.
+**From here on, all `manage.py` commands run via docker.**
 
-## 6.1 `__init__.py`
+## 6.1 `infrastructure/__init__.py`
 
 ```python
 ```
@@ -1148,14 +1364,18 @@ class TransactionModel(models.Model):
 
 ## 6.3 Migrations
 
-Run after Postgres is up (Step 14):
-
 ```bash
-uv run python manage.py makemigrations budget
-uv run python manage.py migrate
+docker compose exec web python manage.py makemigrations budget
+docker compose exec web python manage.py migrate
 ```
 
-The app label is `budget` (from `BudgetConfig.name = "budget.budget"`; Django uses the last path segment). Confirm with `makemigrations budget` — if Django complains, use `makemigrations budget.budget` and adjust `default_app_label` on the AppConfig.
+### Update .okf/
+
+- Update `.okf/data-models/transaction.md` — add `# ORM Schema` section documenting TransactionModel columns (type: `Django Model`, add `resource` field pointing to `budget/budget/infrastructure/django_models.py`)
+- Update `.okf/data-models/category.md` — add ORM schema
+- Update `.okf/data-models/category-rule.md` — add ORM schema
+- Create `.okf/architecture/infrastructure-layer.md` (type: `Architecture`, documents ORM models, repos, scraper, jobs; dependency rule: application + domain + Django + Playwright)
+- Append to `log.md`: `**Update**: ORM models + migrations (Step 6).`
 
 ---
 
@@ -1167,6 +1387,7 @@ The app label is `budget` (from `BudgetConfig.name = "budget.budget"`; Django us
 from datetime import date
 from typing import Optional
 
+from django.db.models import F
 from django.utils import timezone
 
 from budget.budget.application.ports import (
@@ -1194,8 +1415,7 @@ class DjangoTransactionRepository(TransactionRepository):
         return Transaction.fromDatabase(TransactionModel.objects.get(id=tx_id))
 
     def list_pending(self) -> list[Transaction]:
-        rows = TransactionModel.objects.filter(categorization_status="pending")
-        return [Transaction.fromDatabase(r) for r in rows]
+        return [Transaction.fromDatabase(r) for r in TransactionModel.objects.filter(categorization_status="pending")]
 
     def list_for_month(self, year: int, month: int) -> list[Transaction]:
         rows = TransactionModel.objects.filter(posted_date__year=year, posted_date__month=month)
@@ -1220,16 +1440,12 @@ class DjangoCategoryRuleRepository(CategoryRuleRepository):
 
     def save(self, rule: CategoryRule) -> CategoryRule:
         row = CategoryRuleModel.objects.create(
-            match_key=rule.match_key,
-            category_id=rule.category_id,
-            times_confirmed=rule.times_confirmed,
+            match_key=rule.match_key, category_id=rule.category_id, times_confirmed=rule.times_confirmed,
         )
         return CategoryRule.fromDatabase(row)
 
     def increment_confirmed(self, rule_id: int) -> None:
-        CategoryRuleModel.objects.filter(id=rule_id).update(
-            times_confirmed=models.F("times_confirmed") + 1
-        )  # NOTE: import django.db.models as models at top of file
+        CategoryRuleModel.objects.filter(id=rule_id).update(times_confirmed=F("times_confirmed") + 1)
 
     def all_rules(self) -> list[CategoryRule]:
         return [CategoryRule.fromDatabase(r) for r in CategoryRuleModel.objects.all()]
@@ -1243,7 +1459,16 @@ class DjangoCategoryRepository(CategoryRepository):
         return [Category.fromDatabase(c) for c in CategoryModel.objects.all().order_by("name")]
 ```
 
-> **IMPORTANT**: add `from django.db.models import F` at the top and use `F("times_confirmed") + 1` in `increment_confirmed`. The inline `models.F` reference above is illustrative; the final file must import it.
+## 7.2 Verify
+
+```bash
+docker compose exec web python manage.py shell -c "from budget.budget.infrastructure.repositories import DjangoTransactionRepository; print('ok')"
+```
+
+### Update .okf/
+
+- Update `.okf/architecture/infrastructure-layer.md` — add repository implementations section
+- Append to `log.md`: `**Creation**: Repository implementations (Step 7).`
 
 ---
 
@@ -1268,14 +1493,14 @@ FORMAT_CSV_RADIO = 'input[value="csv"]'
 DATE_FROM_INPUT = 'input[name="fromDate"]'
 DATE_TO_INPUT = 'input[name="toDate"]'
 DOWNLOAD_BUTTON = 'button:has-text("Download")'
-MFA_PROMPT = '.mfa-challenge'  # may need manual intervention on first run
+MFA_PROMPT = '.mfa-challenge'
 ```
 
 ## 8.3 `scraper.py`
 
 ```python
 import os
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
@@ -1288,12 +1513,6 @@ from .csv_parser import parse_csv
 
 
 class PlaywrightRBCScraper(RBCScraper):
-    """Logs into RBC, exports the joint chequing CSV, parses it.
-
-    Credentials come from env (RBC_USERNAME, RBC_PASSWORD) — never logged.
-    Runs headless in prod; pass headless=False in dev for debugging.
-    """
-
     DOWNLOAD_DIR = Path(os.environ.get("RBC_DOWNLOAD_DIR", "/tmp/rbc_exports"))
 
     def __init__(self, headless: bool = True):
@@ -1305,7 +1524,6 @@ class PlaywrightRBCScraper(RBCScraper):
         password = os.environ.get("RBC_PASSWORD")
         if not username or not password:
             raise SyncFailed("RBC_USERNAME / RBC_PASSWORD not set in env")
-
         try:
             with sync_playwright() as pw:
                 browser = pw.chromium.launch(headless=self._headless)
@@ -1317,12 +1535,11 @@ class PlaywrightRBCScraper(RBCScraper):
                 page.fill(S.PASSWORD_INPUT, password)
                 page.click(S.SIGN_IN_BUTTON)
 
-                # If MFA appears, raise — first-run must be handled manually
                 try:
                     page.wait_for_selector(S.MFA_PROMPT, timeout=4000)
                     raise RBCLoginError("MFA challenge — complete first login manually, then retry")
                 except PlaywrightTimeout:
-                    pass  # no MFA, proceed
+                    pass
 
                 page.wait_for_selector(S.ACCOUNTS_TABLE, timeout=15000)
                 page.click(S.JOINT_CHEQUING_LINK)
@@ -1355,41 +1572,19 @@ from pathlib import Path
 
 from budget.budget.domain.exceptions import SyncFailed
 
-
-# RBC CSV export columns — confirm against a real export before relying on this.
-# Common RBC chequing export columns:
-#   "Account Type","Account Number","Transaction Date","Cheque Number",
-#   "Description 1","Description 2","CAD$","USD$"
-EXPECTED_HEADERS = {
-    "Transaction Date",
-    "Description 1",
-    "CAD$",
-}
+EXPECTED_HEADERS = {"Transaction Date", "Description 1", "CAD$"}
 
 
 def parse_csv(path: Path) -> list[dict]:
-    """Parse an RBC CSV export into raw transaction dicts.
-
-    Returns: list of {
-        rbc_transaction_id: str,   # derived from date+description+amount
-        posted_date: str,          # ISO YYYY-MM-DD
-        description_raw: str,
-        amount_str: str,
-    }
-    Raises SyncFailed if the schema does not match EXPECTED_HEADERS.
-    """
     if not path.exists():
         raise SyncFailed(f"CSV not found: {path}")
-
     rows = []
     with open(path, newline="", encoding="utf-8-sig") as fh:
         reader = csv.DictReader(fh)
         headers = set(reader.fieldnames or [])
         missing = EXPECTED_HEADERS - headers
         if missing:
-            raise SyncFailed(
-                f"RBC CSV schema changed — missing columns: {sorted(missing)}"
-            )
+            raise SyncFailed(f"RBC CSV schema changed — missing columns: {sorted(missing)}")
         for r in reader:
             desc = (r.get("Description 1") or "").strip()
             if r.get("Description 2"):
@@ -1398,9 +1593,8 @@ def parse_csv(path: Path) -> list[dict]:
             amount = (r.get("CAD$") or "").strip()
             if not date_raw or not amount:
                 continue
-            rbc_id = f"{date_raw}|{desc}|{amount}"
             rows.append({
-                "rbc_transaction_id": rbc_id,
+                "rbc_transaction_id": f"{date_raw}|{desc}|{amount}",
                 "posted_date": _normalize_date(date_raw),
                 "description_raw": desc,
                 "amount_str": amount,
@@ -1409,17 +1603,19 @@ def parse_csv(path: Path) -> list[dict]:
 
 
 def _normalize_date(raw: str) -> str:
-    """RBC exports dates as MM/DD/YYYY or DD/MM/YYYY — confirm against real export.
-
-    Default assumption: MM/DD/YYYY (RBC's default). Adjust if samples show otherwise.
-    """
     from datetime import datetime
     try:
         return datetime.strptime(raw, "%m/%d/%Y").date().isoformat()
     except ValueError:
-        # fall through to ISO if already ISO
         return raw
 ```
+
+### Update .okf/
+
+- Create `.okf/references/rbc-scraper.md` (type: `Reference`, documents PlaywrightRBCScraper flow, selectors link, MFA handling, credential rules)
+- Create `.okf/references/csv-parser.md` (type: `Reference`, documents EXPECTED_HEADERS, dedup key derivation, date normalization)
+- Update `.okf/references/index.md` to list both
+- Append to `log.md`: `**Creation**: RBC scraper + CSV parser (Step 8).`
 
 ---
 
@@ -1444,8 +1640,7 @@ def run_scheduled_sync():
     """Daily 6am — sync last 7 days as a safety overlap."""
     from budget.budget.application.dtos import SyncTransactionsDto
     dto = SyncTransactionsDto(sync_since=date.today() - timedelta(days=7))
-    usecase = container()["sync"]()
-    usecase.execute(dto)
+    container()["sync"]().execute(dto)
 
 
 def run_sync_now(sync_since: date | None = None):
@@ -1458,8 +1653,7 @@ def run_sync_now(sync_since: date | None = None):
 def _run_sync_task(sync_since: date):
     from budget.budget.application.dtos import SyncTransactionsDto
     dto = SyncTransactionsDto(sync_since=sync_since)
-    usecase = container()["sync"]()
-    usecase.execute(dto)
+    container()["sync"]().execute(dto)
 ```
 
 ## 9.3 `schedule.py`
@@ -1481,11 +1675,17 @@ def register_schedules(ScheduleModel):
     )
 ```
 
+### Update .okf/
+
+- Create `.okf/jobs/daily-sync.md` (type: `Job`, documents cron `0 6 * * *`, sync_since overlap, links to [Sync Transactions](/use-cases/sync-transactions.md))
+- Update `.okf/jobs/index.md`
+- Append to `log.md`: `**Creation**: Django-Q2 daily sync job (Step 9).`
+
 ---
 
 # Step 10 — Interface: Presenters + ViewModels
 
-`budget/budget/interfaces/`. These import domain entities only — no services, no repos.
+`budget/budget/interfaces/`. Import domain entities only — no services, no repos.
 
 ## 10.1 `__init__.py`
 
@@ -1496,7 +1696,6 @@ def register_schedules(ScheduleModel):
 
 ```python
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -1574,8 +1773,7 @@ class DashboardPresenter:
                 percentage=f"{c.percentage:.1f}%",
                 badge_color=c.category.color,
             )
-            for c in summary.categories
-            if c.amount.amount != 0
+            for c in summary.categories if c.amount.amount != 0
         ]
         return MonthlySummaryVM(
             month_label=label,
@@ -1591,10 +1789,8 @@ class ReviewQueuePresenter:
         opts = [CategoryOptionVM(id=c.id, name=c.name) for c in categories]
         items = [
             ReviewQueueItemVM(
-                transaction_id=t.id,
-                description=t.description_raw,
-                amount=_money(t.amount.amount),
-                date=t.posted_date.isoformat(),
+                transaction_id=t.id, description=t.description_raw,
+                amount=_money(t.amount.amount), date=t.posted_date.isoformat(),
                 category_options=opts,
             )
             for t in pending
@@ -1608,12 +1804,15 @@ class SyncResultPresenter:
         if result.errors:
             msg += f" {len(result.errors)} errors."
         return SyncResultVM(
-            new_count=result.new_count,
-            skipped_count=result.skipped_count,
-            errors=result.errors,
-            message=msg,
+            new_count=result.new_count, skipped_count=result.skipped_count,
+            errors=result.errors, message=msg,
         )
 ```
+
+### Update .okf/
+
+- Create `.okf/architecture/interface-layer.md` (type: `Architecture`, documents presenters, view models, components, views; dependency rule: domain + view models only for presenters)
+- Append to `log.md`: `**Creation**: Presenters + view models (Step 10).`
 
 ---
 
@@ -1663,18 +1862,9 @@ class SyncButtonComponent(Component):
   <div class="card-body">
     <h2 class="card-title">{{ vm.month_label }}</h2>
     <div class="stats stats-vertical lg:stats-horizontal shadow">
-      <div class="stat">
-        <div class="stat-title">Income</div>
-        <div class="stat-value">{{ vm.total_income }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Expense</div>
-        <div class="stat-value text-error">{{ vm.total_expense }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Net</div>
-        <div class="stat-value">{{ vm.net }}</div>
-      </div>
+      <div class="stat"><div class="stat-title">Income</div><div class="stat-value">{{ vm.total_income }}</div></div>
+      <div class="stat"><div class="stat-title">Expense</div><div class="stat-value text-error">{{ vm.total_expense }}</div></div>
+      <div class="stat"><div class="stat-title">Net</div><div class="stat-value">{{ vm.net }}</div></div>
     </div>
     <div class="mt-4 space-y-2">
       {% for c in vm.categories %}
@@ -1696,10 +1886,7 @@ class SyncButtonComponent(Component):
   <td>{{ vm.description }}</td>
   <td class="font-mono">{{ vm.amount }}</td>
   <td>
-    <form hx-post="/review/{{ vm.transaction_id }}/approve/"
-          hx-target="closest tr"
-          hx-swap="outerHTML"
-          class="flex gap-2">
+    <form hx-post="/review/{{ vm.transaction_id }}/approve/" hx-target="closest tr" hx-swap="outerHTML" class="flex gap-2">
       {% csrf_token %}
       <select name="category" class="select select-bordered select-sm">
         {% for opt in vm.category_options %}
@@ -1715,10 +1902,7 @@ class SyncButtonComponent(Component):
 `components/templates/sync_button.html`:
 ```html
 {% load django_components %}
-<button hx-post="/sync/" hx-target="#sync-toast" hx-swap="innerHTML"
-        class="btn btn-primary">
-  Sync now
-</button>
+<button hx-post="/sync/" hx-target="#sync-toast" hx-swap="innerHTML" class="btn btn-primary">Sync now</button>
 <div id="sync-toast" class="text-sm"></div>
 ```
 
@@ -1734,6 +1918,11 @@ component.register("summary_card", SummaryCardComponent)
 component.register("review_row", ReviewRowComponent)
 component.register("sync_button", SyncButtonComponent)
 ```
+
+### Update .okf/
+
+- Update `.okf/architecture/interface-layer.md` — add components section
+- Append to `log.md`: `**Creation`: django-components (Step 11).`
 
 ---
 
@@ -1770,18 +1959,16 @@ def dashboard(request):
 ```python
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.views.decorators.http import require_POST
 
 from budget.budget.infrastructure.jobs.sync_job import run_sync_now
 
 
+@require_POST
 @login_required
 def sync_now(request):
-    if request.method != "POST":
-        return HttpResponse(status=405)
     run_sync_now()
-    return HttpResponse(
-        '<div class="alert alert-info">Syncing in the background — refresh in a minute.</div>'
-    )
+    return HttpResponse('<div class="alert alert-info">Syncing in the background — refresh in a minute.</div>')
 ```
 
 ## 12.4 `views/review.py`
@@ -1810,12 +1997,10 @@ def review_queue(request):
 ```python
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from budget.budget.application.container import container
 from budget.budget.application.dtos import ApproveCategorizationDto
-from budget.budget.interfaces.presenters import ReviewQueuePresenter
 
 
 @require_POST
@@ -1824,7 +2009,6 @@ def approve(request, tx_id: int):
     category_id = int(request.POST.get("category"))
     usecase = container()["approve"]()
     usecase.execute(ApproveCategorizationDto(transaction_id=tx_id, category_id=category_id))
-    # Re-render an empty row on success (HTMX swap removes the row)
     return HttpResponse('<tr></tr>')
 ```
 
@@ -1847,16 +2031,13 @@ def approve(request, tx_id: int):
 <div class="navbar bg-base-100 shadow">
   <div class="flex-1 px-4 font-bold">RBC Household Budget</div>
   <div class="flex-none">
-    <form method="post" action="{% url 'logout' %}">
-      {% csrf_token %}
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}
       <button class="btn btn-ghost btn-sm">Sign out</button>
     </form>
   </div>
 </div>
 <main class="container mx-auto p-4 space-y-6">
-  <div>
-    {% component "sync_button" %}
-  </div>
+  <div>{% component "sync_button" %}</div>
   {% component "summary_card" vm=vm %}
   <div id="review-queue" hx-get="/review/" hx-trigger="load">
     <span class="loading loading-spinner"></span>
@@ -1876,41 +2057,15 @@ def approve(request, tx_id: int):
     <p class="text-sm text-gray-500">Nothing to review — everything's categorized.</p>
     {% else %}
     <table class="table">
-      <thead>
-        <tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr>
-      </thead>
+      <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
       <tbody>
-        {% for item in vm.items %}
-        {% component "review_row" vm=item %}
-        {% endfor %}
+        {% for item in vm.items %}{% component "review_row" vm=item %}{% endfor %}
       </tbody>
     </table>
     {% endif %}
   </div>
 </div>
 ```
-
-## 12.7 `budget/budget/urls.py`
-
-```python
-from django.contrib import admin
-from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import path
-
-from budget.budget.interfaces.views import dashboard, sync, review, approve
-
-urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("login/", LoginView.as_view(), name="login"),
-    path("logout/", LogoutView.as_view(), name="logout"),
-    path("", dashboard, name="dashboard"),
-    path("sync/", sync.sync_now, name="sync_now"),
-    path("review/", review.review_queue, name="review_queue"),
-    path("review/<int:tx_id>/approve/", approve.approve, name="approve"),
-]
-```
-
-## 12.8 Login template
 
 `budget/budget/templates/registration/login.html`:
 ```html
@@ -1933,6 +2088,35 @@ urlpatterns = [
 </html>
 ```
 
+## 12.7 `budget/budget/urls.py`
+
+```python
+from django.contrib import admin
+from django.contrib.auth.views import LoginView, LogoutView
+from django.urls import path
+
+from budget.budget.interfaces.views import dashboard, sync, review, approve
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("login/", LoginView.as_view(), name="login"),
+    path("logout/", LogoutView.as_view(), name="logout"),
+    path("", dashboard.dashboard, name="dashboard"),
+    path("sync/", sync.sync_now, name="sync_now"),
+    path("review/", review.review_queue, name="review_queue"),
+    path("review/<int:tx_id>/approve/", approve.approve, name="approve"),
+]
+```
+
+### Update .okf/
+
+- Create `.okf/endpoints/dashboard.md` (type: `API Endpoint`, route `GET /`, links to [Get Monthly Summary](/use-cases/get-monthly-summary.md))
+- Create `.okf/endpoints/sync.md` (type: `API Endpoint`, route `POST /sync/`, links to [Daily Sync](/jobs/daily-sync.md))
+- Create `.okf/endpoints/review-queue.md` (type: `API Endpoint`, route `GET /review/`)
+- Create `.okf/endpoints/approve.md` (type: `API Endpoint`, route `POST /review/<id>/approve/`)
+- Update `.okf/endpoints/index.md` to list all four
+- Append to `log.md`: `**Creation`: Views + URL routing + 4 endpoint concepts (Step 12).`
+
 ---
 
 # Step 13 — Auth Wiring
@@ -1940,118 +2124,23 @@ urlpatterns = [
 Auth is Django built-in. Create two users (you + spouse) via:
 
 ```bash
-uv run python manage.py createsuperuser  # repeat for spouse
+docker compose exec web python manage.py createsuperuser  # repeat for spouse
 ```
 
 All views already use `@login_required`. `LOGIN_URL = "/login/"` is set in `base.py`.
 
 No signup flow. No password reset flow for v1 — out of scope.
 
----
+### Update .okf/
 
-# Step 14 — docker-compose
-
-## 14.1 `docker-compose.yml`
-
-```yaml
-services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: budget
-      POSTGRES_USER: budget
-      POSTGRES_PASSWORD: budget_dev
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./compose/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports: ["5432:5432"]
-
-  web:
-    build: { context: ., dockerfile: Dockerfile }
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes: ["./:/app"]
-    env_file: .env
-    depends_on: [db]
-    ports: ["8000:8000"]
-
-  qcluster:
-    build: { context: ., dockerfile: Dockerfile }
-    command: python manage.py qcluster
-    env_file: .env
-    depends_on: [db, web]
-
-volumes:
-  pgdata:
-```
-
-## 14.2 `compose/db/init.sql`
-
-```sql
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-```
-
-## 14.3 `Dockerfile` (shared by web + qcluster)
-
-```dockerfile
-FROM python:3.12-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libpq-dev curl \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Install uv
-RUN pip install --upgrade uv
-
-COPY pyproject.toml ./
-RUN uv sync
-
-# Playwright + chromium deps (ARM64-ok on >=1.40)
-RUN uv run playwright install --with-deps chromium
-
-COPY . .
-
-EXPOSE 8000
-
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-```
-
-## 14.4 `.dockerignore`
-
-```
-.git
-.venv
-__pycache__
-*.pyc
-postgres-data
-.playwright
-test-results
-*.log
-.env
-```
-
-## 14.5 First run
-
-```bash
-cp .env.example .env          # then fill SECRET_KEY
-docker compose up -d db
-docker compose run --rm web python manage.py migrate
-docker compose run --rm web python manage.py createsuperuser
-docker compose up -d
-```
-
-Visit `http://localhost:8000/`, sign in.
+- Update `.okf/architecture/interface-layer.md` — add auth section (Django built-in, `@login_required`, no signup)
+- Append to `log.md`: `**Update**: Auth wiring (Step 13).`
 
 ---
 
-# Step 15 — Tests
+# Step 14 — Tests
 
-## 15.1 `tests/conftest.py`
+## 14.1 `tests/conftest.py`
 
 ```python
 import pytest
@@ -2076,7 +2165,7 @@ def client_logged(client, user):
     return client
 ```
 
-## 15.2 Unit tests (no DB)
+## 14.2 Unit tests (no DB)
 
 `tests/unit/test_title_normalizer.py`:
 ```python
@@ -2101,11 +2190,7 @@ from budget.budget.domain.value_objects import NormalizedTitle
 def test_hit():
     cat = Category(id=1, name="Coffee")
     rule = CategoryRule(id=10, match_key="tim hortons", category_id=1)
-    out = match(
-        NormalizedTitle("tim hortons"),
-        rules={"tim hortons": rule},
-        categories={1: cat},
-    )
+    out = match(NormalizedTitle("tim hortons"), {"tim hortons": rule}, {1: cat})
     assert out is not None
     assert out[1].name == "Coffee"
 
@@ -2118,7 +2203,7 @@ def test_miss():
 ```python
 from decimal import Decimal
 
-from budget.budget.domain.entities import Category, CategoryTotal, MonthlySummary
+from budget.budget.domain.entities import MonthlySummary
 from budget.budget.domain.value_objects import Money
 from budget.budget.interfaces.presenters import DashboardPresenter
 
@@ -2136,108 +2221,71 @@ def test_dashboard_presenter_formats_money():
     assert vm.net == "$400.00"
 ```
 
-## 15.3 Integration tests (DB)
+## 14.3 Integration + functional tests
 
-`tests/integration/test_sync_usecase.py`:
-```python
-from datetime import date
-from unittest.mock import MagicMock
+Create the remaining test files mirroring the structure: one integration test per use case, one functional test per view. Use the `container` + `db` fixtures. Mock Playwright in scraper tests — never hit live RBC.
 
-from budget.budget.application.dtos import SyncTransactionsDto
-from budget.budget.application.use_cases import SyncTransactionsUseCase
-
-
-def test_sync_dedupes_existing(db, container):
-    scraper = MagicMock()
-    scraper.scrape.return_value = [{
-        "rbc_transaction_id": "X|desc|10.00",
-        "posted_date": "2026-07-01",
-        "description_raw": "desc",
-        "amount_str": "10.00",
-    }]
-    usecase = SyncTransactionsUseCase(
-        scraper,
-        container["sync"]()._repo if hasattr(container["sync"](), "_repo") else None,
-        MagicMock(),
-    )
-    # ... drive through, assert new_count=1 then second call skipped_count=1
-```
-
-(Flesh out the rest of the integration tests mirroring the structure: each use case gets one test file, one test per public method, using `db` fixture + `container` fixture + factory-boy for `TransactionModel`.)
-
-## 15.4 Functional tests (HTTP)
-
-`tests/functional/test_dashboard.py`:
-```python
-def test_dashboard_requires_login(client):
-    resp = client.get("/")
-    assert resp.status_code == 302
-    assert "/login/" in resp.url
-
-
-def test_dashboard_logged_in(client_logged):
-    resp = client_logged.get("/")
-    assert resp.status_code == 200
-```
-
-## 15.5 RBC scraper test (mocked Playwright)
-
-`tests/integration/test_rbc_scraper.py`:
-```python
-from unittest.mock import patch
-from datetime import date
-
-from budget.budget.infrastructure.rbc.scraper import PlaywrightRBCScraper
-
-
-def test_scraper_raises_when_no_creds(monkeypatch):
-    monkeypatch.delenv("RBC_USERNAME", raising=False)
-    monkeypatch.delenv("RBC_PASSWORD", raising=False)
-    s = PlaywrightRBCScraper()
-    try:
-        s.scrape(date.today())
-        assert False, "should raise"
-    except Exception:
-        pass
-```
-
-## 15.6 Run all
+## 14.4 Run all
 
 ```bash
-uv run pytest -q
+# Unit tests (fast, no DB) — can run on host or docker:
+docker compose exec web pytest tests/unit -q
+
+# Full suite (needs DB):
+docker compose exec web pytest -q
 ```
+
+### Update .okf/
+
+- Create `.okf/architecture/testing.md` (type: `Architecture`, documents the testing matrix: unit for handlers/presenters/vms, integration for use cases/repos, functional for views)
+- Append to `log.md`: `**Creation`: Testing strategy + test suite (Step 14).`
 
 ---
 
-# Step 16 — Final Verification
+# Step 15 — Final Verification
 
 Run each command in order. Stop and fix on any failure before moving on.
 
 ```bash
 # 1. Lint
-uv run ruff check budget tests
+docker compose exec web ruff check budget tests
 
-# 2. Type errors (no mypy config yet — at least ruff)
-uv run ruff check budget tests --select E,F,UP
+# 2. Django system check
+docker compose exec web python manage.py check
 
-# 3. Django system check
-uv run python manage.py check
+# 3. Migrations drift check
+docker compose exec web python manage.py makemigrations --check --dry-run
 
-# 4. Migrations dry-run
-uv run python manage.py makemigrations --check --dry-run
+# 4. Tests green
+docker compose exec web pytest -q
 
-# 5. Tests
-uv run pytest -q
+# 5. Full stack up
+docker compose up -d
+# visit http://localhost:8000/ — redirect to /login/, sign in, see dashboard
 
-# 6. Run dev server
-uv run python manage.py runserver
-# visit http://localhost:8000/ — should redirect to /login/
-# sign in with superuser, see empty dashboard + empty review queue
+# 6. OKF graph completeness check
+# Verify every .okf/*.md file has frontmatter with a non-empty `type` field
+# Verify .okf/log.md has an entry for every step (0 through 15)
 ```
+
+The build is complete when:
+
+- `docker compose exec web pytest -q` is green
+- `docker compose up` starts db + web + qcluster cleanly
+- `http://localhost:8000/` redirects to login, then shows dashboard after auth
+- The HTMX "Sync now" button enqueues a Django-Q2 task (visible in `django_q.orm` table)
+- The review queue fragment loads at `GET /review/`
+- Approving a row removes it from the queue and creates / reinforces a `CategoryRule`
+- `.okf/` bundle is conformant: every concept has `type` frontmatter, `log.md` covers all steps
+
+### Update .okf/
+
+- Final `log.md` entry: `**Verification**: All checks green, build complete (Step 15).`
+- Update `.okf/index.md` if any new sections were added
 
 ---
 
-## After the Build — First Real Action
+## After the Build — First Real Action (human)
 
 Per the handoff, the matcher cannot be trusted until samples are in. Once the app boots:
 
@@ -2245,20 +2293,22 @@ Per the handoff, the matcher cannot be trusted until samples are in. Once the ap
 2. Drop the file at `samples/rbc_export_real.csv`.
 3. Copy 30–50 description strings into `samples/rbc_descriptions.txt` (one per line).
 4. Inspect the patterns (store numbers, ref codes, dates embedded in description).
-5. Update `budget/budget/application/matching/normalizer.py` `normalize()` to apply the validated pipeline — swap `normalize_strict` into `normalize`.
-6. Re-run `tests/unit/test_title_normalizer.py` with cases derived from the samples.
+5. Update `budget/budget/application/matching/normalizer.py` `normalize()` — swap `normalize_strict` into `normalize`.
+6. Re-run `docker compose exec web pytest tests/unit/test_title_normalizer.py` with cases from the samples.
+7. **Update `.okf/references/csv-parser.md`** with the confirmed CSV headers + date format.
+8. **Update `.okf/use-cases/auto-categorize.md`** noting the normalizer is now strict.
 
 ---
 
-## Reference: Use-case → file map
+## Reference: Use-case → file → endpoint → OKF concept
 
-| Use case | File | View route |
-|---|---|---|
-| `SyncTransactionsUseCase` | `application/use_cases.py` | `POST /sync/` (via job) |
-| `AutoCategorizeUseCase` | `application/use_cases.py` | (called by sync) |
-| `ApproveCategorizationUseCase` | `application/use_cases.py` | `POST /review/<id>/approve/` |
-| `GetMonthlySummaryUseCase` | `application/use_cases.py` | `GET /` |
-| `GetReviewQueueUseCase` | `application/use_cases.py` | `GET /review/` |
+| Use case | File | View route | OKF concept |
+|---|---|---|---|
+| `SyncTransactionsUseCase` | `application/use_cases.py` | `POST /sync/` (via job) | `/use-cases/sync-transactions.md` |
+| `AutoCategorizeUseCase` | `application/use_cases.py` | (called by sync) | `/use-cases/auto-categorize.md` |
+| `ApproveCategorizationUseCase` | `application/use_cases.py` | `POST /review/<id>/approve/` | `/use-cases/approve-categorization.md` |
+| `GetMonthlySummaryUseCase` | `application/use_cases.py` | `GET /` | `/use-cases/get-monthly-summary.md` |
+| `GetReviewQueueUseCase` | `application/use_cases.py` | `GET /review/` | `/use-cases/get-review-queue.md` |
 
 ## Reference: Dependency direction cheat sheet
 
@@ -2273,17 +2323,21 @@ Per the handoff, the matcher cannot be trusted until samples are in. Once the ap
 | `interfaces/components/` | django-components, templates |
 | `tests/` | everything |
 
+## Reference: Docker command cheat sheet
+
+| Task | Command |
+|---|---|
+| Start all services | `docker compose up -d` |
+| Stop all services | `docker compose down` |
+| Run Django command (running container) | `docker compose exec web python manage.py <cmd>` |
+| Run Django command (one-off) | `docker compose run --rm web python manage.py <cmd>` |
+| Run tests | `docker compose exec web pytest -q` |
+| Rebuild after dep change | `docker compose build web && docker compose up -d` |
+| View logs | `docker compose logs -f web` |
+| DB shell | `docker compose exec db psql -U budget -d budget` |
+
 ---
 
 ## Done
 
-The build is complete when:
-
-- `uv run pytest -q` is green
-- `docker compose up` starts db + web + qcluster cleanly
-- `http://localhost:8000/` redirects to login, then shows dashboard after auth
-- The HTMX "Sync now" button enqueues a Django-Q2 task (visible in `django_q.orm` table)
-- The review queue fragment loads at `GET /review/`
-- Approving a row removes it from the queue and creates / reinforces a `CategoryRule`
-
-Hand off to the human for: real RBC sample collection → final normalizer tightening.
+Hand off to the human for: real RBC sample collection → final normalizer tightening → `.okf/` concept updates for confirmed CSV schema.
