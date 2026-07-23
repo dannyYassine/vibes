@@ -19,6 +19,63 @@ ln -s ~/anthropic-skills/skills/frontend-design ~/.claude/skills/frontend-design
 
 After restarting opencode, it finds `**/SKILL.md` files in auto-load paths (`~/.claude/skills/`, `~/.agents/skills/`) or configured `skills.paths`. The model triggers on matching keywords from the skill's description.
 
+## AI Assistant Setup
+
+This repo requires several MCP servers and plugins for AI-assisted development.
+Configure in `opencode.json` (project-level) or `~/.config/opencode/opencode.json` (global).
+
+| Tool | Purpose | Where Configured |
+|------|---------|-----------------|
+| [code-review-graph](https://code-review-graph.com) | Code knowledge graph — change detection, impact analysis, semantic search | `opencode.json` → `mcp.code-review-graph` |
+| [codegraph](https://colbymchenry.github.io/codegraph/) | Lightweight codebase graph — alternative to code-review-graph | Not configured (optional alternative) |
+| [Context7](https://context7.com) | Live library/framework documentation via MCP | `~/.config/opencode/opencode.json` → `mcp.context7` |
+| [Caveman](https://caveman.so) | Ultra-compressed AI communication mode (~65% token reduction) | `~/.config/opencode/opencode.json` → `plugin` |
+| [OKF (Open Knowledge Format)](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) | Structured knowledge files for AI-consumable feature/product docs | `.agents/skills/knowledge/` — YAML frontmatter, bundle-relative cross-links |
+
+### code-review-graph
+
+[code-review-graph.com](https://code-review-graph.com) — Persistent knowledge graph
+that indexes functions, classes, files, and cross-references. Auto-updates on file
+changes. Key tools:
+
+- `detect_changes` — risk-scored review of uncommitted changes
+- `query_graph` — trace callers, callees, imports, tests
+- `get_impact_radius` — blast radius of a change
+- `semantic_search_nodes` — find code by name or keyword
+
+### codegraph
+
+[colbymchenry.github.io/codegraph/](https://colbymchenry.github.io/codegraph/) —
+Alternative MCP-based code graph tool. Lighter weight than code-review-graph.
+Use as a drop-in replacement or complement.
+
+### Context7
+
+[context7.com](https://context7.com) — MCP server that fetches current docs for
+libraries, frameworks, SDKs, and APIs. Uses `resolve-library-id` + `query-docs`.
+Prevents stale answers by always referencing latest API surface.
+
+### Caveman
+
+[caveman.so](https://caveman.so) — Communication plugin that compresses AI output
+~65% by dropping articles, filler, pleasantries, and hedging while preserving
+technical accuracy. Levels: `lite`, `full` (default), `ultra`. Companion skills:
+
+- `caveman-help` — quick-reference card
+- `caveman-commit` — compressed commit messages
+- `caveman-review` — compressed code review
+- `caveman-stats` — token savings metrics
+- `caveman-compress` — compress memory files
+
+### OKF (Open Knowledge Format)
+
+[Spec & Google Cloud blog](https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing) —
+Structured markdown with YAML frontmatter (`type`, `title`, `tags`, `timestamp`)
+for AI-consumable knowledge. Used in `.agents/skills/knowledge/` to document
+features, products, and architecture. Bundle root: `index.md` with cross-links
+via bundle-relative paths. Conformance: every `.md` (except `index.md`/`log.md`)
+must have parseable frontmatter with non-empty `type`.
+
 ## Design Tools
 
 - [DaisyUI Blueprint](https://daisyui.com/blueprint/) — UI component blueprints for rapid prototyping
