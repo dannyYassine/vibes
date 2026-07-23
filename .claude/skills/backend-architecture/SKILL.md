@@ -76,14 +76,14 @@ delivery mechanisms → new VerbNounDto() → usecase.execute(dto) → services 
 | ------------------------------------------------ | --------------------- | ------------------------------- |
 | Handles HTTP request                             | Controller            | `layers/delivery-mechanisms.md` |
 | Handles CLI command                              | Command               | `layers/delivery-mechanisms.md` |
-| Dispatched to queue, picked up by worker         | Job                   | `layers/delivery-mechanisms.md` |
+| Dispatched to queue, picked up by worker         | Job                   | `layers/jobs.md`                |
 | Something happened, notify other parts of system | Event                 | `layers/events.md`              |
-| Reacts to event (sync)                           | Listener              | `layers/delivery-mechanisms.md` |
-| Reacts to event (sync or async via queue)        | Subscriber            | `layers/delivery-mechanisms.md` |
+| Reacts to event (sync)                           | Listener              | `layers/listeners.md`           |
+| Reacts to event (sync or async via queue)        | Subscriber            | `layers/subscribers.md`         |
 | Carries input from delivery to usecase           | DTO                   | `layers/dtos.md`                |
 | Orchestrates a single user intent                | Usecase               | `layers/usecases.md`            |
 | Reusable business logic, no direct user intent   | Service (core/domain) | `layers/services.md`            |
-| Wraps a Helper with business logic               | Service-helper        | `layers/services.md`            |
+| Wraps a Helper with business logic               | Service-helper        | `layers/service-helpers.md`     |
 | Thin 3rd-party tech wrapper, no business logic   | Helper                | `layers/helpers.md`             |
 | Single focused operation, plain-var constructor  | Handler               | `layers/handlers.md`            |
 | Persists or fetches from storage                 | Repository            | `layers/repositories.md`        |
@@ -146,6 +146,7 @@ Load on demand:
 - `layers/dtos.md`
 - `layers/usecases.md`
 - `layers/services.md` — covers all three service sub-types
+- `layers/service-helpers.md` — 1:1 pair with a Helper, business logic around third-party SDKs
 - `layers/helpers.md`
 - `layers/handlers.md`
 - `layers/repositories.md`
@@ -153,6 +154,9 @@ Load on demand:
 - `layers/factories.md`
 - `layers/events.md`
 - `layers/delivery-mechanisms.md`
+- `layers/listeners.md`
+- `layers/subscribers.md`
+- `layers/jobs.md`
 - `layers/di-container.md`
 - `layers/views.md` — root vs fragment views, PRG pattern
 - `layers/presenters.md` — bridge domain→UI

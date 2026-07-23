@@ -38,7 +38,7 @@ describe('POST /users', () => {
 
 ## Listeners
 
-Invoke `handle(event)` directly; assert the usecase received the correct DTO:
+See `layers/listeners.md`. Invoke `handle(event)` directly; assert the usecase received the correct DTO:
 
 ```typescript
 describe('UserRegisteredListener', () => {
@@ -86,7 +86,7 @@ describe('CreateUserUserCommand', () => {
 
 ## Subscribers
 
-Emit the event on the bus; assert the correct downstream job or listener was triggered:
+See `layers/subscribers.md`. Emit the event on the bus; assert the correct downstream job or listener was triggered:
 
 ```typescript
 describe('OrderEventsSubscriber', () => {

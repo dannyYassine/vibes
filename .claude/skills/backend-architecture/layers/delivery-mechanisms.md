@@ -108,39 +108,11 @@ class SendWelcomeEmailUserJob {
 
 ### Listener (Sync Event)
 
-```typescript
-class UserCreatedListener {
-  constructor(private readonly onboardUserUseCase: OnboardUserUseCase) {}
-
-  async handle(event: UserCreatedEvent): Promise<void> {
-    const dto = new OnboardUserDto(event.userId, event.email);
-    await this.onboardUserUseCase.execute(dto);
-  }
-}
-```
+See `layers/listeners.md` — the listener receives an event, builds a DTO, and calls a usecase synchronously.
 
 ### Subscriber (Event Bus)
 
-```typescript
-class OrderEventsSubscriber {
-  constructor(
-    private readonly processPaymentUseCase: ProcessPaymentUseCase,
-    private readonly cancelOrderUseCase: CancelOrderUseCase,
-  ) {}
-
-  subscribe(): void {
-    eventBus.on('order.placed', async (event) => {
-      const dto = new ProcessPaymentDto(event.orderId, event.amount);
-      await this.processPaymentUseCase.execute(dto);
-    });
-
-    eventBus.on('order.cancelled', async (event) => {
-      const dto = new CancelOrderDto(event.orderId, event.reason);
-      await this.cancelOrderUseCase.execute(dto);
-    });
-  }
-}
-```
+See `layers/subscribers.md` — the subscriber registers callbacks on the event bus, handling events inline or dispatching jobs for deferred work.
 
 ## Anti-patterns
 

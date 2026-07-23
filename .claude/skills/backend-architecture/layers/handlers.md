@@ -78,8 +78,8 @@ class UserController {
 - Controllers
 - Commands
 - Actions
-- Listeners
-- Subscribers
+- Listeners (see `listeners.md`)
+- Subscribers (see `subscribers.md`)
 
 ## Anti-patterns
 

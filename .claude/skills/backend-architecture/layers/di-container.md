@@ -11,7 +11,7 @@ The container is the single registry of all long-lived, injectable classes. Ever
 | Usecases | Registered + injected | Transient by default |
 | Core services | Registered + injected | Singleton |
 | Domain services | Registered + injected | Singleton |
-| Service-helpers | Registered + injected | Singleton; paired Helper is NOT registered |
+| Service-helpers | Registered + injected | Singleton; paired [Helper](helpers.md) is NOT registered |
 | Repositories | Registered + injected | Singleton |
 | Factories | Registered + injected | Singleton |
 | Delivery mechanisms | Receives injections | Framework-managed; usecases injected into constructor |

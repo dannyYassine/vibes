@@ -12,7 +12,7 @@ Testing a service directly means duplicating coverage that already exists in the
 
 ## Rare Exception: Service-Helpers
 
-A service-helper may warrant a unit test when its business logic is complex and not easily exercised through the full integration path:
+A [service-helper](../layers/service-helpers.md) may warrant a unit test when its business logic is complex and not easily exercised through the full integration path:
 
 ```typescript
 describe('GithubReadService', () => {

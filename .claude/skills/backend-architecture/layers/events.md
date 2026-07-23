@@ -2,7 +2,7 @@
 
 ## Rule
 
-Events capture something that already happened. Any layer may dispatch an event, but only at the source of truth — the exact point where the logic occurred. Events are picked up by listeners (sync) or subscribers (sync or async via queue).
+Events capture something that already happened. Any layer may dispatch an event, but only at the source of truth — the exact point where the logic occurred. Events are picked up by [listeners](listeners.md) (sync) or [subscribers](subscribers.md) (sync or async via queue).
 
 ## Naming
 
@@ -57,7 +57,7 @@ Dispatch at the source of truth — the layer where the action definitively occu
 
 **Do not dispatch** from a delivery mechanism. The delivery mechanism does not own the logic — the usecase or service does.
 
-## Consumers: Listeners vs Subscribers
+## Consumers: [Listeners](listeners.md) vs [Subscribers](subscribers.md)
 
 | Consumer | Execution | Use when |
 |---|---|---|

@@ -48,27 +48,7 @@ class NotificationService {
 
 ### 3. Service-Helper
 
-One-to-one pair with a Helper class. Applies business logic to the helper's raw output. **The only class that may call its paired Helper.**
-
-- Named to mirror the helper: `GithubReadHelper` → `GithubReadService` (or `GithubReadServiceHelper` — keep naming consistent per project)
-- The service-helper is the only caller of its paired helper — no other class touches the helper directly
-
-```typescript
-// GithubReadHelper — thin wrapper, no business logic
-class GithubReadHelper {
-  fetchRepoData(owner: string, repo: string): RawGithubRepo { ... }
-}
-
-// GithubReadService — service-helper, applies business logic
-class GithubReadService {
-  constructor(private readonly helper: GithubReadHelper) {}
-
-  async getActiveRepos(org: string): Promise<Repo[]> {
-    const raw = this.helper.fetchRepoData(org, '*');
-    return raw.filter(r => !r.archived).map(r => Repo.fromRaw(r));
-  }
-}
-```
+See `layers/service-helpers.md`. One-to-one pair with a Helper class. Applies business logic to the helper's raw output. **The only class that may call its paired Helper.**
 
 ## All Services: Allowed Calls
 

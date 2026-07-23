@@ -2,7 +2,7 @@
 
 ## Rule
 
-Helpers are thin wrappers over third-party tech or SDKs. No business logic. **Only their paired service-helper class may call them — no other class.**
+Helpers are thin wrappers over third-party tech or SDKs. No business logic. **Only their paired [service-helper](service-helpers.md) class may call them — no other class.**
 
 ## What a Helper Is
 
@@ -20,7 +20,7 @@ Helpers are thin wrappers over third-party tech or SDKs. No business logic. **On
 
 ## The Pairing Rule
 
-Every helper has exactly one service-helper that owns it:
+Every helper has exactly one [service-helper](service-helpers.md) that owns it:
 
 ```
 GithubReadHelper  ←→  GithubReadService  (service-helper)
