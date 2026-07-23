@@ -1,0 +1,9 @@
+.git
+.venv
+__pycache__
+*.pyc
+postgres-data
+.playwright
+test-results
+*.log
+.env
