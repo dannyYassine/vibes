@@ -53,7 +53,7 @@ Reference (for humans): `.claude/skills/backend-architecture/SKILL.md` — frame
 - Postgres 16
 - pytest + pytest-django + factory-boy
 - uv for Python packaging
-- DI: **manual `Provider` dict** in `budget/budget/application/container.py` (no `django-injector` dep — 4 use cases is small)
+- DI: **[python-dependency-injector](https://github.com/ets-labs/python-dependency-injector)** — `DeclarativeContainer` with `providers.Factory` / `providers.Singleton`. `@inject` + `Provide[...]` used at **delivery mechanism layer only** (views, jobs). Use cases, services, repos receive deps via constructor injection from the container.
 - **OKF v0.1** knowledge graph in `.okf/` — markdown + YAML frontmatter, updated after every step
 
 ---
@@ -268,6 +268,7 @@ dependencies = [
     "psycopg[binary]>=3.1",
     "playwright>=1.40",
     "python-money>=0.9",
+    "dependency-injector>=4.41",
 ]
 
 [project.optional-dependencies]
@@ -569,6 +570,17 @@ class BudgetConfig(AppConfig):
     name = "budget.budget"
 
     def ready(self):
+        # Wire dependency-injector container into views + jobs modules.
+        # @inject + Provide[Container.xxx] in those modules resolve here.
+        from budget.budget.application.container import Container
+        Container.wire(modules=[
+            "budget.budget.interfaces.views.dashboard",
+            "budget.budget.interfaces.views.sync",
+            "budget.budget.interfaces.views.review",
+            "budget.budget.interfaces.views.approve",
+            "budget.budget.infrastructure.jobs.sync_job",
+        ])
+
         # Register Django-Q2 scheduled sync (idempotent)
         from django_q.models import Schedule
         from budget.budget.infrastructure.jobs.schedule import register_schedules
@@ -1256,50 +1268,103 @@ class SummaryService:
 
 `budget/budget/application/container.py`:
 
+Uses [python-dependency-injector](https://github.com/ets-labs/python-dependency-injector) `DeclarativeContainer`. Repositories and the scraper are `providers.Singleton` (stateless wrappers, shared). Services are `providers.Singleton` (hold repo refs, stateless). Use cases are `providers.Factory` (new instance per call — one per request). `@inject` + `Provide[Container.xxx]` is used **only at the delivery mechanism layer** (views, jobs) — never inside use cases, services, or repos. The container wires those inner layers via constructor injection.
+
 ```python
-"""Manual DI container. 4 use cases is small; avoids django-injector dep."""
+from dependency_injector import containers, providers
 
-def build_container():
-    from budget.budget.infrastructure.repositories import (
-        DjangoCategoryRepository, DjangoCategoryRuleRepository, DjangoTransactionRepository,
+from budget.budget.application.use_cases import (
+    ApproveCategorizationUseCase, AutoCategorizeUseCase, GetMonthlySummaryUseCase,
+    GetReviewQueueUseCase, SyncTransactionsUseCase,
+)
+from budget.budget.services.categorization_service import CategorizationService
+from budget.budget.services.summary_service import SummaryService
+
+
+class Container(containers.DeclarativeContainer):
+    """Wiring container. @inject in views/jobs resolves Provide[Container.xxx] here.
+
+    Repositories + scraper are Singleton (imported lazily from infrastructure so
+    domain/application stay Django-free at import time). Services hold repo refs
+    → also Singleton. Use cases are Factory (one instance per request/job).
+    """
+
+    # --- Infrastructure (wired lazily — see wire() override below) ---
+
+    # DeclarativeContainer can't reference infrastructure at import time without
+    # pulling Django into application/. We use a lazy wiring pattern: the
+    # providers are declared as Factories that import inside the callable.
+
+    transaction_repo = providers.Singleton(
+        "budget.budget.infrastructure.repositories.DjangoTransactionRepository",
     )
-    from budget.budget.infrastructure.rbc.scraper import PlaywrightRBCScraper
-    from budget.budget.application.use_cases import (
-        ApproveCategorizationUseCase, AutoCategorizeUseCase, GetMonthlySummaryUseCase,
-        GetReviewQueueUseCase, SyncTransactionsUseCase,
+    category_rule_repo = providers.Singleton(
+        "budget.budget.infrastructure.repositories.DjangoCategoryRuleRepository",
     )
-    from budget.budget.services.categorization_service import CategorizationService
-    from budget.budget.services.summary_service import SummaryService
+    category_repo = providers.Singleton(
+        "budget.budget.infrastructure.repositories.DjangoCategoryRepository",
+    )
+    rbc_scraper = providers.Singleton(
+        "budget.budget.infrastructure.rbc.scraper.PlaywrightRBCScraper",
+    )
 
-    tx_repo = DjangoTransactionRepository()
-    rule_repo = DjangoCategoryRuleRepository()
-    cat_repo = DjangoCategoryRepository()
-    scraper = PlaywrightRBCScraper()
-    categorizer = CategorizationService(tx_repo, rule_repo, cat_repo)
-    summarizer = SummaryService(tx_repo, cat_repo)
+    # --- Services (depend on repos above) ---
 
-    return {
-        "sync": lambda: SyncTransactionsUseCase(scraper, tx_repo, categorizer),
-        "auto_categorize": lambda: AutoCategorizeUseCase(categorizer, tx_repo),
-        "approve": lambda: ApproveCategorizationUseCase(tx_repo, rule_repo, categorizer),
-        "monthly_summary": lambda: GetMonthlySummaryUseCase(summarizer),
-        "review_queue": lambda: GetReviewQueueUseCase(tx_repo, cat_repo),
-    }
+    categorization_service = providers.Singleton(
+        CategorizationService,
+        tx_repo=transaction_repo,
+        rule_repo=category_rule_repo,
+        cat_repo=category_repo,
+    )
 
+    summary_service = providers.Singleton(
+        SummaryService,
+        tx_repo=transaction_repo,
+        cat_repo=category_repo,
+    )
 
-_container = None
+    # --- Use cases (Factory = new instance per call) ---
 
-def container():
-    global _container
-    if _container is None:
-        _container = build_container()
-    return _container
+    sync_usecase = providers.Factory(
+        SyncTransactionsUseCase,
+        scraper=rbc_scraper,
+        repo=transaction_repo,
+        categorizer=categorization_service,
+    )
+
+    auto_categorize_usecase = providers.Factory(
+        AutoCategorizeUseCase,
+        categorizer=categorization_service,
+        repo=transaction_repo,
+    )
+
+    approve_usecase = providers.Factory(
+        ApproveCategorizationUseCase,
+        tx_repo=transaction_repo,
+        rule_repo=category_rule_repo,
+        categorizer=categorization_service,
+    )
+
+    monthly_summary_usecase = providers.Factory(
+        GetMonthlySummaryUseCase,
+        summary_service=summary_service,
+    )
+
+    review_queue_usecase = providers.Factory(
+        GetReviewQueueUseCase,
+        tx_repo=transaction_repo,
+        cat_repo=category_repo,
+    )
 ```
+
+> **Note on lazy string imports**: `providers.Singleton("module.path.ClassName")` uses dependency-injector's string-import feature — the actual import happens at first call time, not at container definition time. This keeps `application/` Django-free at import. See the [lazy imports docs](https://python-dependency-injector.etslabs.org/providers/string_imports.html).
+
+> **`@inject` is delivery-layer only.** Views and jobs decorate with `@inject` and use `Provide[Container.xxx]` as default parameter values. Use cases, services, and repos receive their dependencies via standard constructor parameters — the container passes them when it creates the instance. This keeps the inner layers framework-agnostic and testable.
 
 ### Update .okf/
 
-- Create `.okf/architecture/di-container.md` (type: `Architecture`, documents the Provider dict pattern, 5 keys, why not django-injector)
-- Append to `log.md`: `**Creation**: DI container (Step 5).`
+- Create `.okf/architecture/di-container.md` (type: `Architecture`, documents python-dependency-injector DeclarativeContainer, Singleton vs Factory, `@inject` at delivery layer only, 5 use-case providers)
+- Append to `log.md`: `**Creation`: DI container (Step 5).`
 
 ---
 
@@ -1631,16 +1696,22 @@ def _normalize_date(raw: str) -> str:
 ```python
 from datetime import date, timedelta
 
+from dependency_injector.wiring import inject, Provide
+
 from django_q.tasks import async_task
 
-from budget.budget.application.container import container
+from budget.budget.application.container import Container
+from budget.budget.application.dtos import SyncTransactionsDto
+from budget.budget.application.use_cases import SyncTransactionsUseCase
 
 
-def run_scheduled_sync():
+@inject
+def run_scheduled_sync(
+    sync_usecase: SyncTransactionsUseCase = Provide[Container.sync_usecase],
+):
     """Daily 6am — sync last 7 days as a safety overlap."""
-    from budget.budget.application.dtos import SyncTransactionsDto
     dto = SyncTransactionsDto(sync_since=date.today() - timedelta(days=7))
-    container()["sync"]().execute(dto)
+    sync_usecase.execute(dto)
 
 
 def run_sync_now(sync_since: date | None = None):
@@ -1650,10 +1721,14 @@ def run_sync_now(sync_since: date | None = None):
     async_task("budget.budget.infrastructure.jobs.sync_job._run_sync_task", sync_since)
 
 
-def _run_sync_task(sync_since: date):
-    from budget.budget.application.dtos import SyncTransactionsDto
+@inject
+def _run_sync_task(
+    sync_since: date,
+    sync_usecase: SyncTransactionsUseCase = Provide[Container.sync_usecase],
+):
+    """Worker body — injected with the sync use case."""
     dto = SyncTransactionsDto(sync_since=sync_since)
-    container()["sync"]().execute(dto)
+    sync_usecase.execute(dto)
 ```
 
 ## 9.3 `schedule.py`
@@ -1940,16 +2015,22 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
-from budget.budget.application.container import container
+from dependency_injector.wiring import inject, Provide
+
+from budget.budget.application.container import Container
 from budget.budget.application.dtos import GetMonthlySummaryDto
+from budget.budget.application.use_cases import GetMonthlySummaryUseCase
 from budget.budget.interfaces.presenters import DashboardPresenter
 
 
 @login_required
-def dashboard(request):
+@inject
+def dashboard(
+    request,
+    summary_usecase: GetMonthlySummaryUseCase = Provide[Container.monthly_summary_usecase],
+):
     today = date.today()
-    usecase = container()["monthly_summary"]()
-    summary = usecase.execute(GetMonthlySummaryDto(year=today.year, month=today.month))
+    summary = summary_usecase.execute(GetMonthlySummaryDto(year=today.year, month=today.month))
     vm = DashboardPresenter().present(summary)
     return render(request, "dashboard.html", {"vm": vm, "today": today})
 ```
@@ -1978,15 +2059,21 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 
-from budget.budget.application.container import container
+from dependency_injector.wiring import inject, Provide
+
+from budget.budget.application.container import Container
 from budget.budget.application.dtos import GetReviewQueueDto
+from budget.budget.application.use_cases import GetReviewQueueUseCase
 from budget.budget.interfaces.presenters import ReviewQueuePresenter
 
 
 @login_required
-def review_queue(request):
-    usecase = container()["review_queue"]()
-    pending, categories = usecase.execute(GetReviewQueueDto())
+@inject
+def review_queue(
+    request,
+    review_usecase: GetReviewQueueUseCase = Provide[Container.review_queue_usecase],
+):
+    pending, categories = review_usecase.execute(GetReviewQueueDto())
     vm = ReviewQueuePresenter().present(pending, categories)
     html = render_to_string("review_queue.html", {"vm": vm})
     return HttpResponse(html)
@@ -1999,16 +2086,23 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
 
-from budget.budget.application.container import container
+from dependency_injector.wiring import inject, Provide
+
+from budget.budget.application.container import Container
 from budget.budget.application.dtos import ApproveCategorizationDto
+from budget.budget.application.use_cases import ApproveCategorizationUseCase
 
 
 @require_POST
 @login_required
-def approve(request, tx_id: int):
+@inject
+def approve(
+    request,
+    tx_id: int,
+    approve_usecase: ApproveCategorizationUseCase = Provide[Container.approve_usecase],
+):
     category_id = int(request.POST.get("category"))
-    usecase = container()["approve"]()
-    usecase.execute(ApproveCategorizationDto(transaction_id=tx_id, category_id=category_id))
+    approve_usecase.execute(ApproveCategorizationDto(transaction_id=tx_id, category_id=category_id))
     return HttpResponse('<tr></tr>')
 ```
 
@@ -2146,12 +2240,13 @@ No signup flow. No password reset flow for v1 — out of scope.
 import pytest
 from django.contrib.auth.models import User
 
-from budget.budget.application.container import build_container
+from budget.budget.application.container import Container
 
 
 @pytest.fixture
 def container(db):
-    return build_container()
+    """Provide the wired DI container for integration tests."""
+    return Container()
 
 
 @pytest.fixture
@@ -2318,7 +2413,7 @@ Per the handoff, the matcher cannot be trusted until samples are in. Once the ap
 | `application/` | `domain/`, stdlib |
 | `services/` | `application/`, `domain/`, stdlib |
 | `infrastructure/` | `application/`, `domain/`, Django, Playwright |
-| `interfaces/views/` | `application/container`, `interfaces/presenters`, Django |
+| `interfaces/views/` | `application/container`, `application/use_cases` (for type hints), `interfaces/presenters`, `dependency_injector.wiring`, Django |
 | `interfaces/presenters/` | `domain/`, `interfaces/view_models` |
 | `interfaces/components/` | django-components, templates |
 | `tests/` | everything |
