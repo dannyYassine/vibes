@@ -16,32 +16,35 @@ May import: domain + stdlib only. No Django, no services, no infrastructure.
 
 ## Sub-packages
 
-### `ports.py`
-Abstract base classes defining repository and scraper contracts:
-- `TransactionRepository`
-- `CategoryRuleRepository`
-- `CategoryRepository`
-- `RBCScraper`
+### `ports/`
+Abstract base classes defining repository and scraper contracts — one file per port:
+- `transaction_repository.py` — `TransactionRepository`
+- `category_rule_repository.py` — `CategoryRuleRepository`
+- `category_repository.py` — `CategoryRepository`
+- `rbc_scraper.py` — `RBCScraper`
 
-### `dtos.py`
-Data transfer objects — pure dataclasses:
-- `SyncTransactionsDto(sync_since: date)`
-- `AutoCategorizeDto()`
-- `ApproveCategorizationDto(transaction_id, category_id)`
-- `GetMonthlySummaryDto(year, month)`
-- `GetReviewQueueDto()`
+### `dtos/`
+Data transfer objects — one file per DTO:
+- `sync_transactions.py` — `SyncTransactionsDto(sync_since: date)`
+- `auto_categorize.py` — `AutoCategorizeDto()`
+- `approve_categorization.py` — `ApproveCategorizationDto(transaction_id, category_id)`
+- `get_monthly_summary.py` — `GetMonthlySummaryDto(year, month)`
+- `get_review_queue.py` — `GetReviewQueueDto()`
 
 ### `matching/`
 - `normalizer.py` — `normalize()` (v1: lowercased identity), `normalize_strict()` (production-ready)
 - `exact_matcher.py` — `match()`: dict lookup by `NormalizedTitle.value`
 
-### `use_cases.py`
-Five use cases:
-- `SyncTransactionsUseCase` — scrape + dedup + save + auto-categorize
-- `AutoCategorizeUseCase` — match pending transactions against rules
-- `ApproveCategorizationUseCase` — manual approve + reinforce rule
-- `GetMonthlySummaryUseCase` — aggregated monthly totals
-- `GetReviewQueueUseCase` — pending transactions + all categories
+### `use_cases/`
+One file per use case + one per result type:
+- `sync_result.py` — `SyncResult(new_count, skipped_count, errors: list)`
+- `sync_transactions.py` — `SyncTransactionsUseCase` — scrape + dedup + save + auto-categorize
+- `auto_categorize_result.py` — `AutoCategorizeResult(auto_approved, queued)`
+- `auto_categorize.py` — `AutoCategorizeUseCase` — match pending transactions against rules
+- `approve_result.py` — `ApproveResult(transaction, rule_reinforced)`
+- `approve_categorization.py` — `ApproveCategorizationUseCase` — manual approve + reinforce rule
+- `get_monthly_summary.py` — `GetMonthlySummaryUseCase` — aggregated monthly totals
+- `get_review_queue.py` — `GetReviewQueueUseCase` — pending transactions + all categories
 
 ## Key Design Decisions
 - `AUTO_APPROVE_THRESHOLD = 1` — class attribute on `AutoCategorizeUseCase`, not Django setting

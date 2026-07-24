@@ -18,7 +18,7 @@ timestamp: 2026-07-23T12:00:00Z
 | `times_confirmed` | `int` | Count of approvals reinforcing this rule |
 
 ## Domain File
-`budget/budget/domain/entities.py`
+`budget/budget/domain/entities/category_rule.py`
 
 ## ORM Schema
 
@@ -32,4 +32,4 @@ timestamp: 2026-07-23T12:00:00Z
 | `updated_at` | DateTimeField | auto_now |
 
 ## Django Model
-`budget.budget.infrastructure.django_models.CategoryRuleModel`
+`budget.budget.infrastructure.models.CategoryRuleModel`

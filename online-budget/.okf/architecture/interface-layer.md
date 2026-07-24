@@ -18,19 +18,20 @@ timestamp: 2026-07-23T12:00:00Z
 
 ## Sub-packages
 
-### `view_models.py`
-Data-only dataclasses for template consumption:
-- `MonthlySummaryVM` — month_label, total_income, total_expense, net, categories
-- `CategoryTotalVM` — name, amount, percentage, badge_color
-- `ReviewQueueVM` — items, empty
-- `ReviewQueueItemVM` — transaction_id, description, amount, date, category_options
-- `CategoryOptionVM` — id, name
-- `SyncResultVM` — new_count, skipped_count, errors, message
+### `view_models/`
+Data-only dataclasses — one file per VM:
+- `category_total.py` — `CategoryTotalVM` — name, amount, percentage, badge_color
+- `monthly_summary.py` — `MonthlySummaryVM` — month_label, total_income, total_expense, net, categories
+- `category_option.py` — `CategoryOptionVM` — id, name
+- `review_queue_item.py` — `ReviewQueueItemVM` — transaction_id, description, amount, date, category_options
+- `review_queue.py` — `ReviewQueueVM` — items, empty
+- `sync_result.py` — `SyncResultVM` — new_count, skipped_count, errors, message
 
-### `presenters.py`
-- `DashboardPresenter` — `MonthlySummary` → `MonthlySummaryVM`
-- `ReviewQueuePresenter` — `list[Transaction]`, `list[Category]` → `ReviewQueueVM`
-- `SyncResultPresenter` — `SyncResult` → `SyncResultVM`
+### `presenters/`
+- `_helpers.py` — `_money(amount)` shared formatting helper
+- `dashboard.py` — `DashboardPresenter` — `MonthlySummary` → `MonthlySummaryVM`
+- `review_queue.py` — `ReviewQueuePresenter` — `list[Transaction]`, `list[Category]` → `ReviewQueueVM`
+- `sync_result.py` — `SyncResultPresenter` — `SyncResult` → `SyncResultVM`
 
 ### `components/`
 - `SummaryCardComponent` — monthly summary card

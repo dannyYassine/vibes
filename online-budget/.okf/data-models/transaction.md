@@ -23,7 +23,7 @@ timestamp: 2026-07-23T12:00:00Z
 | `approved_at` | `Optional[str]` | ISO datetime when approved |
 
 ## Domain File
-`budget/budget/domain/entities.py`
+`budget/budget/domain/entities/transaction.py`
 
 ## ORM Schema
 
@@ -41,4 +41,4 @@ timestamp: 2026-07-23T12:00:00Z
 | `imported_at` | DateTimeField | auto_now_add |
 
 ## Django Model
-`budget.budget.infrastructure.django_models.TransactionModel`
+`budget.budget.infrastructure.models.TransactionModel`

@@ -16,15 +16,17 @@ May import: application + domain + Django + Playwright. Not imported by domain/a
 
 ## Sub-packages
 
-### `django_models.py`
-- `CategoryModel` — ORM for Category entity
-- `CategoryRuleModel` — ORM for CategoryRule entity
-- `TransactionModel` — ORM for Transaction entity
+### `models/`
+One file per ORM model:
+- `category.py` — `CategoryModel` — ORM for Category entity
+- `category_rule.py` — `CategoryRuleModel` — ORM for CategoryRule entity
+- `transaction.py` — `TransactionModel` — ORM for Transaction entity
 
-### `repositories.py`
-- `DjangoTransactionRepository` — save, get, list_pending, list_for_month, update_category, exists
-- `DjangoCategoryRuleRepository` — find_by_match_key, save, increment_confirmed, all_rules
-- `DjangoCategoryRepository` — get, list_all
+### `repositories/`
+One file per repository implementation:
+- `django_category.py` — `DjangoCategoryRepository` — get, list_all
+- `django_category_rule.py` — `DjangoCategoryRuleRepository` — find_by_match_key, save, increment_confirmed, all_rules
+- `django_transaction.py` — `DjangoTransactionRepository` — save, get, list_pending, list_for_month, update_category, exists
 
 ### `rbc/`
 - `PlaywrightRBCScraper` — browser automation

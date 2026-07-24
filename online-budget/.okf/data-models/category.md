@@ -17,7 +17,7 @@ timestamp: 2026-07-23T12:00:00Z
 | `color` | `str` | Hex color, default `#999999` |
 
 ## Domain File
-`budget/budget/domain/entities.py`
+`budget/budget/domain/entities/category.py`
 
 ## ORM Schema
 
@@ -28,4 +28,4 @@ timestamp: 2026-07-23T12:00:00Z
 | `color` | CharField(7) | default #999999 |
 
 ## Django Model
-`budget.budget.infrastructure.django_models.CategoryModel`
+`budget.budget.infrastructure.models.CategoryModel`

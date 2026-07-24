@@ -1,5 +1,8 @@
 # Bundle Update Log
 
+## 2026-07-24
+* **Update**: Refactored monolithic files to directory packages — domain, application, infrastructure, interface layers. All large modules (`dtos`, `ports`, `use_cases`, `entities`, `exceptions`, `value_objects`, `models`, `repositories`, `presenters`, `view_models`) split into one-file-per-concept directories.
+
 ## 2026-07-23
 * **Creation**: Domain layer + 3 entity concepts (Step 2).
 * **Creation**: DI container (Step 5).
