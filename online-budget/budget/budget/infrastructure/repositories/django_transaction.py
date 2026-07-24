@@ -1,4 +1,3 @@
-from django.db.models import F
 from django.utils import timezone
 
 from budget.budget.application.ports import TransactionRepository

@@ -7,8 +7,10 @@ from .approve_result import ApproveResult
 
 class ApproveCategorizationUseCase:
     def __init__(
-        self, tx_repo: TransactionRepository, rule_repo: CategoryRuleRepository,
-        categorizer: CategorizationService,
+        self,
+        tx_repo: TransactionRepository,
+        rule_repo: CategoryRuleRepository,
+        categorizer: CategorizationService
     ):
         self._tx_repo = tx_repo
         self._rule_repo = rule_repo

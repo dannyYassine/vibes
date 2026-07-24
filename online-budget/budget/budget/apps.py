@@ -11,18 +11,9 @@ class BudgetConfig(AppConfig):
 
         from budget.budget.application.container import Container
 
-        # Only wire if Django is fully loaded
         if django.conf.settings.configured:
             import budget.budget.infrastructure.jobs.sync_job as _sync_job
-            import budget.budget.interfaces.views.approve as _approve
-            import budget.budget.interfaces.views.dashboard as _dashboard
-            import budget.budget.interfaces.views.review as _review
-            import budget.budget.interfaces.views.sync as _sync
             di_wire(container=Container(), modules=[
-                _dashboard,
-                _sync,
-                _review,
-                _approve,
                 _sync_job,
             ])
 
@@ -43,4 +34,4 @@ class BudgetConfig(AppConfig):
                 from budget.budget.infrastructure.jobs.schedule import register_schedules
                 register_schedules(Schedule)
             except Exception:
-                pass  # skip during check/migrate — tables or deps may not exist
+                pass

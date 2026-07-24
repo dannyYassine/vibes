@@ -1,4 +1,3 @@
-from decimal import Decimal
 
 from budget.budget.domain.entities import MonthlySummary
 from budget.budget.interfaces.view_models import CategoryTotalVM, MonthlySummaryVM

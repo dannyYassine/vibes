@@ -1,11 +1,12 @@
 from budget.budget.domain.entities import Transaction
+from budget.budget.interfaces.components.review_queue import ReviewQueueComponent
 from budget.budget.interfaces.view_models import CategoryOptionVM, ReviewQueueItemVM, ReviewQueueVM
 
 from ._helpers import _money
 
 
 class ReviewQueuePresenter:
-    def present(self, pending: list[Transaction], categories) -> ReviewQueueVM:
+    def present(self, pending: list[Transaction], categories) -> ReviewQueueComponent:
         opts = [CategoryOptionVM(id=c.id, name=c.name) for c in categories]
         items = [
             ReviewQueueItemVM(
@@ -15,4 +16,5 @@ class ReviewQueuePresenter:
             )
             for t in pending
         ]
-        return ReviewQueueVM(items=items, empty=len(items) == 0)
+        vm = ReviewQueueVM(items=items, empty=len(items) == 0)
+        return ReviewQueueComponent(vm=vm)
