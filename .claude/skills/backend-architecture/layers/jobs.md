@@ -23,7 +23,10 @@ A Job represents deferred work dispatched to a queue and consumed asynchronously
 
 ## Job Class Structure
 
-The job class lives in its own module. It exposes two concerns:
+The job class lives in its own module. Constructor and handle serve different roles:
+
+- **Constructor**: Receives only serializable job data (payload). Called at dispatch time to instantiate the job before queuing.
+- **Handle**: Receives injected dependencies (usecases, services). Called later by the runtime worker when the job is dequeued and executed. Dependencies are wired through the framework's DI container at execution time.
 
 ```typescript
 // Module: user
@@ -34,9 +37,9 @@ class SendWelcomeEmailUserJob {
     public readonly data: { userId: string },
   ) {}
 
-  async handle(job: Job<this>): Promise<void> {
-    const dto = new SendWelcomeEmailDto(job.data.userId);
-    await this.sendWelcomeEmailUseCase.execute(dto);
+  async handle(usecase: SendWelcomeEmailUseCase): Promise<void> {
+    const dto = new SendWelcomeEmailDto(this.data.userId);
+    await usecase.execute(dto);
   }
 }
 ```
@@ -112,16 +115,20 @@ Jobs must never:
 ```typescript
 // Correct — handle is thin, delegates to usecase
 class SendWelcomeEmailUserJob {
-  async handle(job: Job): Promise<void> {
-    const dto = new SendWelcomeEmailDto(job.data.userId);
-    await this.sendWelcomeEmailUseCase.execute(dto);
+  constructor(public readonly data: { userId: string }) {}
+
+  async handle(usecase: SendWelcomeEmailUseCase): Promise<void> {
+    const dto = new SendWelcomeEmailDto(this.data.userId);
+    await usecase.execute(dto);
   }
 }
 
 // Wrong — business logic in handle
 class SendWelcomeEmailUserJob {
-  async handle(job: Job): Promise<void> {
-    const user = await this.userRepository.findById(job.data.userId); // NO
+  constructor(public readonly data: { userId: string }) {}
+
+  async handle(): Promise<void> {
+    const user = await this.userRepository.findById(this.data.userId); // NO
     if (user.emailVerified) { // NO — business logic
       await this.emailService.send(user.email); // NO — calling service directly
     }

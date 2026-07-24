@@ -80,14 +80,14 @@ protected $listen = [
 - Call helpers
 - Contain business logic or conditional domain rules
 - Dispatch events (the event is the trigger, not the outcome)
-- Dispatch jobs directly (use a subscriber for async work — see `subscribers.md`)
+- Dispatch jobs directly — the usecase does that
 
 ## Key Constraints
 
-- **Synchronous only** — the caller waits. Heavy work blocks the response. Use a subscriber + job for deferred work.
+- **Synchronous only** — the caller waits. Heavy work blocks the response. Use a subscriber that calls a usecase which dispatches a job for deferred work.
 - **One event = one listener concern** — a listener handles exactly one event and calls exactly one usecase. If multiple side-effects are needed, chain through a usecase or split into separate listeners.
 - **No return value** — return `void`. The caller does not consume a result.
-- **Listener never dispatches a job** — a listener is synchronous. If async is needed, use a subscriber.
+- **Listener never dispatches a job** — a listener is synchronous. If async is needed, the usecase it calls dispatches the job.
 
 ## Anti-patterns
 
@@ -95,7 +95,14 @@ protected $listen = [
 |---|---|
 | `handle` calling a repository directly | Route through a usecase |
 | `handle` with business logic (`if/else`, validation) | Move to usecase or service |
-| Listener dispatching a job | Move to a subscriber, which may dispatch jobs |
+| Listener dispatching a job | Move to a subscriber, which calls a usecase. The usecase dispatches jobs if needed. |
 | Listener returning data to the caller | Return void; use a usecase if a result is needed |
-| Heavy synchronous work in listener (email, report generation) | Use a subscriber that dispatches a job |
+| Heavy synchronous work in listener (email, report generation) | Use a subscriber that calls a usecase which dispatches a job |
 | One listener handling multiple events | Split into one listener per event |
+
+## Testing
+
+Two levels:
+
+- **Functional** — call `listener.handle(event)` directly, mock the usecase. Tests DTO construction and parsing. See `testing/delivery-mechanisms.md`.
+- **Integration (wiring)** — bootstrap the app, fire the real event, verify the listener's usecase was called. Tests the `EventServiceProvider.$listen` mapping. See `testing/listeners.md`.
