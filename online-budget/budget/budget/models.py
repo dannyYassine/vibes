@@ -1,4 +1,4 @@
-from budget.budget.infrastructure.django_models import (
+from budget.budget.infrastructure.models import (
     CategoryModel,
     CategoryRuleModel,
     TransactionModel,
