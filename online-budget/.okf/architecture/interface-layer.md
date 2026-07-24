@@ -16,6 +16,17 @@ timestamp: 2026-07-23T12:00:00Z
 - Views may import: `application/container`, `application/use_cases`, `interfaces/presenters`, `dependency_injector.wiring`, Django
 - Components may import: django-components, templates
 
+## Component Registration
+In `apps.py` `ready()`:
+```python
+from budget.budget.interfaces.components.review_row_component import ReviewRowComponent
+from budget.budget.interfaces.components.summary_card_component import SummaryCardComponent
+from budget.budget.interfaces.components.sync_button_component import SyncButtonComponent
+component.register("summary_card", SummaryCardComponent)
+component.register("review_row", ReviewRowComponent)
+component.register("sync_button", SyncButtonComponent)
+```
+
 ## Sub-packages
 
 ### `view_models/`
@@ -30,14 +41,14 @@ Data-only dataclasses — one file per VM:
 ### `presenters/`
 - `_helpers.py` — `_money(amount)` shared formatting helper
 - `dashboard.py` — `DashboardPresenter` — `MonthlySummary` → `MonthlySummaryVM`
-- `review_queue.py` — `ReviewQueuePresenter` — `list[Transaction]`, `list[Category]` → `ReviewQueueComponent`
+- `review_queue.py` — `ReviewQueuePresenter` — `list[Transaction]`, `list[Category]` → `ReviewQueueComponent` (imports from `components.review_queue_component`)
 - `sync_result.py` — `SyncResultPresenter` — `SyncResult` → `SyncResultVM`
 
 ### `components/`
-- `SummaryCardComponent` — monthly summary card
-- `ReviewRowComponent` — approval row with category selector
-- `ReviewQueueComponent` — renders review queue HTMX fragment via `ReviewQueueVM`, template at `components/templates/review_queue.html`
-- `SyncButtonComponent` — HTMX sync trigger
+- `summary_card_component.py` — `SummaryCardComponent` — monthly summary card
+- `review_row_component.py` — `ReviewRowComponent` — approval row with category selector
+- `review_queue_component.py` — `ReviewQueueComponent` — renders review queue HTMX fragment via `ReviewQueueVM`, template at `components/templates/review_queue.html`
+- `sync_button_component.py` — `SyncButtonComponent` — HTMX sync trigger
 
 ### `views/`
 - `dashboard.py` — `DashboardView(LoginRequiredMixin, View)` — `GET /` — renders dashboard with monthly summary
