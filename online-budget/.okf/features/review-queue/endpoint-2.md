@@ -20,4 +20,4 @@ timestamp: 2026-07-23T12:00:00Z
 3. Return empty `<tr></tr>` (row removed from DOM)
 
 ## Links
-- [Approve Categorization](/use-cases/approve-categorization.md)
+- [Use Case](./use-case-2.md)

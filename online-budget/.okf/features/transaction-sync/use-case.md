@@ -12,8 +12,8 @@ timestamp: 2026-07-23T12:00:00Z
 `SyncTransactionsDto(sync_since: date)`
 
 ## Calls
-- [RBC Scraper](/references/rbc-scraper.md)
-- [Transaction Repository](/data-models/transaction.md)
+- [RBC Scraper](/shared/references/rbc-scraper.md)
+- [Transaction](/shared/data-models/transaction.md)
 - [Categorization Service](/architecture/services-layer.md)
 
 ## Output
@@ -25,3 +25,7 @@ timestamp: 2026-07-23T12:00:00Z
 3. Build Transaction via `categorizer.build_new_transaction(raw)`
 4. Save via `repo.save(tx)`
 5. Run `categorizer.auto_categorize_pending()`
+
+## See Also
+- [Categorization Engine](/features/categorization-engine/index.md) — chained after sync
+- [External Communications](external-communications.md) — sync failure alerts

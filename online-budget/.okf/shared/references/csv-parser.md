@@ -31,3 +31,6 @@ timestamp: 2026-07-23T12:00:00Z
 - Dedup key derived from date + description + amount (3-way collision guard)
 - Date format: `%m/%d/%Y` → ISO 8601
 - BOM-aware: opens with `utf-8-sig` encoding
+
+## Used By
+- [Transaction Sync](/features/transaction-sync/index.md)

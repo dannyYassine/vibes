@@ -42,3 +42,9 @@ timestamp: 2026-07-23T12:00:00Z
 
 ## Django Model
 `budget.budget.infrastructure.models.TransactionModel`
+
+## Used By
+- [Transaction Sync](/features/transaction-sync/index.md)
+- [Categorization Engine](/features/categorization-engine/index.md)
+- [Review Queue](/features/review-queue/index.md)
+- [Dashboard Reports](/features/dashboard-reports/index.md)

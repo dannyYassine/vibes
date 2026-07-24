@@ -21,4 +21,4 @@ timestamp: 2026-07-23T12:00:00Z
 4. Render `dashboard.html` with `MonthlySummaryVM`
 
 ## Links
-- [Get Monthly Summary](/use-cases/get-monthly-summary.md)
+- [Use Case](./use-case.md)

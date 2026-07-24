@@ -12,8 +12,8 @@ timestamp: 2026-07-23T12:00:00Z
 `ApproveCategorizationDto(transaction_id, category_id)`
 
 ## Calls
-- [Transaction Repository](/data-models/transaction.md)
-- [Category Rule Repository](/data-models/category-rule.md)
+- [Transaction](/shared/data-models/transaction.md)
+- [Category Rule](/shared/data-models/category-rule.md)
 - [Categorization Service](/architecture/services-layer.md)
 
 ## Output

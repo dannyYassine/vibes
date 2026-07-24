@@ -28,3 +28,6 @@ All CSS selectors in `selectors.py` — single file to patch when RBC changes UI
 - `RBC_USERNAME` and `RBC_PASSWORD` read from environment only
 - Never hardcoded, never logged
 - `.env` file is gitignored
+
+## Used By
+- [Transaction Sync](/features/transaction-sync/index.md)

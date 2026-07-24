@@ -20,3 +20,6 @@ timestamp: 2026-07-23T12:00:00Z
 ## Notes
 - `AUTO_APPROVE_THRESHOLD = 1` — single match auto-approves
 - Transactions with no match stay `"pending"` in review queue
+
+## See Also
+- [Transaction Sync](/features/transaction-sync/index.md) — triggers this use case after sync

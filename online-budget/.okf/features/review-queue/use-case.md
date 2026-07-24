@@ -12,8 +12,8 @@ timestamp: 2026-07-23T12:00:00Z
 `GetReviewQueueDto()` (no params)
 
 ## Calls
-- [Transaction Repository](/data-models/transaction.md)
-- [Category Repository](/data-models/category.md)
+- [Transaction](/shared/data-models/transaction.md)
+- [Category](/shared/data-models/category.md)
 
 ## Output
 `(pending: list[Transaction], categories: list[Category])`

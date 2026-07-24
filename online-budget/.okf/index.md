@@ -1,11 +1,10 @@
 ---
-okf_version: "0.1"
+okf_version: "0.2"
 ---
 
 # RBC Household Budget — Knowledge Graph
 
-This bundle documents the architecture, use cases, data models, endpoints,
-and jobs of the RBC Household Budget app. Updated after each build step.
+Bundle traces product requirements → features → code. Updated after codebase changes.
 
 ## Architecture
 * [Layering Rules](/architecture/layering-rules.md) - the 10 hard rules
@@ -15,17 +14,18 @@ and jobs of the RBC Household Budget app. Updated after each build step.
 * [Infrastructure Layer](/architecture/infrastructure-layer.md)
 * [Interface Layer](/architecture/interface-layer.md)
 
-## Use Cases
-* See [use-cases index](/use-cases/index.md)
+## Requirements
+* [Sync Transactions From Bank](/requirements/sync-transactions-from-bank.md)
+* [Auto Categorize Expenses](/requirements/auto-categorize-expenses.md)
+* [Approve Questionable Items](/requirements/approve-questionable-items.md)
+* [Monthly Spending Summary](/requirements/monthly-spending-summary.md)
 
-## Data Models
-* See [data-models index](/data-models/index.md)
+## Features
+* [Transaction Sync](/features/transaction-sync/index.md)
+* [Categorization Engine](/features/categorization-engine/index.md)
+* [Review Queue](/features/review-queue/index.md)
+* [Dashboard Reports](/features/dashboard-reports/index.md)
 
-## Endpoints
-* See [endpoints index](/endpoints/index.md)
-
-## Jobs
-* See [jobs index](/jobs/index.md)
-
-## References
-* See [references index](/references/index.md)
+## Shared
+* [Data Models](/shared/data-models/index.md)
+* [References](/shared/references/index.md)

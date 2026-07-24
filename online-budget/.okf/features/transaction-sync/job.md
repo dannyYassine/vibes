@@ -30,3 +30,8 @@ timestamp: 2026-07-23T12:00:00Z
 ### `_run_sync_task(sync_since)`
 - Worker body executed by Django-Q2
 - Uses `@inject` for use case resolution
+
+## Links
+- [Use Case](use-case.md)
+- [Endpoint](endpoint.md)
+- [External Communications](external-communications.md)

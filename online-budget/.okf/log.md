@@ -1,6 +1,7 @@
 # Bundle Update Log
 
 ## 2026-07-24
+* **Migration**: Restructured .okf from layer-based to feature-directory organization. Requirements, features/ (with internal use-case, endpoint, job, external-communications per feature), shared/data-models, shared/references. Architecture stays at root. Cross-refs rewritten. okf_version upgraded to 0.2.
 * **Update**: Component files renamed with `_component` suffix — `review_queue` → `review_queue_component`, `review_row` → `review_row_component`, `summary_card` → `summary_card_component`, `sync_button` → `sync_button_component`. Import paths updated in `apps.py` and `presenters/review_queue.py`.
 * **Update**: Views converted from functions to class-based views (DashboardView, SyncNowView, ReviewQueueView, ApproveView) with LoginRequiredMixin. ReviewQueuePresenter now returns ReviewQueueComponent instead of ReviewQueueVM. New ReviewQueueComponent in interfaces/components. Template review_queue.html moved under components/templates. apps.py wiring simplified — views no longer individually wired.
 * **Update**: Refactored monolithic files to directory packages — domain, application, infrastructure, interface layers. All large modules (`dtos`, `ports`, `use_cases`, `entities`, `exceptions`, `value_objects`, `models`, `repositories`, `presenters`, `view_models`) split into one-file-per-concept directories.

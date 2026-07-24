@@ -19,4 +19,5 @@ timestamp: 2026-07-23T12:00:00Z
 2. Return HTML toast message
 
 ## Links
-- [Daily Sync](/jobs/daily-sync.md)
+- [Job](job.md)
+- [Use Case](use-case.md)

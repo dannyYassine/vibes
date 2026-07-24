@@ -23,4 +23,4 @@ timestamp: 2026-07-23T12:00:00Z
 `components/templates/review_queue.html`
 
 ## Links
-- [Get Review Queue](/use-cases/get-review-queue.md)
+- [Use Case](./use-case.md)
