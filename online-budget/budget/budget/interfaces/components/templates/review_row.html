@@ -1,0 +1,17 @@
+{% load django_components %}
+<tr>
+  <td>{{ vm.date }}</td>
+  <td>{{ vm.description }}</td>
+  <td class="font-mono">{{ vm.amount }}</td>
+  <td>
+    <form hx-post="/review/{{ vm.transaction_id }}/approve/" hx-target="closest tr" hx-swap="outerHTML" class="flex gap-2">
+      {% csrf_token %}
+      <select name="category" class="select select-bordered select-sm">
+        {% for opt in vm.category_options %}
+        <option value="{{ opt.id }}">{{ opt.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-sm btn-primary" type="submit">Approve</button>
+    </form>
+  </td>
+</tr>

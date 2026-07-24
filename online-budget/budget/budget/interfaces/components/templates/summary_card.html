@@ -1,0 +1,19 @@
+{% load django_components %}
+<section class="card bg-base-100 shadow">
+  <div class="card-body">
+    <h2 class="card-title">{{ vm.month_label }}</h2>
+    <div class="stats stats-vertical lg:stats-horizontal shadow">
+      <div class="stat"><div class="stat-title">Income</div><div class="stat-value">{{ vm.total_income }}</div></div>
+      <div class="stat"><div class="stat-title">Expense</div><div class="stat-value text-error">{{ vm.total_expense }}</div></div>
+      <div class="stat"><div class="stat-title">Net</div><div class="stat-value">{{ vm.net }}</div></div>
+    </div>
+    <div class="mt-4 space-y-2">
+      {% for c in vm.categories %}
+      <div class="flex justify-between items-center">
+        <span class="badge" style="background:{{ c.badge_color }}">{{ c.name }}</span>
+        <span>{{ c.amount }} <small>{{ c.percentage }}</small></span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>

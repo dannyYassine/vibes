@@ -1,0 +1,16 @@
+{% load django_components %}
+<div class="card bg-base-100 shadow">
+  <div class="card-body">
+    <h2 class="card-title">Review queue</h2>
+    {% if vm.empty %}
+    <p class="text-sm text-gray-500">Nothing to review — everything's categorized.</p>
+    {% else %}
+    <table class="table">
+      <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
+      <tbody>
+        {% for item in vm.items %}{% component "review_row" vm=item %}{% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+</div>

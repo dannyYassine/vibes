@@ -1,0 +1,12 @@
+# All RBC selectors live here. When RBC changes its UI, patch this one file.
+USERNAME_INPUT = 'input[name="username"]'
+PASSWORD_INPUT = 'input[name="password"]'
+SIGN_IN_BUTTON = 'button[type="submit"]'
+ACCOUNTS_TABLE = 'table.accounts-list'
+JOINT_CHEQUING_LINK = 'a:has-text("Chequing")'
+EXPORT_BUTTON = 'button:has-text("Export")'
+FORMAT_CSV_RADIO = 'input[value="csv"]'
+DATE_FROM_INPUT = 'input[name="fromDate"]'
+DATE_TO_INPUT = 'input[name="toDate"]'
+DOWNLOAD_BUTTON = 'button:has-text("Download")'
+MFA_PROMPT = '.mfa-challenge'

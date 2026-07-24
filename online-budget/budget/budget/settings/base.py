@@ -1,4 +1,5 @@
 import os
+
 import environ
 
 env = environ.Env(
@@ -22,7 +23,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_components",
     "django_q",
-    "budget",
+    "budget.budget",
 ]
 
 MIDDLEWARE = [
@@ -35,7 +36,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "budget.urls"
+ROOT_URLCONF = "budget.budget.urls"
 
 TEMPLATES = [
     {
@@ -52,7 +53,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "budget.wsgi.application"
+WSGI_APPLICATION = "budget.budget.wsgi.application"
 
 DATABASES = {
     "default": env.db("DATABASE_URL"),

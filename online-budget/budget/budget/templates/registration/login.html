@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+</head>
+<body class="bg-base-200 min-h-screen flex items-center justify-center">
+<form method="post" class="card w-96 bg-base-100 shadow-xl p-6 space-y-4">
+  {% csrf_token %}
+  <h1 class="text-xl font-bold">RBC Household Budget</h1>
+  {{ form.as_p }}
+  <button class="btn btn-primary w-full" type="submit">Sign in</button>
+</form>
+</body>
+</html>
