@@ -15,8 +15,8 @@ class ApproveCategorizationUseCase:
         self._tx_repo = tx_repo
         self._rule_repo = rule_repo
         self._categorizer = categorizer
+def execute(self, dto: ApproveCategorizationDto) -> ApproveResult:
 
-    def execute(self, dto: ApproveCategorizationDto) -> ApproveResult:
         tx = self._tx_repo.update_category(dto.transaction_id, dto.category_id, status="manual")
         reinforced = self._categorizer.reinforce_rule(tx.description_normalized, dto.category_id)
         return ApproveResult(transaction=tx, rule_reinforced=reinforced)

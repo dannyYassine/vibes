@@ -20,9 +20,9 @@ class BudgetConfig(AppConfig):
             # Register django-components
             from django_components import component
 
-            from budget.budget.interfaces.components.review_row import ReviewRowComponent
-            from budget.budget.interfaces.components.summary_card import SummaryCardComponent
-            from budget.budget.interfaces.components.sync_button import SyncButtonComponent
+            from budget.budget.interfaces.components.review_row_component import ReviewRowComponent
+            from budget.budget.interfaces.components.summary_card_component import SummaryCardComponent
+            from budget.budget.interfaces.components.sync_button_component import SyncButtonComponent
             component.register("summary_card", SummaryCardComponent)
             component.register("review_row", ReviewRowComponent)
             component.register("sync_button", SyncButtonComponent)

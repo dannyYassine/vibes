@@ -1,5 +1,5 @@
 from budget.budget.domain.entities import Transaction
-from budget.budget.interfaces.components.review_queue import ReviewQueueComponent
+from budget.budget.interfaces.components.review_queue_component import ReviewQueueComponent
 from budget.budget.interfaces.view_models import CategoryOptionVM, ReviewQueueItemVM, ReviewQueueVM
 
 from ._helpers import _money
