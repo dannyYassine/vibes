@@ -29,7 +29,7 @@ Invoke when:
 | `online_budget/services/**/*.py` | `shared/references/\<service\>.md` | Cross-feature |
 | `online_budget/infrastructure/**/*.py` | `shared/references/\<impl\>.md` | Cross-feature |
 | `opencode.json`, `pyproject.toml`, `docker-compose.yml`, `Makefile` | `architecture/\<layer\>.md` | Project-level |
-| New directory under `online_budget/` | Undetermined — ask user which feature it belongs to | — |
+| Unmatched path | Run Novel Pattern Protocol (see below) | — |
 
 ### Feature Heuristic
 
@@ -41,7 +41,35 @@ Resolve feature name from file path using substring matching:
 | `categoriz`, `ml`, `classify` | `categorization-engine` |
 | `review`, `approve`, `queue` | `review-queue` |
 | `dashboard`, `report`, `summary` | `dashboard-reports` |
-| Unmatched → ask user | — |
+| Unmatched | Infer from code structure (see Novel Pattern Protocol) |
+
+### Novel Pattern Protocol
+
+When a changed file does not match any existing Detection Map pattern, do not skip it. Instead:
+
+1. **Read the file** — understand its code structure: imports, class hierarchy, decorators, method signatures, docstrings
+2. **Classify by code patterns**:
+
+| If code looks like | .okf/ type | Template |
+|---|---|---|
+| Has `execute(dto)` or similar run method, calls ports/repos | Use Case | `use-case.md` |
+| Has HTTP method handler (`get`, `post`, `put`, `delete`), extends Django `View` | API Endpoint | `endpoint.md` |
+| Has `@schedule`, `@cron`, `async_task`, Q2 schedule registration | Job | `job.md` |
+| Has event class, `send_email`, `dispatch`, webhook handler | External Communication | `external-communication.md` |
+| Has dataclass, `@dataclass`, Django `Model`, Pydantic model, typed fields | Domain Entity | `data-model.md` |
+| Has abstract/ABC class, wraps external API, integrates 3rd-party service | Reference | `reference.md` |
+| Registers routes, config, DI wiring, Docker/CI config | Architecture | `architecture.md` |
+| None of the above cleanly match | Reference (most generic type) | `reference.md` |
+
+3. **Determine feature membership**: Look at sibling files in the same directory. If siblings match a known feature, join it. If the directory has no known siblings, it may be a new feature.
+
+4. **For a new feature**: Create `features/<new-feature>/` dir with `index.md` + appropriate child docs based on what files exist. Check if a new requirement doc is needed. Ask user for feature name if unclear.
+
+5. **Extend the map**: Add a new row to the Detection Map section in this SKILL.md so future runs match automatically. Format:
+   ```
+   | `<path pattern>` | `<target pattern>` | `Feature-local` |
+   ```
+   Place the new row in the correct scope group (feature-local, shared, architecture).
 
 ## Workflow
 
@@ -57,9 +85,10 @@ Filter to files under `online_budget/`, `opencode.json`, `pyproject.toml`, etc.
 
 For each changed file:
 1. Match path against Detection Map patterns
-2. Resolve feature name via Feature Heuristic
-3. Collect set of .okf/ files to update
-4. Separate into: feature-local, shared, architecture
+2. If matched → resolve feature name via Feature Heuristic
+3. If unmatched → run Novel Pattern Protocol (classify, feature, extend map)
+4. Collect set of .okf/ files to update
+5. Separate into: feature-local, shared, architecture
 
 ### Step 3: Read Existing .okf/ Doc (if present)
 
@@ -379,6 +408,7 @@ Use bundle-relative paths starting with `/` for cross-boundary links (stable und
 | Shared reference | 1 doc in `shared/references/` | Same as above |
 | Architecture | 1 doc in `architecture/` | No cascade |
 | New feature | New dir + all child docs + `features/index.md` | New requirement link if applicable |
+| New pattern (unmatched file type) | Classify via Novel Pattern Protocol, create doc + extend Detection Map | Add pattern row to this SKILL.md |
 | New requirement | 1 doc in `requirements/` + `requirements/index.md` | Feature index link |
 | Deleted code | Mark doc `status: deprecated` + update `timestamp` | Flag for removal in log.md |
 
