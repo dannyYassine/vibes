@@ -1,7 +1,7 @@
 ---
-name: okf-updater
+name: okf-sync
 description: >
-  Auto-updates .okf/ knowledge docs after codebase changes.
+  Syncs .okf/ knowledge docs after codebase changes.
   Maps code changes to feature directories, shared models, or architecture docs.
   Regenerates YAML frontmatter + body per OKF format spec.
   Trigger: "update okf", "sync .okf", "refresh docs", "okf sync", after code edit.
