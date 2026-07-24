@@ -30,22 +30,23 @@ Data-only dataclasses — one file per VM:
 ### `presenters/`
 - `_helpers.py` — `_money(amount)` shared formatting helper
 - `dashboard.py` — `DashboardPresenter` — `MonthlySummary` → `MonthlySummaryVM`
-- `review_queue.py` — `ReviewQueuePresenter` — `list[Transaction]`, `list[Category]` → `ReviewQueueVM`
+- `review_queue.py` — `ReviewQueuePresenter` — `list[Transaction]`, `list[Category]` → `ReviewQueueComponent`
 - `sync_result.py` — `SyncResultPresenter` — `SyncResult` → `SyncResultVM`
 
 ### `components/`
 - `SummaryCardComponent` — monthly summary card
 - `ReviewRowComponent` — approval row with category selector
+- `ReviewQueueComponent` — renders review queue HTMX fragment via `ReviewQueueVM`, template at `components/templates/review_queue.html`
 - `SyncButtonComponent` — HTMX sync trigger
 
 ### `views/`
-- `dashboard` — `GET /` — renders dashboard with monthly summary
-- `sync_now` — `POST /sync/` — triggers background sync
-- `review_queue` — `GET /review/` — renders review queue fragment
-- `approve` — `POST /review/<id>/approve/` — approves categorization
+- `dashboard.py` — `DashboardView(LoginRequiredMixin, View)` — `GET /` — renders dashboard with monthly summary
+- `sync.py` — `SyncNowView(LoginRequiredMixin, View)` — `POST /sync/` — triggers background sync
+- `review.py` — `ReviewQueueView(LoginRequiredMixin, View)` — `GET /review/` — renders review queue fragment
+- `approve.py` — `ApproveView(LoginRequiredMixin, View)` — `POST /review/<id>/approve/` — approves categorization
 
 ## Auth
-- All views use `@login_required` decorator
+- All views use `LoginRequiredMixin` (class-based views) or `@method_decorator(require_POST)` on dispatch
 - Django built-in auth (`LoginView`, `LogoutView`)
 - Login template at `templates/registration/login.html`
 - No signup flow (admin creates users)

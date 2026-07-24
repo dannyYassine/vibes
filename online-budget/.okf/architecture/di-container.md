@@ -50,10 +50,9 @@ Infrastructure classes use string-based providers (e.g. `"budget.budget.infrastr
 In `apps.py` `ready()`:
 ```python
 Container.wire(modules=[
-    "budget.budget.interfaces.views.dashboard",
-    "budget.budget.interfaces.views.sync",
-    "budget.budget.interfaces.views.review",
-    "budget.budget.interfaces.views.approve",
     "budget.budget.infrastructure.jobs.sync_job",
 ])
+```
+
+Views no longer individually wired — class-based views use `@inject` in `__init__` with `Provide[Container.xxx]` as default values. The container resolves dependencies via the `__init__` signature at class instantiation time.
 ```

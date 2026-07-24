@@ -9,10 +9,10 @@ timestamp: 2026-07-23T12:00:00Z
 # Sync
 
 ## Route
-`POST /sync/` — `sync.sync_now`
+`POST /sync/` — `SyncNowView.as_view()`
 
 ## Auth
-`@login_required`
+`LoginRequiredMixin` + `@method_decorator(require_POST)`
 
 ## Flow
 1. Call `run_sync_now()` (fire-and-forget via Django-Q2 async_task)

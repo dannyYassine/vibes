@@ -9,10 +9,10 @@ timestamp: 2026-07-23T12:00:00Z
 # Dashboard
 
 ## Route
-`GET /` — `dashboard.dashboard`
+`GET /` — `DashboardView.as_view()`
 
 ## Auth
-`@login_required`
+`LoginRequiredMixin`
 
 ## Flow
 1. Build `GetMonthlySummaryDto(year=today.year, month=today.month)`

@@ -1,6 +1,7 @@
 # Bundle Update Log
 
 ## 2026-07-24
+* **Update**: Views converted from functions to class-based views (DashboardView, SyncNowView, ReviewQueueView, ApproveView) with LoginRequiredMixin. ReviewQueuePresenter now returns ReviewQueueComponent instead of ReviewQueueVM. New ReviewQueueComponent in interfaces/components. Template review_queue.html moved under components/templates. apps.py wiring simplified — views no longer individually wired.
 * **Update**: Refactored monolithic files to directory packages — domain, application, infrastructure, interface layers. All large modules (`dtos`, `ports`, `use_cases`, `entities`, `exceptions`, `value_objects`, `models`, `repositories`, `presenters`, `view_models`) split into one-file-per-concept directories.
 
 ## 2026-07-23

@@ -9,15 +9,18 @@ timestamp: 2026-07-23T12:00:00Z
 # Review Queue
 
 ## Route
-`GET /review/` — `review.review_queue`
+`GET /review/` — `ReviewQueueView.as_view()`
 
 ## Auth
-`@login_required`
+`LoginRequiredMixin`
 
 ## Flow
 1. Execute `GetReviewQueueUseCase`
-2. Present via `ReviewQueuePresenter`
-3. Render `review_queue.html` fragment
+2. Present via `ReviewQueuePresenter` → returns `ReviewQueueComponent`
+3. Render via `component.render_to_response(request)`
+
+## Template
+`components/templates/review_queue.html`
 
 ## Links
 - [Get Review Queue](/use-cases/get-review-queue.md)

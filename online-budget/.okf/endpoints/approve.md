@@ -9,10 +9,10 @@ timestamp: 2026-07-23T12:00:00Z
 # Approve Categorization
 
 ## Route
-`POST /review/<tx_id>/approve/` — `approve.approve`
+`POST /review/<tx_id>/approve/` — `ApproveView.as_view()`
 
 ## Auth
-`@login_required`
+`LoginRequiredMixin` + `@method_decorator(require_POST)`
 
 ## Flow
 1. Parse `category` from POST body
