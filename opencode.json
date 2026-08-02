@@ -33,6 +33,18 @@
             "field": "reasoning_content"
           }
         },
+        "deepseek/deepseek-v4-flash-0731": {
+          "name": "deepseek-v4-flash-0731",
+          "options": {
+            "provider": {
+              "allow_fallbacks": true
+            },
+            "reasoning": { "enabled": true }
+          },
+          "interleaved": {
+            "field": "reasoning_content"
+          }
+        },
         "z-ai/glm-5.2": {
           "name": "glm-5.2",
           "options": {
@@ -159,6 +171,13 @@
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
     },
+    "plan-flash-0731": {
+      "mode": "primary",
+      "model": "openrouter/deepseek/deepseek-v4-flash-0731",
+      "description": "Fastest planning agent (deepseek-v4-flash-0731)",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "prompt": "You are a planning agent. Produce detailed plans with file paths, architecture decisions, and dependency analysis. Do NOT write code or make edits."
+    },
     "plan": {
       "model": "openrouter/deepseek/deepseek-v4-pro",
       "description": "Fast planning agent (deepseek-v4-pro)",
@@ -184,6 +203,11 @@
       "model": "openrouter/deepseek/deepseek-v4-flash",
       "description": "Fastest main agent (deepseek-v4-flash)"
     },
+    "main-flash-0731": {
+      "mode": "primary",
+      "model": "openrouter/deepseek/deepseek-v4-flash-0731",
+      "description": "Fastest main agent (deepseek-v4-flash-0731)"
+    },
     "main": {
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-pro",
@@ -203,6 +227,13 @@
       "mode": "primary",
       "model": "openrouter/deepseek/deepseek-v4-flash",
       "description": "Fastest question-only agent (deepseek-v4-flash)",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "prompt": "You are a question-answering agent. Answer questions about the codebase using search and read tools. Do NOT write code, make edits, or run commands. Explain, do not execute."
+    },
+    "ask-flash-0731": {
+      "mode": "primary",
+      "model": "openrouter/deepseek/deepseek-v4-flash-0731",
+      "description": "Fastest question-only agent (deepseek-v4-flash-0731)",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
       "prompt": "You are a question-answering agent. Answer questions about the codebase using search and read tools. Do NOT write code, make edits, or run commands. Explain, do not execute."
     },

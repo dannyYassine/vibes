@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    stdin_open: true
+    tty: true
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - MODEL=${MODEL:-openai/gpt-4o-mini}
+      - WORKSPACE=${WORKSPACE:-/workspace}
+    volumes:
+      - ./workspace:/workspace

@@ -30,6 +30,13 @@ Invoke when:
 | `online_budget/infrastructure/**/*.py` | `shared/references/\<impl\>.md` | Cross-feature |
 | `opencode.json`, `pyproject.toml`, `docker-compose.yml`, `Makefile` | `architecture/\<layer\>.md` | Project-level |
 | Unmatched path | Run Novel Pattern Protocol (see below) | — |
+| `<app>/modules/\<feature\>/usecases/*.py` | `features/\<feature\>/use-case.md` | Feature-local |
+| `<app>/modules/\<feature\>/delivery/*.py` | `features/\<feature\>/endpoint.md` or `architecture/entrypoint.md` | Mixed |
+| `<app>/modules/\<feature\>/services/*.py` | `shared/references/\<service\>.md` | Cross-feature |
+| `<app>/modules/\<feature\>/repositories/*.py` | `shared/references/\<impl\>.md` | Cross-feature |
+| `<app>/modules/\<feature\>/models/*.py` | `shared/data-models/\<entity\>.md` | Cross-feature |
+| `<app>/modules/\<feature\>/dtos/*.py` | `shared/data-models/\<dto\>.md` | Cross-feature |
+| `<app>/modules/\<feature\>/` (any layer) | `features/\<feature\>/` (mirrors module) | Feature-local |
 
 ### Feature Heuristic
 
@@ -42,6 +49,17 @@ Resolve feature name from file path using substring matching:
 | `review`, `approve`, `queue` | `review-queue` |
 | `dashboard`, `report`, `summary` | `dashboard-reports` |
 | Unmatched | Infer from code structure (see Novel Pattern Protocol) |
+| `modules/\<feature\>/` | \<feature\> (verbatim) |
+
+### Feature ↔ Module Derivation
+
+Features are derived from code modules; `modules/` is the source of truth.
+
+- Every feature documents exactly one module: `features/<feature>/` mirrors `modules/<feature>/`.
+- Feature name = module directory name, taken verbatim (do not invent a different feature name).
+- A feature dir without a matching `modules/<feature>/` documents nonexistent code — do not create it.
+- Creating a module creates its feature; renaming a module renames its feature; deleting a module deprecates its feature docs.
+- `modules` frontmatter on feature docs must equal the feature name.
 
 ### Novel Pattern Protocol
 
@@ -138,6 +156,8 @@ title: {Layer Name}
 description: {from docstring or purpose}
 tags: [architecture, {layer-name}]
 timestamp: {now}
+modules:
+  - {module-name}
 ---
 
 # {Title}
@@ -222,6 +242,8 @@ title: {UseCaseName}
 description: {from class docstring or module docstring}
 tags: [usecase, {domain}]
 timestamp: {now}
+modules:
+  - {module-name}
 ---
 
 # {Title}
@@ -251,6 +273,8 @@ title: {EndpointName}
 description: {from view docstring}
 tags: [api, {resource}]
 timestamp: {now}
+modules:
+  - {module-name}
 ---
 
 # {Title}
@@ -280,6 +304,8 @@ title: {JobName}
 description: {from job docstring}
 tags: [job, scheduler]
 timestamp: {now}
+modules:
+  - {module-name}
 ---
 
 # {Title}
@@ -310,6 +336,8 @@ title: {CommunicationName}
 description: {from class/docstring}
 tags: [external-comm, {event|email|webhook|notification}]
 timestamp: {now}
+modules:
+  - {module-name}
 ---
 
 # {Title}
@@ -345,6 +373,8 @@ title: {EntityName}
 description: {from class or module docstring}
 tags: [domain, {entity-name}]
 timestamp: {now}
+modules:
+  - {module-name}
 ---
 
 # {Title}
@@ -375,6 +405,8 @@ title: {ServiceName}
 description: {from module docstring}
 tags: [reference, {service-name}]
 timestamp: {now}
+modules:
+  - {module-name}
 ---
 
 # {Title}
@@ -398,6 +430,30 @@ timestamp: {now}
 - Shared docs link to features: `/features/{feature}/index.md`
 
 Use bundle-relative paths starting with `/` for cross-boundary links (stable under move). Use relative `./` for sibling links inside same dir.
+
+## Module Metadata (`modules` frontmatter)
+
+Bridges docs ↔ source modules: a doc carrying `modules` tells an AI exactly which source files it narrates — the "why does this file exist" answer.
+
+Rules:
+
+1. **Required** on every leaf doc that narrates code: Use Case, API Endpoint, Job, External Communication, Domain Entity (Data Model), Reference, Architecture.
+2. **Value** = YAML list of feature module directory names under `modules/` that the doc narrates. Example: `modules: [chat]`. Multiple modules sharing one doc are listed together (grouping expected).
+3. **Exempt**: Requirement docs (product-level, no code), Feature index docs (aggregators; code covered by child docs), and project-level infra/config docs (e.g. `architecture/deployment.md`).
+4. **Module name** = the directory under `modules/<feature>/`, matching Detection Map feature resolution (e.g. `chat`).
+5. **Refresh on every sync**: when a doc's module membership changes (module added to grouped doc, module renamed), update `modules` alongside body.
+6. **Position**: after `timestamp`, before any v0.2 fields. Per-type frontmatter templates above include it.
+
+Example:
+
+```
+---
+type: Reference
+title: Coding Tools
+modules:
+  - chat
+---
+```
 
 ## Blast Radius Rules
 
@@ -447,3 +503,4 @@ After all writes, verify:
 5. Every cross-ref link resolves (file exists at path)
 6. `log.md` has entry for this update
 7. No stale docs for deleted code — if found, set `status: deprecated`
+8. Every code-narrating leaf doc (Use Case, API Endpoint, Job, External Communication, Domain Entity, Reference, Architecture) has non-empty `modules` naming directories under `modules/` (per Module Metadata rules; exempt docs warned)

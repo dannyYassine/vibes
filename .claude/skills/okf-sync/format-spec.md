@@ -35,6 +35,7 @@ path/to/.okf/
 | `description` | string | One-sentence summary |
 | `tags` | list | Lowercase, hyphenated, YAML list `[tag1, tag2]` |
 | `timestamp` | ISO 8601 | When doc was created/updated. Format: `YYYY-MM-DDTHH:MM:SSZ` |
+| `modules` | list | Feature module directory names under `modules/` that this doc narrates (e.g. `chat`). Required on code-narrating docs. |
 
 ## Frontmatter Fields — Extended (v0.2)
 
@@ -92,7 +93,7 @@ tags: [architecture, domain, usecase, api, job, external-comm, reference, requir
 |---|---|
 | File extension | `.md` only |
 | Filename case | `kebab-case.md` |
-| Frontmatter field order | `type`, `title`, `description`, `tags`, `timestamp`, then optional v0.2 fields |
+| Frontmatter field order | `type`, `title`, `description`, `tags`, `timestamp`, `modules`, then optional v0.2 fields |
 | Timestamp format | `YYYY-MM-DDTHH:MM:SSZ` (ISO 8601, UTC) |
 | Cross-references within feature dir | Relative `[doc](doc.md)` |
 | Cross-references across boundaries | Bundle-relative `/section/file.md` |
