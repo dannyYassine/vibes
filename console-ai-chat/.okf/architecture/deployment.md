@@ -3,7 +3,7 @@ type: Architecture
 title: Deployment
 description: uv-based packaging, Docker image build, compose runtime wiring, and environment configuration.
 tags: [architecture, deployment, docker, config]
-timestamp: 2026-08-01T00:00:00Z
+timestamp: 2026-08-02T00:00:00Z
 ---
 
 # Deployment Layer
@@ -24,6 +24,7 @@ Project root: `pyproject.toml`, `Dockerfile`, `docker-compose.yml`, `.env.exampl
 - `.env.example` — documented env surface
 
 ## Key Design Decisions
-- Env surface: `OPENROUTER_API_KEY` (required), `MODEL` (default `openai/gpt-4o-mini`), `WORKSPACE` (default `/workspace`).
+- Env surface: `OPENROUTER_API_KEY` (required), `MODEL` (default `openai/gpt-4o-mini`), `WORKSPACE` (default `/workspace`), `CONFIRM_TOOL_CALLS` (default `1`; set `0`/`false` to skip the tool-confirmation prompt).
+- Tool-confirmation gate on by default: every agent tool call requires `y`/`e`/`c` before execution; toggle off via `CONFIRM_TOOL_CALLS=0`.
 - Workspace volume shared host↔container — agent files persist on the host.
 - README notes future services (db, worker) added as compose siblings.

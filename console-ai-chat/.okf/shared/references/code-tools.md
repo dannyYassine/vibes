@@ -3,7 +3,7 @@ type: Reference
 title: Coding Tools
 description: Workspace-scoped agent tools to list, read, write, append, edit files and run shell commands inside a sandbox.
 tags: [reference, tools, sandbox, security]
-timestamp: 2026-08-01T00:00:00Z
+timestamp: 2026-08-02T00:00:00Z
 modules:
   - chat
 ---
@@ -27,8 +27,10 @@ Security model:
 | `read_file` | utf-8, errors replaced, `...[truncated]` marker |
 | `write_file` | create/overwrite, mkdir parents; returns byte count |
 | `append_file` | append or create; returns appended size and prior size |
-| `edit_file` | first-occurrence replace (or all with `replace_all=True`); rejects empty/missing `old` |
+| `edit_file` | first-occurrence replace (or all with `replace_all=True`); `line` (1-indexed) scopes replace to one line; rejects empty/missing `old` |
 | `run_command` | status line `[ok]` / `[exit N]` / timeout error |
+
+All six tools run through the confirmation gate (`ConfirmToolMiddleware`, `CONFIRM_TOOL_CALLS=1` default): user confirms `y`, edits args `e`, or cancels `c` before any file/shell side effect.
 
 Host mount: `docker-compose.yml` binds `./workspace:/workspace`, so agent-written files persist on the host under `workspace/` (sample `workspace/hello.py`).
 

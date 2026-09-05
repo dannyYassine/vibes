@@ -8,6 +8,7 @@ from langchain_openrouter import ChatOpenRouter
 
 from console_ai_chat.modules.chat.repositories import workspace as code_tools
 from console_ai_chat.modules.chat.services import tools
+from console_ai_chat.modules.chat.services.confirm import ConfirmToolMiddleware
 
 SYSTEM_PROMPT = (
     "You are a coding assistant in a console chat. Answer concisely and clearly. "
@@ -42,7 +43,12 @@ def build_model(model_name: str, api_key: str) -> ChatOpenRouter:
 
 def build_agent(api_key: str, model_name: str):
     model = build_model(model_name, api_key)
-    return create_agent(model=model, tools=TOOLS, system_prompt=SYSTEM_PROMPT)
+    return create_agent(
+        model=model,
+        tools=TOOLS,
+        system_prompt=SYSTEM_PROMPT,
+        middleware=[ConfirmToolMiddleware()],
+    )
 
 
 def load_api_key() -> str:

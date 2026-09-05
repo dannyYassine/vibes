@@ -1,5 +1,20 @@
 # Log
 
+## 2026-08-02
+
+### Step 5: Tool-confirmation gate
+* **Created**: `src/console_ai_chat/modules/chat/services/confirm.py` — `ConfirmToolMiddleware` + `decide()`; `y`/`e`/`c` gate over LangChain `AgentMiddleware.wrap_tool_call`; `CONFIRM_TOOL_CALLS` toggle
+* **Created**: `tests/test_confirm.py` — confirmation, cancel, edit-args, EOF-cancel, disabled passthrough (12 tests)
+* **Updated**: `src/console_ai_chat/modules/chat/delivery/cli.py` — `build_agent()` passes `middleware=[ConfirmToolMiddleware()]`
+* **Updated**: `pyproject.toml` — dev extra: `pytest>=8.0`
+* **Updated**: `.env.example` — `CONFIRM_TOOL_CALLS=1`
+* **Updated**: `.okf/architecture/entrypoint.md` — middleware wiring, services/confirm.py
+* **Updated**: `.okf/architecture/deployment.md` — `CONFIRM_TOOL_CALLS` env surface
+* **Updated**: `.okf/features/chat/use-case.md` — confirmation step in flow
+* **Updated**: `.okf/shared/references/code-tools.md` — `edit_file` line param + gate note
+* **Updated**: `.okf/shared/references/tools.md` — gate applies to all 4 tools
+* **Updated**: `.okf/requirements/console-chat.md` — acceptance criterion 6 (confirmation gate)
+
 ## 2026-08-01
 
 ### Step 0: Initial bundle creation

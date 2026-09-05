@@ -10,6 +10,9 @@ dependencies = [
     "python-dotenv>=1.2.2",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
 [project.scripts]
 console-ai-chat = "console_ai_chat.modules.chat.delivery.cli:main"
 
