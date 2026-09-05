@@ -4,15 +4,15 @@
 
 ## Responsibility
 
-The DI container is the **composition root** for the entire app. It registers every concrete class — DataSources, Repositories, Services, Presenters — and resolves them on demand with their dependencies wired in.
+The DI container is the **composition root** for the entire app. It registers every concrete class — Gateways, Services, Presenters — and resolves them on demand with their dependencies wired in.
 
-The container is foundational: every other layer relies on it for instantiation. Without it, the View would need to know how to construct a Presenter, which would force it to know about Services, Repositories, and DataSources. With it, the View asks "give me a `UserDetailPresenter`" and gets a fully-wired instance back.
+The container is foundational: every other layer relies on it for instantiation. Without it, the View would need to know how to construct a Presenter, which would force it to know about Services and Gateways. With it, the View asks "give me a `UserDetailPresenter`" and gets a fully-wired instance back.
 
 ## Strict rules
 
 - **Single source of truth for wiring.** All `new SomeClass(...)` calls happen in registration code. No layer constructs another layer directly.
 - **Token-based registration.** Each registration uses a token (typically the class itself, used as a TypeScript-safe key). Tokens are how you ask for a dependency.
-- **Two scopes: singleton and transient.** Singletons (DataSources, Repositories, Services) are created once and reused. Transients (Presenters) get a fresh instance per resolution — important because Presenters hold UI state.
+- **Two scopes: singleton and transient.** Singletons (Gateways, Services) are created once and reused. Transients (Presenters) get a fresh instance per resolution — important because Presenters hold UI state.
 - **Lazy resolution.** Dependencies are constructed on first `resolve()`, not at registration time. This keeps app startup fast and avoids constructing things you never use.
 - **Framework-agnostic.** The container is plain TypeScript. React, Vue, and Svelte adapters consume it but the container itself doesn't know about any framework.
 
@@ -75,28 +75,17 @@ Each feature exposes a `register` function. The composition root calls them all:
 // src/features/user/userModule.ts
 import type { Container } from "@/infra/container/Container";
 import { HttpClient } from "@/infra/http/HttpClient";
-import { UserDataSource } from "./data/UserDataSource";
-import { UserRepository } from "./domain/UserRepository";
+import { UserApiGateway, IUserGateway } from "./data/UserGateway";
 import { UserService } from "./domain/UserService";
 import { UserDetailPresenter } from "./presentation/UserDetailPresenter";
 import { UserListPresenter } from "./presentation/UserListPresenter";
 
 export function registerUserModule(container: Container): void {
-  container.register(
-    UserDataSource,
-    (c) => new UserDataSource(c.resolve(HttpClient), "/api"),
-    "singleton",
-  );
-
-  container.register(
-    UserRepository,
-    (c) => new UserRepository(c.resolve(UserDataSource)),
-    "singleton",
-  );
+  container.register(IUserGateway, (c) => new UserApiGateway(c.resolve(HttpClient)), "singleton");
 
   container.register(
     UserService,
-    (c) => new UserService(c.resolve(UserRepository)),
+    (c) => new UserService(c.resolve(IUserGateway)),
     "singleton",
   );
 
@@ -145,12 +134,11 @@ export function bootstrapContainer(): Container {
 | Layer | Scope | Why |
 |-------|-------|-----|
 | HttpClient, AuthClient | singleton | Shared connection state, auth tokens |
-| DataSource | singleton | Stateless transport — no reason to recreate |
-| Repository | singleton | Holds caches that benefit from being shared |
+| Gateway | singleton | Stateless transport — no reason to recreate |
 | Service | singleton | Stateless orchestration |
 | Presenter | **transient** | Holds per-screen UI state — must be fresh on mount |
 | ViewModel | n/a | Constructed by Presenter, not registered |
-| Entity | n/a | Constructed by Repository mapping, not registered |
+| Entity | n/a | Constructed by Service mapping, not registered |
 
 The key insight: **anything that holds UI state is transient**. Anything that holds shared infrastructure or domain logic is singleton.
 
@@ -161,16 +149,14 @@ Without a container, the View ends up with code like:
 ```typescript
 const presenter = new UserDetailPresenter(
   new UserService(
-    new UserRepository(
-      new UserDataSource(httpClient, "/api"),
-    ),
+    new UserApiGateway(httpClient),
   ),
 );
 ```
 
-That's three problems:
-1. The View now imports DataSource, Repository, and Service — violating layer boundaries.
-2. Swapping any layer (e.g., adding a caching Repository decorator) requires editing every call site.
+That's still three problems:
+1. The View now imports Gateway and Service — violating layer boundaries.
+2. Swapping any layer (e.g., adding a caching Gateway decorator) requires editing every call site.
 3. Tests can't substitute mocks without monkey-patching.
 
 With a container, the View imports only the Presenter token. Substitution is one line in the registration code.
@@ -182,14 +168,14 @@ For tests, build a separate container with mocks:
 ```typescript
 function createTestContainer(): Container {
   const container = new Container();
-  container.register(UserRepository, () => mockUserRepository);
-  container.register(UserService, (c) => new UserService(c.resolve(UserRepository)));
+  container.register(IUserGateway, () => fakeUserGateway);
+  container.register(UserService, (c) => new UserService(c.resolve(IUserGateway)));
   container.register(UserDetailPresenter, (c) => new UserDetailPresenter(c.resolve(UserService)), "transient");
   return container;
 }
 ```
 
-You substitute at any layer — typically Repository for service tests, Service for presenter tests, Presenter for view tests.
+You substitute at any layer — typically Gateway for service tests, Service for presenter tests, Presenter for view tests.
 
 ## Alternative: use a library
 

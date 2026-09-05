@@ -24,7 +24,7 @@ export default defineConfig({
         "src/**/*.d.ts",
       ],
       // No global threshold — coverage is a diagnostic, not a gate.
-      // Service integration tests will naturally cover Repository/Service/Entity/ViewModel.
+      // Service integration tests will naturally cover Service/Entity/ViewModel.
       // If a feature shows low coverage, it usually means missing integration tests, not missing unit tests.
     },
   },
@@ -70,7 +70,6 @@ For Vue projects, replace the React Testing Library cleanup with whatever cleanu
 ### Faking time
 
 Use Vitest's fake timers when:
-- Testing TTL caching behavior
 - Testing date-dependent ViewModel formatting (`formattedLastLogin`)
 - Testing dormancy / staleness checks on entities
 
@@ -96,7 +95,7 @@ For Presenter actions that fire async work (Service calls), `await` the action:
 
 ```typescript
 await service.changeRole(targetId, "admin", actor);
-expect(setup.fakes.user.getCallCount("patchUser")).toBe(1);
+expect(setup.fakes.user.getCallCount("updateUser")).toBe(1);
 ```
 
 For component tests where the Presenter is mocked, you usually don't need to await — `vi.fn()` records the call synchronously.
@@ -116,9 +115,8 @@ Aim for high coverage **as a side effect** of writing the right tests, not as a 
 
 | Layer | Coverage source |
 |-------|-----------------|
-| DataSource | Mocked — production code is light, fake provides equivalent coverage in tests |
-| DTO | Type-only — no coverage relevant |
-| Repository | Service integration tests |
+| Gateway | Mocked — production code is light, fake provides equivalent coverage in tests |
+| API model | Type-only — no coverage relevant |
 | Entity | Service integration tests + occasional unit tests |
 | Service | Service integration tests |
 | Presenter | Component tests + occasional unit tests |
@@ -141,12 +139,12 @@ src/
 │           ├── user.integration.test.ts          # PRIMARY
 │           ├── UserDetailView.test.tsx           # Component test
 │           ├── fakes/
-│           │   ├── FakeUserDataSource.ts
-│           │   └── userDtoFactory.ts
+│           │   ├── FakeUserGateway.ts
+│           │   └── userApiModelFactory.ts
 │           └── unit/                              # Optional, bug fixes
 │               ├── User.test.ts
-│               ├── UserViewModel.test.ts
-│               └── UserRepository.test.ts
+│               ├── UserDetailViewModel.test.ts
+│               └── UserService.test.ts
 └── __tests__/
     ├── setup.ts
     └── shared/

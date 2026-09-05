@@ -6,15 +6,15 @@
 
 Component tests verify the View renders correctly for given Presenter state and that user actions invoke the correct Presenter methods with the correct arguments.
 
-The Presenter is **mocked**. Real Services, Repositories, and DataSources are NOT involved. Behavior of those layers is covered by service integration tests.
+The Presenter is **mocked**. Real Services and Gateways are NOT involved. Behavior of those layers is covered by service integration tests.
 
 ## What's real, what's fake
 
 | Layer | In component tests |
 |-------|--------------------|
-| Service / Repository / DataSource | Not involved |
+| Service / Gateway | Not involved |
 | Presenter | **Mocked** (fake instance with controllable state) |
-| ViewModel | **Real** (built from real Entities in the test, or a `FakeUserViewModel`) |
+| ViewModel | **Real** (a real VM instance with primitives copied in the test helper) |
 | View | **Real** |
 
 ## Strict rules
@@ -107,12 +107,13 @@ import { createFakePresenter, type FakePresenter } from "@/__tests__/shared/crea
 import { UserDetailPresenter, type UserDetailState } from "../presentation/UserDetailPresenter";
 import { UserDetailView } from "../presentation/UserDetailView";
 import { User } from "../domain/User";
-import { UserViewModel } from "../presentation/UserViewModel";
+import { UserDetailViewModel } from "../presentation/UserDetailViewModel";
 
 const currentUser = new User({
   id: "admin-1",
   email: "admin@example.com",
   fullName: "Admin User",
+  birthYear: 1985,
   avatarUrl: null,
   role: "admin",
   isActive: true,
@@ -125,6 +126,7 @@ const targetUser = new User({
   id: "user-1",
   email: "jane@example.com",
   fullName: "Jane Doe",
+  birthYear: 1990,
   avatarUrl: null,
   role: "member",
   isActive: true,
@@ -132,6 +134,22 @@ const targetUser = new User({
   updatedAt: new Date("2024-06-01"),
   lastLoginAt: new Date("2026-05-04"),
 });
+
+/**
+ * VMs hold copied primitives — never entities. The test mirrors what the
+ * real Presenter's load(user) writes into the VM (actor-derived flags included).
+ */
+function makeDetailVM(user: User, actor: User): UserDetailViewModel {
+  const vm = new UserDetailViewModel();
+  vm.id = user.id;
+  vm.displayName = user.fullName;
+  vm.email = user.email;
+  vm.roleLabel = user.role === "admin" ? "Administrator" : "Team member";
+  vm.lastLoginAt = user.lastLoginAt ? user.lastLoginAt.getTime() : null;
+  vm.canEditRole = actor.canEditOtherUsers() && actor.id !== user.id;
+  vm.statusText = user.isActive ? "Active" : "Deactivated";
+  return vm;
+}
 
 type PresenterMethods = {
   configure: UserDetailPresenter["configure"];
@@ -192,7 +210,7 @@ describe("UserDetailView", () => {
   it("renders the user detail when loaded", () => {
     presenter.setStateForTest({
       status: "loaded",
-      user: new UserViewModel(targetUser, currentUser),
+      user: makeDetailVM(targetUser, currentUser),
       errorMessage: null,
       isSaving: false,
     });
@@ -209,7 +227,7 @@ describe("UserDetailView", () => {
   it("calls changeRole on the presenter when the role select changes", () => {
     presenter.setStateForTest({
       status: "loaded",
-      user: new UserViewModel(targetUser, currentUser),
+      user: makeDetailVM(targetUser, currentUser),
       errorMessage: null,
       isSaving: false,
     });
@@ -240,7 +258,7 @@ describe("UserDetailView", () => {
 
 **Each `state.status` gets a test.** Skipping a status branch in tests means the View's behavior for that branch is unverified. Even a one-line "renders nothing for idle status" assertion is worth having.
 
-**Asserting on Presenter calls — not Service or Repository.** The View's contract is the Presenter. Tests verify the View talks to the Presenter correctly; service integration tests verify the Presenter talks to the Service correctly.
+**Asserting on Presenter calls — not Service or Gateway.** The View's contract is the Presenter. Tests verify the View talks to the Presenter correctly; service integration tests verify the Presenter talks to the Service correctly.
 
 **Use `getByRole` / `getByLabelText` from React Testing Library.** They reflect what users actually interact with. Avoid `getByTestId` except as a last resort — querying by role/text catches accessibility issues for free.
 

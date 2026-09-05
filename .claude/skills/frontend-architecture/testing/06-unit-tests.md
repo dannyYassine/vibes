@@ -16,7 +16,7 @@ If you find yourself writing a unit test outside these cases, ask whether the in
 
 - **Unit tests are additive, not a replacement.** The integration test for the feature still exists and still must pass. The unit test is a focused regression check.
 - **Live in `__tests__/unit/`.** This makes their secondary status visually obvious to anyone reading the test directory.
-- **Name the file after the layer being tested.** `UserRepository.test.ts`, `UserViewModel.test.ts`. Don't name them after the bug — names should still describe what's being tested.
+- **Name the file after the layer being tested.** `UserService.test.ts`, `UserViewModel.test.ts`. Don't name them after the bug — names should still describe what's being tested.
 - **Reference the integration test in a comment when fixing a bug.** Example: `// Regression test for bug #1247 — see user.integration.test.ts > "changeRole > rejects when target deactivated"`.
 
 ## Bug fix workflow
@@ -82,6 +82,7 @@ function buildUser(overrides: Partial<ConstructorParameters<typeof User>[0]>) {
     id: "user-1",
     email: "test@example.com",
     fullName: "Test User",
+    birthYear: 1990,
     avatarUrl: null,
     role: "member",
     isActive: true,
@@ -98,12 +99,11 @@ Constructor validation is the canonical case for entity unit tests — it's pure
 ### ViewModel unit test
 
 ```typescript
-// src/features/user/__tests__/unit/UserViewModel.test.ts
+// src/features/user/__tests__/unit/UserDetailViewModel.test.ts
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { UserViewModel } from "../../presentation/UserViewModel";
-import { User } from "../../domain/User";
+import { UserDetailViewModel } from "../../presentation/UserDetailViewModel";
 
-describe("UserViewModel.formattedLastLogin", () => {
+describe("UserDetailViewModel.formattedLastLogin", () => {
   afterEach(() => vi.useRealTimers());
 
   // Regression test for bug #1893 — relative date formatting
@@ -112,8 +112,8 @@ describe("UserViewModel.formattedLastLogin", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-04T15:00:00Z"));
 
-    const user = buildUser({ lastLoginAt: new Date("2026-05-04T08:00:00Z") });
-    const vm = new UserViewModel(user, user);
+    const vm = new UserDetailViewModel();
+    vm.lastLoginAt = new Date("2026-05-04T08:00:00Z").getTime();
 
     expect(vm.formattedLastLogin).toBe("Today");
   });
@@ -122,85 +122,49 @@ describe("UserViewModel.formattedLastLogin", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-04T15:00:00Z"));
 
-    const user = buildUser({ lastLoginAt: new Date("2026-05-03T08:00:00Z") });
-    const vm = new UserViewModel(user, user);
+    const vm = new UserDetailViewModel();
+    vm.lastLoginAt = new Date("2026-05-03T08:00:00Z").getTime();
 
     expect(vm.formattedLastLogin).toBe("Yesterday");
   });
 
   it("returns 'Never' when lastLoginAt is null", () => {
-    const user = buildUser({ lastLoginAt: null });
-    const vm = new UserViewModel(user, user);
+    const vm = new UserDetailViewModel();
 
     expect(vm.formattedLastLogin).toBe("Never");
   });
 });
-
-function buildUser(overrides: Partial<ConstructorParameters<typeof User>[0]>) {
-  return new User({
-    id: "user-1",
-    email: "test@example.com",
-    fullName: "Test User",
-    avatarUrl: null,
-    role: "member",
-    isActive: true,
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2024-01-01"),
-    lastLoginAt: null,
-    ...overrides,
-  });
-}
 ```
 
-ViewModel formatting tests are well-suited to unit tests because relative date logic has many edge cases that would clutter the integration test.
+ViewModel formatting tests are well-suited to unit tests because relative date logic has many edge cases that would clutter the integration test. Note the VM holds epoch milliseconds, not a `Date` — the Presenter does that conversion during the copy (see `05-viewmodel.md`).
 
-### Repository unit test
+### Service mapping unit test
+
+The Service owns the API-model→Entity mapping. Most mapping cases are covered by integration tests, but a truly tricky mapping edge case can justify a focused unit test:
 
 ```typescript
-// src/features/user/__tests__/unit/UserRepository.test.ts
-import { describe, it, expect, vi } from "vitest";
-import { UserRepository } from "../../domain/UserRepository";
-import { FakeUserDataSource } from "../fakes/FakeUserDataSource";
-import { makeUserDto } from "../fakes/userDtoFactory";
+// src/features/user/__tests__/unit/UserService.test.ts
+import { describe, it, expect } from "vitest";
+import { UserService } from "../../domain/UserService";
+import { FakeUserGateway } from "../fakes/FakeUserGateway";
+import { makeUserApiModel } from "../fakes/userApiModelFactory";
 
-describe("UserRepository caching", () => {
-  // Regression test for bug #2207 — cache TTL was off-by-one
-  // See user.integration.test.ts > "getUser caches subsequent fetches within TTL"
-  it("returns cached entity within TTL window", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-04T12:00:00Z"));
+describe("UserService mapping edge cases", () => {
+  // Regression test for bug #2207 — null last_name produced "Jane null"
+  // See user.integration.test.ts > "getUser"
+  it("falls back fullName to first_name when last_name is null", async () => {
+    const gateway = new FakeUserGateway();
+    gateway.seed([makeUserApiModel({ usr_id: "user-1", first_name: "Jane", last_name: null })]);
+    const service = new UserService(gateway);
 
-    const dataSource = new FakeUserDataSource();
-    dataSource.seed([makeUserDto({ id: "user-1" })]);
-    const repo = new UserRepository(dataSource as never);
+    const user = await service.getUser("user-1");
 
-    await repo.findById("user-1");
-    vi.setSystemTime(new Date("2026-05-04T12:00:59Z")); // 59s later — within 60s TTL
-    await repo.findById("user-1");
-
-    expect(dataSource.getCallCount("fetchUser")).toBe(1);
-    vi.useRealTimers();
-  });
-
-  it("refetches after TTL expires", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-04T12:00:00Z"));
-
-    const dataSource = new FakeUserDataSource();
-    dataSource.seed([makeUserDto({ id: "user-1" })]);
-    const repo = new UserRepository(dataSource as never);
-
-    await repo.findById("user-1");
-    vi.setSystemTime(new Date("2026-05-04T12:01:01Z")); // 61s later — past 60s TTL
-    await repo.findById("user-1");
-
-    expect(dataSource.getCallCount("fetchUser")).toBe(2);
-    vi.useRealTimers();
+    expect(user.fullName).toBe("Jane");
   });
 });
 ```
 
-Caching boundary tests are a good unit-test target because driving exact timing through the integration test requires the same `vi.useFakeTimers` setup but with more setup overhead.
+Mapping edge cases are a good unit-test target when driving them through the integration test requires large seed fixtures for a single field's behavior.
 
 ### Presenter unit test
 

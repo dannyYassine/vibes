@@ -4,15 +4,15 @@
 
 This reference describes how Vue 3 Views bind to Presenters. It covers:
 
-1. The `usePresenter` composable — resolves a Presenter from the DI container, manages its lifecycle via Vue's component lifecycle, and exposes reactive state
+1. The `usePresenter` composable — resolves a Presenter from the DI container, wraps it in Vue's `reactive()`, and manages its lifecycle
 2. The container injection key and `provideContainer` helper
-3. Why the Vue version is even simpler than React's
+3. Why the Vue reactivity model makes the Presenter's `vm` directly bindable
 
 ## Why Vue's composables are a natural fit
 
-Vue's composables solve exactly the problem that Presenter lifecycle integration creates. When a composable calls `onMounted` or `onUnmounted` internally, those hooks automatically tie to the **calling component's lifecycle** — no manual `useEffect` plumbing required. This means `usePresenter` can be a drop-in composable that returns `{ presenter, state }`, and the Presenter's `onMounted`/`onDestroyed` fire automatically because the composable wires them into Vue's lifecycle for you.
+Vue's composables solve exactly the problem that Presenter lifecycle integration creates. When a composable calls `onMounted` or `onUnmounted` internally, those hooks automatically tie to the **calling component's lifecycle** — no manual effect plumbing required. This means `usePresenter` can be a drop-in composable that returns the presenter itself, and the Presenter's `onMounted`/`onDestroyed` fire automatically because the composable wires them into Vue's lifecycle for you.
 
-Vue also doesn't have React's Strict Mode double-mount in dev, so the lifecycle hooks fire exactly once per mount/unmount — no idempotency concerns from the framework side.
+Vue also doesn't have React's Strict Mode double-mount, so lifecycle hooks fire exactly once per real mount — no idempotency concerns from the framework side.
 
 ## Strict rules
 
@@ -20,13 +20,13 @@ Vue also doesn't have React's Strict Mode double-mount in dev, so the lifecycle 
 - **The composable accepts a Presenter token (the class), not an instance.** Passing the class lets the composable resolve a fresh instance from the container per mount.
 - **The Presenter is built exactly once per component mount.** It survives re-renders.
 - **Lifecycle hooks fire in this order:** `onCreated` (synchronously after construction, inside the composable call) → `onMounted` (Vue's `onMounted` hook) → `onDestroyed` (Vue's `onUnmounted` hook).
-- **Views read state from the returned `shallowRef`.** Vue's reactivity handles re-renders automatically.
+- **Views read and bind everything through `presenter.vm.*`.** Never call `presenter.getState()` in templates and never wrap the returned presenter in `ref`/`shallowRef` yourself.
 
 ## The `usePresenter` composable
 
 ```typescript
 // src/infra/presenter/vue/usePresenter.ts
-import { shallowRef, onMounted, onUnmounted, type ShallowRef } from "vue";
+import { reactive, onMounted, onUnmounted } from "vue";
 import type { Presenter } from "../Presenter";
 import type { Token } from "@/infra/container/Container";
 import { useContainer } from "./useContainer";
@@ -40,48 +40,22 @@ export type UsePresenterOptions<TPresenter> = {
   configure?: (presenter: TPresenter) => void;
 };
 
-export type UsePresenterResult<TPresenter extends Presenter<unknown>> = {
-  presenter: TPresenter;
-  state: ShallowRef<
-    TPresenter extends Presenter<infer TState> ? TState : never
-  >;
-};
-
 /**
- * Resolves a Presenter from the DI container, manages its lifecycle, and
- * exposes its state as a reactive `shallowRef`.
- *
- * Lifecycle:
- *   1. Composable call (setup): container.resolve(Token) → presenter.onCreated()
- *   2. Vue onMounted: presenter._markMounted() → presenter.onMounted()
- *   3. Vue onUnmounted: presenter._markUnmounted() → presenter.onDestroyed() → unsubscribe
- *
- * The same Presenter instance is reused across all re-renders of the component.
- * On unmount, the Presenter is discarded — a remount creates a fresh one.
+ * Resolves a Presenter from the DI container, wraps it in `reactive()`,
+ * manages lifecycle. Returns the SAME presenter instance — reactive proxy.
+ * View binds: v-model="presenter.vm.fullName", @click="presenter.handleSave()".
  */
 export function usePresenter<TPresenter extends Presenter<unknown>>(
   Token: Token<TPresenter>,
   options: UsePresenterOptions<TPresenter> = {},
-): UsePresenterResult<TPresenter> {
+): TPresenter {
   const container = useContainer();
   const presenter = container.resolve(Token);
 
-  type TState = TPresenter extends Presenter<infer S> ? S : never;
-  const state = shallowRef(presenter.getState() as TState);
-
-  // Apply configuration before onCreated runs — this lets onCreated
-  // observe the configured state if it needs to.
   options.configure?.(presenter);
 
-  // onCreated fires synchronously during setup, before the first render.
   Promise.resolve(presenter.onCreated()).catch((err) => {
     console.error(`[usePresenter] ${Token.name}.onCreated threw:`, err);
-  });
-
-  // Subscribe to state changes. The subscription lives for the component's
-  // lifetime — we tear it down in onUnmounted alongside onDestroyed.
-  const unsubscribe = presenter.subscribe((next) => {
-    state.value = next as TState;
   });
 
   onMounted(() => {
@@ -96,12 +70,39 @@ export function usePresenter<TPresenter extends Presenter<unknown>>(
     Promise.resolve(presenter.onDestroyed()).catch((err) => {
       console.error(`[usePresenter] ${Token.name}.onDestroyed threw:`, err);
     });
-    unsubscribe();
   });
 
-  return { presenter, state };
+  return reactive(presenter) as TPresenter;
 }
 ```
+
+## Why `reactive(presenter)`
+
+The Presenter owns `vm` — a plain ViewModel class holding flat mutable primitives plus pure getters. Wrapping the **Presenter** (not the VM) means every access to `presenter.vm` goes through the reactive proxy, so reading `presenter.vm.fullName` returns a reactive view of the VM.
+
+This gives you reactivity in **both directions**:
+
+- **v-model writes from the template** — `v-model="presenter.vm.fullName"` writes through the proxy and triggers updates everywhere else the field is read (e.g., a `submitLabel` getter that depends on `fullName`).
+- **Field mutations inside Presenter methods** — `this.vm.isSaving = true` followed by `notify()` updates the same proxied object, and the template re-renders.
+
+One proxy at the top is enough. Vue's `reactive()` is a deep proxy: accessing `presenter.vm` through the presenter proxy cascades a reactive view of the VM automatically. You never need to wrap the VM separately.
+
+## The getter caveat
+
+The ViewModel exposes derived display values as **pure getters** (`isSubmitDisabled`, `submitLabel`, `errorMessage`). Getters live on the class **prototype**, and `reactive()` handles prototype getters correctly — `presenter.vm.submitLabel` through the proxy invokes the getter and tracks its dependencies.
+
+But two operations destroy getters:
+
+- **Spreading the VM** — `{ ...vm }` copies own enumerable properties only. Prototype getters are lost; you get `undefined` (or stale snapshot values) instead of live computed properties. Never do this.
+- **`toRefs(vm)`** — designed for plain objects, it also drops prototype getters and produces refs for the wrong surface.
+
+Bind through `presenter.vm.*` directly. That's the whole point of the proxy.
+
+## Lifecycle wiring
+
+Identical to the framework-agnostic contract: `onCreated` fires synchronously during setup (wrapped in `Promise.resolve` so async overrides don't produce unhandled rejections) → `_markMounted()` + `onMounted` in Vue's `onMounted` → `_markUnmounted()` + `onDestroyed` in Vue's `onUnmounted`.
+
+Vue has no Strict Mode double-mount. Hooks fire once per real mount/unmount cycle.
 
 ## The container injection key and helpers
 
@@ -192,146 +193,97 @@ provideContainer(container);
 ## Canonical View example
 
 ```vue
-<!-- src/features/user/presentation/UserDetailView.vue -->
+<!-- src/features/user/presentation/UserFormView.vue -->
 <script setup lang="ts">
 import { usePresenter } from "@/infra/presenter/vue/usePresenter";
-import { UserDetailPresenter } from "./UserDetailPresenter";
-import type { User, UserRole } from "../domain/User";
+import { UserFormPresenter } from "./UserFormPresenter";
 
-const props = defineProps<{
-  userId: string;
-  currentUser: User;
-}>();
+const props = defineProps<{ userId: string }>();
 
-const { presenter, state } = usePresenter(UserDetailPresenter, {
-  configure: (p) => p.configure(props.userId, props.currentUser),
+const presenter = usePresenter(UserFormPresenter, {
+  configure: (p) => p.configure(props.userId),
 });
-
-function onRoleChange(event: Event) {
-  const newRole = (event.target as HTMLSelectElement).value as UserRole;
-  presenter.changeRole(newRole);
-}
 </script>
 
 <template>
-  <p v-if="state.status === 'loading'">Loading…</p>
-
-  <div v-else-if="state.status === 'error'" class="error">
-    <p>{{ state.errorMessage }}</p>
-    <button @click="presenter.dismissError()">Dismiss</button>
-  </div>
-
-  <div v-else-if="state.status === 'loaded' && state.user" class="user-detail">
-    <div class="avatar">
-      <img v-if="state.user.avatarUrl" :src="state.user.avatarUrl" alt="" />
-      <span v-else>{{ state.user.avatarInitials }}</span>
-    </div>
-
-    <h1>{{ state.user.displayName }}</h1>
-    <p class="email">{{ state.user.email }}</p>
-
-    <span :class="['badge', `badge-${state.user.roleBadgeColor}`]">
-      {{ state.user.roleLabel }}
-    </span>
-    <span v-if="state.user.canShowAdminBadge" class="admin-badge">Admin</span>
-
-    <dl>
-      <dt>Status</dt><dd>{{ state.user.statusLabel }}</dd>
-      <dt>Last login</dt><dd>{{ state.user.formattedLastLogin }}</dd>
-      <dt>Joined</dt><dd>{{ state.user.formattedJoinedAt }}</dd>
-    </dl>
-
-    <label v-if="state.user.canEditRole">
-      Change role:
-      <select :disabled="state.isSaving" @change="onRoleChange">
-        <option value="admin">Administrator</option>
-        <option value="member">Team member</option>
-        <option value="guest">Guest</option>
-      </select>
+  <form @submit.prevent="presenter.handleSave()">
+    <label>
+      Full Name:
+      <!-- Direct v-model binding to ViewModel primitives -->
+      <input v-model="presenter.vm.fullName" type="text" />
     </label>
-  </div>
+
+    <label>
+      Birth Year:
+      <input v-model="presenter.vm.birthYear" type="number" />
+    </label>
+
+    <p v-if="presenter.vm.errorMessage" class="error">
+      {{ presenter.vm.errorMessage }}
+    </p>
+
+    <button type="submit" :disabled="presenter.vm.isSubmitDisabled">
+      {{ presenter.vm.submitLabel }}
+    </button>
+  </form>
 </template>
 ```
 
-Note how clean the script section is — six lines plus an event handler. The composable hides all the lifecycle wiring.
-
-## Why `shallowRef` and not `reactive` or `ref`
-
-The Presenter's state model is **immutable**: every `setState` produces a new state object. Vue has three options for tracking external state, and `shallowRef` is the right one here:
-
-| API | Behavior | Fit for Presenter state |
-|-----|----------|-------------------------|
-| `ref<T>(v)` | Deep proxy of `.value` | ❌ Wraps every property in a proxy. Wasted work — we replace the whole state object on every update. |
-| `reactive<T>(v)` | Deep proxy of the object itself | ❌ Conflicts with immutable updates. Mutating a proxy of an already-replaced object is semantically wrong. |
-| `shallowRef<T>(v)` | Tracks `.value` reference only | ✅ Triggers reactivity on full replacement. No proxy overhead. Matches immutable state model exactly. |
-
-`shallowRef` is the canonical choice for "I have an external store that emits whole new state objects." It's what Pinia uses internally for the same reason.
-
-In templates, you access state as `state.status` (Vue auto-unwraps refs in templates). In script code outside the template, use `state.value.status`.
-
-## Why this is simpler than React
-
-Three Vue features collapse complexity that React requires manual handling for:
-
-1. **Composables auto-bind to component lifecycle.** No `useEffect` with empty deps + lint suppressions. `onMounted`/`onUnmounted` inside a composable just work.
-2. **No Strict Mode double-mount.** The Presenter is constructed once per real mount. `onMounted`/`onDestroyed` don't need to be idempotent for framework reasons (though they should still be idempotent on principle).
-3. **Reactivity is automatic.** No `useSyncExternalStore`. Update `shallowRef.value` and Vue handles re-rendering.
-
-The trade-off: Vue's `<script setup>` syntax is a compile-time transform, which can feel less explicit than React's pure-function components. Both work fine for this architecture; the layer separation is the same.
+Note how clean the script section is. Inputs bind straight to VM primitives; buttons bind to VM getters; actions call Presenter methods. The View never parses, formats, or branches on anything but VM state.
 
 ## Common mistakes
 
-- **Calling `presenter.getState()` inside the template** instead of using `state.value` (script) or `state` (template). The direct call works but doesn't trigger updates on state change.
+- **Calling `presenter.getState()` in templates** instead of `presenter.vm.*`. The direct call works but returns a raw, unproxied reference — no reactivity.
 - **Passing a presenter instance to the composable** instead of the class token. The composable can only manage lifecycle if it owns construction.
-- **Constructing presenters in components** with `new UserDetailPresenter(...)`. Bypasses the container and breaks dependency substitution in tests.
-- **Calling `usePresenter` outside `<script setup>` or a `setup()` function.** Composables must run during component setup so they can register `onMounted`/`onUnmounted`. Calling from an event handler or `watch` callback will fail.
+- **Constructing presenters in components** with `new UserFormPresenter(...)`. Bypasses the container and breaks dependency substitution in tests.
+- **Spreading the VM** (`{ ...presenter.vm }`) — loses prototype getters. Same for `toRefs(presenter.vm)`.
+- **Wrapping the presenter in `ref`/`shallowRef` yourself** instead of using the reactive proxy `usePresenter` already returns. Double-wrapping creates two sources of truth.
 - **Forgetting to install the container at the root.** `useContainer` throws a clear error in this case — but it's an easy mistake in test setups.
-- **Using `ref` or `reactive` instead of `shallowRef`.** Works in many cases but adds proxy overhead and creates subtle bugs when the same state object reference is reused across updates.
 
 ## Testing Views with the composable
 
-For component tests, build a test container with mocked Presenters and provide it before mounting:
+For component tests, build a test container with a fake presenter and provide it before mounting. The fake is a real class instance (or the real presenter type with `vi.fn()` methods) whose VM you set directly — see `testing/05-component-vue.md`:
 
 ```typescript
 import { mount } from "@vue/test-utils";
 import { Container } from "@/infra/container/Container";
 import { ContainerKey } from "@/infra/presenter/vue/useContainer";
-import { UserDetailPresenter } from "@/features/user/presentation/UserDetailPresenter";
-import UserDetailView from "@/features/user/presentation/UserDetailView.vue";
+import { UserFormPresenter } from "@/features/user/presentation/UserFormPresenter";
+import { FakeUserFormPresenter } from "@/features/user/__tests__/fakes/FakeUserFormPresenter";
+import UserFormView from "@/features/user/presentation/UserFormView.vue";
 
-test("UserDetailView renders user", () => {
+test("UserFormView renders from the VM", () => {
   const container = new Container();
-  const fakePresenter = createFakeUserDetailPresenter({
-    initialState: { status: "loaded", user: fakeViewModel(), /* ... */ },
-  });
-  container.register(UserDetailPresenter, () => fakePresenter, "transient");
+  const fakePresenter = new FakeUserFormPresenter(); // real VM, vi.fn() actions
+  fakePresenter.vm.fullName = "Jane Doe";
+  container.register(UserFormPresenter, () => fakePresenter, "transient");
 
-  const wrapper = mount(UserDetailView, {
-    props: { userId: "user-1", currentUser: currentUser },
+  const wrapper = mount(UserFormView, {
+    props: { userId: "user-1" },
     global: {
       provide: { [ContainerKey as symbol]: container },
     },
   });
 
-  expect(wrapper.text()).toContain("Jane Doe");
+  expect(wrapper.find("input").element.value).toBe("Jane Doe");
 });
 ```
 
-The fake presenter only needs to extend `Presenter<TState>` with the right initial state — no Service or Repository required.
+The fake presenter exposes a controllable `vm` — no Service or Gateway involved.
 
 ## Cross-framework parity
 
-The Vue and React adapters expose the same shape:
+Both adapters expose the same `usePresenter(Token, { configure })` signature. The state model deliberately diverges:
 
 | Concept | React | Vue |
 |---------|-------|-----|
-| Hook/composable name | `usePresenter` | `usePresenter` |
+| Hook | `usePresenter(Token, { configure })` | `usePresenter(Token, { configure })` |
+| Returns | `{ presenter, state }` — state via `useSyncExternalStore` | presenter wrapped in `reactive()` — read `presenter.vm.*` |
+| State updates | Presenter calls `setState(patch)` (immutable) | Presenter mutates `this.vm` then `notify()` |
 | Container access | `useContainer()` | `useContainer()` |
-| Container provider | `<ContainerProvider container={c}>` | `provideContainer(c)` or `app.use(containerPlugin(c))` |
-| Reactivity primitive | `useSyncExternalStore` | `shallowRef` |
-| Mount lifecycle | `useEffect(() => {...}, [])` | `onMounted` (composable) |
-| Unmount lifecycle | cleanup in `useEffect` return | `onUnmounted` (composable) |
-| Configure callback | `{ configure: (p) => ... }` option | `{ configure: (p) => ... }` option |
-| Returns | `{ presenter, state }` | `{ presenter, state }` (state is `ShallowRef<TState>`) |
+| Provider | `<ContainerProvider container={c}>` | `provideContainer(c)` / `app.use(containerPlugin(c))` |
+| Configure | `{ configure: (p) => ... }` | `{ configure: (p) => ... }` |
 
-Code that doesn't touch the framework — Layers 0 through 7 — is identical between projects. Only the View files and the `frameworks/<framework>/` adapter differ.
+**Why the divergence:** React's `useSyncExternalStore` requires the snapshot reference to change for re-renders, so React presenters must use immutable `setState`. Vue's reactive proxy makes direct VM mutation idiomatic — a mutation through the proxy triggers updates without any reference change. The base `Presenter` class supports both styles (`setState` + `notify`), so the layer above the adapters is identical.
+
+Code that doesn't touch the framework — Layers 0 through 5 — is identical between projects. Only the View files and the `frameworks/<framework>/` adapter differ.

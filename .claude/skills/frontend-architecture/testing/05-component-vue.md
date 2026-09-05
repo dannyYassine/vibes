@@ -4,20 +4,20 @@
 
 ## Purpose
 
-Same goal as the React component test reference: verify the View renders correctly for given Presenter state and that user actions invoke the correct Presenter methods. The Presenter is mocked; real Services and below are not involved.
+Same goal as the React component test reference: verify the View renders correctly for given Presenter/ViewModel state and that user actions invoke the correct Presenter methods. The Presenter is mocked; real Services and Gateways are not involved.
 
 ## What's real, what's fake
 
 | Layer | In component tests |
 |-------|--------------------|
-| Service / Repository / DataSource | Not involved |
-| Presenter | **Mocked** (fake instance with controllable state) |
-| ViewModel | **Real** (built from real Entities in the test) |
+| Service / Gateway | Not involved |
+| Presenter | **Mocked** (fake instance with controllable VM) |
+| ViewModel | **Real** — but simple: flat primitives + pure getters |
 | View | **Real** Vue component |
 
 ## Strict rules
 
-Same as React (mock Presenter, never Service; assert on render + Presenter calls; cover every `status` branch). The mechanics differ slightly because Vue Test Utils mounts components differently and `provide`/`inject` is the wiring mechanism.
+Same as React (mock Presenter, never Service; assert on render + Presenter calls). The mechanics differ slightly because Vue Test Utils mounts components differently and `provide`/`inject` is the wiring mechanism — and because Vue presenters expose `vm`, the fake drives the View through VM fields rather than a state object.
 
 ## The test mount helper
 
@@ -47,189 +47,161 @@ export function mountWithContainer<TComponent extends Component>(
 }
 ```
 
-The same `FakePresenter` and `createFakePresenter` helpers from the React reference work in Vue — they're framework-agnostic. Reuse them.
+## The fake presenter
+
+Since Vue presenters expose `vm`, the fake provides a **controllable VM**: a real ViewModel class instance (so the pure getters still work) exposed as `vm`, with action methods as `vi.fn()`.
+
+The fake MUST extend the real `Presenter<TState>` base class — the `usePresenter` composable calls `onCreated`/`onMounted`/`onDestroyed`/`_markMounted`/`_markUnmounted` on whatever it resolves, and a plain object without those methods crashes at mount.
+
+```typescript
+// src/features/user/__tests__/fakes/FakeUserFormPresenter.ts
+import { vi } from "vitest";
+import { Presenter } from "@/infra/presenter/Presenter";
+import { UserFormViewModel } from "../../presentation/UserFormViewModel";
+
+/**
+ * Real VM instance (getters live) + spied action methods.
+ * Scenarios are driven by setting VM fields directly:
+ *   fake.vm.isSaving = true;
+ */
+export class FakeUserFormPresenter extends Presenter<UserFormViewModel> {
+  configure = vi.fn();
+  handleSave = vi.fn();
+  dismissError = vi.fn();
+
+  readonly vm: UserFormViewModel;
+
+  constructor() {
+    // Local const BEFORE super() — same gotcha as real presenters.
+    const vm = new UserFormViewModel();
+    super(vm);
+    this.vm = vm;
+  }
+}
+```
+
+Drive scenarios by setting VM fields directly — `presenter.vm.isSaving = true` — and the reactive presenter (the composable wraps the resolved instance in `reactive()`) propagates the change to the template after `await nextTick()`.
 
 ## Canonical example
 
 ```typescript
-// src/features/user/__tests__/UserDetailView.test.ts
+// src/features/user/__tests__/UserFormView.test.ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { nextTick } from "vue";
 import { mountWithContainer } from "@/__tests__/shared/mountWithContainer";
 import { Container } from "@/infra/container/Container";
-import { createFakePresenter, type FakePresenter } from "@/__tests__/shared/createFakePresenter";
-import { UserDetailPresenter, type UserDetailState } from "../presentation/UserDetailPresenter";
-import UserDetailView from "../presentation/UserDetailView.vue";
-import { User } from "../domain/User";
-import { UserViewModel } from "../presentation/UserViewModel";
+import { FakeUserFormPresenter } from "./fakes/FakeUserFormPresenter";
+import { UserFormPresenter } from "../presentation/UserFormPresenter";
+import UserFormView from "../presentation/UserFormView.vue";
 
-const currentUser = new User({
-  id: "admin-1",
-  email: "admin@example.com",
-  fullName: "Admin User",
-  avatarUrl: null,
-  role: "admin",
-  isActive: true,
-  createdAt: new Date("2024-01-01"),
-  updatedAt: new Date("2024-01-01"),
-  lastLoginAt: new Date("2026-05-04"),
-});
-
-const targetUser = new User({
-  id: "user-1",
-  email: "jane@example.com",
-  fullName: "Jane Doe",
-  avatarUrl: null,
-  role: "member",
-  isActive: true,
-  createdAt: new Date("2024-06-01"),
-  updatedAt: new Date("2024-06-01"),
-  lastLoginAt: new Date("2026-05-04"),
-});
-
-type PresenterMethods = {
-  configure: UserDetailPresenter["configure"];
-  changeRole: UserDetailPresenter["changeRole"];
-  dismissError: UserDetailPresenter["dismissError"];
-  loadUser: UserDetailPresenter["loadUser"];
-};
-
-describe("UserDetailView (Vue)", () => {
+describe("UserFormView (Vue)", () => {
   let container: Container;
-  let presenter: FakePresenter<UserDetailState> & {
-    configure: ReturnType<typeof vi.fn>;
-    changeRole: ReturnType<typeof vi.fn>;
-    dismissError: ReturnType<typeof vi.fn>;
-    loadUser: ReturnType<typeof vi.fn>;
-  };
+  let presenter: FakeUserFormPresenter;
 
   beforeEach(() => {
     container = new Container();
-    presenter = createFakePresenter<UserDetailState, PresenterMethods>(
-      {
-        status: "idle",
-        user: null,
-        errorMessage: null,
-        isSaving: false,
-      },
-      ["configure", "changeRole", "dismissError", "loadUser"],
-    );
-    container.register(UserDetailPresenter, () => presenter, "transient");
+    presenter = new FakeUserFormPresenter();
+    container.register(UserFormPresenter, () => presenter, "transient");
   });
 
-  it("shows a loading indicator while data is being fetched", () => {
-    presenter.setStateForTest({ status: "loading" });
-
-    const wrapper = mountWithContainer(UserDetailView, container, {
-      props: { userId: "user-1", currentUser },
+  it("renders inputs bound to the VM", async () => {
+    presenter.vm.fullName = "Jane Doe";
+    const wrapper = mountWithContainer(UserFormView, container, {
+      props: { userId: "user-1" },
     });
+    await nextTick();
 
-    expect(wrapper.text()).toMatch(/loading/i);
+    const input = wrapper.find('input[type="text"]');
+    expect((input.element as HTMLInputElement).value).toBe("Jane Doe");
   });
 
-  it("shows the error message and dismiss button when the load fails", async () => {
-    presenter.setStateForTest({
-      status: "error",
-      user: null,
-      errorMessage: "Network error",
+  it("writes v-model input back into the VM", async () => {
+    const wrapper = mountWithContainer(UserFormView, container, {
+      props: { userId: "user-1" },
     });
 
-    const wrapper = mountWithContainer(UserDetailView, container, {
-      props: { userId: "user-1", currentUser },
+    await wrapper.find('input[type="text"]').setValue("Jane Doe");
+
+    expect(presenter.vm.fullName).toBe("Jane Doe");
+  });
+
+  it("disables submit while fullName is empty", async () => {
+    presenter.vm.fullName = "";
+    const wrapper = mountWithContainer(UserFormView, container, {
+      props: { userId: "user-1" },
+    });
+
+    const submit = wrapper.find('button[type="submit"]');
+    expect((submit.element as HTMLButtonElement).disabled).toBe(true);
+    expect(submit.text()).toBe(presenter.vm.submitLabel);
+  });
+
+  it("shows the error message when the VM has one", async () => {
+    presenter.vm.errorMessage = "Network error";
+    const wrapper = mountWithContainer(UserFormView, container, {
+      props: { userId: "user-1" },
     });
 
     expect(wrapper.text()).toContain("Network error");
-    await wrapper.find("button").trigger("click");
-    expect(presenter.dismissError).toHaveBeenCalledTimes(1);
   });
 
-  it("renders the user detail when loaded", () => {
-    presenter.setStateForTest({
-      status: "loaded",
-      user: new UserViewModel(targetUser, currentUser),
-      errorMessage: null,
-      isSaving: false,
+  it("calls handleSave on submit", async () => {
+    const wrapper = mountWithContainer(UserFormView, container, {
+      props: { userId: "user-1" },
     });
 
-    const wrapper = mountWithContainer(UserDetailView, container, {
-      props: { userId: "user-1", currentUser },
-    });
+    await wrapper.find("form").trigger("submit");
 
-    expect(wrapper.find("h1").text()).toBe("Jane Doe");
-    expect(wrapper.text()).toContain("jane@example.com");
-    expect(wrapper.text()).toContain("Team member"); // role label from VM
+    expect(presenter.handleSave).toHaveBeenCalledTimes(1);
   });
 
-  it("calls changeRole on the presenter when the role select changes", async () => {
-    presenter.setStateForTest({
-      status: "loaded",
-      user: new UserViewModel(targetUser, currentUser),
-      errorMessage: null,
-      isSaving: false,
+  it("calls configure with the userId on mount", () => {
+    mountWithContainer(UserFormView, container, {
+      props: { userId: "user-42" },
     });
 
-    const wrapper = mountWithContainer(UserDetailView, container, {
-      props: { userId: "user-1", currentUser },
-    });
-
-    await wrapper.find("select").setValue("admin");
-
-    expect(presenter.changeRole).toHaveBeenCalledWith("admin");
+    expect(presenter.configure).toHaveBeenCalledWith("user-42");
   });
 
-  it("calls configure with the userId and currentUser on setup", () => {
-    mountWithContainer(UserDetailView, container, {
-      props: { userId: "user-42", currentUser },
+  it("re-renders when VM fields change (reactivity check)", async () => {
+    const wrapper = mountWithContainer(UserFormView, container, {
+      props: { userId: "user-1" },
     });
 
-    expect(presenter.configure).toHaveBeenCalledWith("user-42", currentUser);
-  });
-
-  it("re-renders when state changes (reactivity check)", async () => {
-    const wrapper = mountWithContainer(UserDetailView, container, {
-      props: { userId: "user-1", currentUser },
-    });
-    expect(wrapper.text()).toMatch(/^$|idle/i); // idle state — likely empty
-
-    presenter.setStateForTest({ status: "loading" });
+    presenter.vm.errorMessage = "Network error";
     await nextTick();
-    expect(wrapper.text()).toMatch(/loading/i);
+    expect(wrapper.text()).toContain("Network error");
 
-    presenter.setStateForTest({
-      status: "loaded",
-      user: new UserViewModel(targetUser, currentUser),
-      errorMessage: null,
-      isSaving: false,
-    });
+    presenter.vm.errorMessage = null;
     await nextTick();
-    expect(wrapper.find("h1").text()).toBe("Jane Doe");
+    expect(wrapper.text()).not.toContain("Network error");
   });
 });
 ```
 
 ## Vue-specific notes
 
-**`await nextTick()` after state changes.** Vue's reactivity is async — DOM updates happen after a microtask. When you call `setStateForTest()` and then assert on the DOM, you typically need `await nextTick()` (or `await wrapper.vm.$nextTick()`) first. The reactivity check test above shows the pattern.
+**`await nextTick()` after VM mutations.** Vue's reactivity is async — DOM updates happen after a microtask. When you set `presenter.vm.someField = ...` (before or after mount) and then assert on the DOM, you typically need `await nextTick()` first. The reactivity check test above shows the pattern.
 
 **Use `wrapper.text()` for content checks** — it reads the rendered text content, similar to RTL's `screen.getByText` semantics.
 
-**Use `wrapper.find()` + `.trigger()` / `.setValue()` for interactions.** These are Vue Test Utils' equivalents of React Testing Library's `fireEvent`.
+**Use `wrapper.find()` + `.trigger()` / `.setValue()` for interactions.** `setValue` exercises the real `v-model` path: the write goes through the reactive proxy into `presenter.vm`, which is exactly what production does.
 
 **The `ContainerKey as symbol` cast** in `mountWithContainer` is required because Vue's `provide` option in mount config types the keys loosely. The cast is safe — `ContainerKey` is declared as `InjectionKey<Container>` which is just a typed Symbol.
 
 ## Patterns to use
 
-**Cover every `status` branch.** Vue's `v-if` / `v-else-if` chains create render variants — each one needs a test, otherwise a typo in the template can ship undetected.
+**Drive the UI through the VM.** Set `presenter.vm.<field> = ...`, `await nextTick()`, assert on render. The write goes through the same reactive proxy the template reads from — same pipeline as production, just driven from the test instead of from a Service call.
 
-**Drive reactivity through `setStateForTest()`.** This calls the protected `setState` on the FakePresenter, which notifies subscribers, which updates the `shallowRef` in the composable, which triggers a re-render. Same pipeline as production, just driven from the test instead of from a Service call.
+**Use real ViewModels in tests.** A real VM instance keeps the pure getters (`isSubmitDisabled`, `submitLabel`) honest — a hand-rolled object with pre-baked getter values would hide getter bugs.
 
-**Use real ViewModels in tests.** Build them from real Entities. The integration test already covers ViewModel correctness, but the View test depends on ViewModel output, so using the real thing keeps the View test honest.
+**Cover every conditional branch.** `v-if` chains over VM fields (`errorMessage`, disabled states) create render variants — each one needs a test, otherwise a typo in the template can ship undetected.
 
 ## Patterns to avoid
 
-- **Don't use `wrapper.setData(...)`** — it bypasses the composable and the Presenter, defeating the test's purpose.
-- **Don't directly mutate `state.value`** in the test — go through `setStateForTest()` so the subscription pipeline fires.
-- **Don't import Vue's `inject` directly in tests.** The `mountWithContainer` helper handles provision; tests should be agnostic to the injection mechanism.
+- **Don't use `wrapper.setData(...)`** — it bypasses the Presenter and the VM, defeating the test's purpose.
+- **Don't inject the container directly in tests** to fish the presenter out — register the fake and let `usePresenter` resolve it. The `mountWithContainer` helper handles provision; tests should be agnostic to the injection mechanism.
+- **Don't spread the fake's VM** to snapshot it — `{ ...vm }` loses the prototype getters.
 
 ## Cross-framework parity
 
@@ -239,10 +211,10 @@ The Vue and React component test references describe the same testing strategy:
 |---------|-------|-----|
 | Mount helper | `renderWithContainer(ui, container)` | `mountWithContainer(component, container, options)` |
 | Container provider | `<ContainerProvider>` | `provide: { [ContainerKey]: container }` |
-| Fake Presenter helper | `createFakePresenter` | `createFakePresenter` (same helper) |
-| Drive state | `presenter.setStateForTest({...})` | `presenter.setStateForTest({...})` (then `await nextTick()`) |
+| Fake Presenter shape | `createFakePresenter` (controllable state) | fake with real VM + `vi.fn()` actions |
+| Drive state | `presenter.setStateForTest({...})` | `presenter.vm.<field> = ...` then `await nextTick()` |
 | Query rendered output | `screen.getByRole(...)` | `wrapper.find(...)` / `wrapper.text()` |
-| Trigger event | `fireEvent.change(input, {...})` | `wrapper.find('select').setValue('admin')` |
-| Assert Presenter call | `expect(presenter.changeRole).toHaveBeenCalledWith("admin")` | identical |
+| Trigger event | `fireEvent.change(input, {...})` | `wrapper.find('input').setValue('...')` |
+| Assert Presenter call | `expect(presenter.handleSave).toHaveBeenCalledWith(...)` | identical |
 
-The test file structure and what's asserted are identical — only the framework's mounting and querying APIs differ.
+The test file structure and what's asserted are identical — only the state-driving mechanism and the framework's mounting/querying APIs differ.

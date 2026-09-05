@@ -290,4 +290,4 @@ test("UserDetailView renders user", () => {
 });
 ```
 
-The fake presenter only needs to extend `Presenter<TState>` with the right initial state — no Service or Repository required.
+The fake presenter only needs to extend `Presenter<TState>` with the right initial state — no Service or Gateway required.
