@@ -133,7 +133,7 @@ export function useContainer(): Container {
   if (!container) {
     throw new Error(
       "useContainer must be called inside a component tree that has " +
-      "called provideContainer(container) — typically from the app root.",
+        "called provideContainer(container) — typically from the app root.",
     );
   }
   return container;
@@ -167,9 +167,7 @@ import App from "./App.vue";
 
 const container = bootstrapContainer();
 
-createApp(App)
-  .use(containerPlugin(container))
-  .mount("#app");
+createApp(App).use(containerPlugin(container)).mount("#app");
 ```
 
 **Composition root component form (if you need conditional provisioning):**
@@ -275,14 +273,14 @@ The fake presenter exposes a controllable `vm` — no Service or Gateway involve
 
 Both adapters expose the same `usePresenter(Token, { configure })` signature. The state model deliberately diverges:
 
-| Concept | React | Vue |
-|---------|-------|-----|
-| Hook | `usePresenter(Token, { configure })` | `usePresenter(Token, { configure })` |
-| Returns | `{ presenter, state }` — state via `useSyncExternalStore` | presenter wrapped in `reactive()` — read `presenter.vm.*` |
-| State updates | Presenter calls `setState(patch)` (immutable) | Presenter mutates `this.vm` then `notify()` |
-| Container access | `useContainer()` | `useContainer()` |
-| Provider | `<ContainerProvider container={c}>` | `provideContainer(c)` / `app.use(containerPlugin(c))` |
-| Configure | `{ configure: (p) => ... }` | `{ configure: (p) => ... }` |
+| Concept          | React                                                     | Vue                                                       |
+| ---------------- | --------------------------------------------------------- | --------------------------------------------------------- |
+| Hook             | `usePresenter(Token, { configure })`                      | `usePresenter(Token, { configure })`                      |
+| Returns          | `{ presenter, state }` — state via `useSyncExternalStore` | presenter wrapped in `reactive()` — read `presenter.vm.*` |
+| State updates    | Presenter calls `setState(patch)` (immutable)             | Presenter mutates `this.vm` then `notify()`               |
+| Container access | `useContainer()`                                          | `useContainer()`                                          |
+| Provider         | `<ContainerProvider container={c}>`                       | `provideContainer(c)` / `app.use(containerPlugin(c))`     |
+| Configure        | `{ configure: (p) => ... }`                               | `{ configure: (p) => ... }`                               |
 
 **Why the divergence:** React's `useSyncExternalStore` requires the snapshot reference to change for re-renders, so React presenters must use immutable `setState`. Vue's reactive proxy makes direct VM mutation idiomatic — a mutation through the proxy triggers updates without any reference change. The base `Presenter` class supports both styles (`setState` + `notify`), so the layer above the adapters is identical.
 
