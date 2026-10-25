@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo API</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://unpkg.com/htmx-ext-json-enc@2"></script>
+    <script src="https://unpkg.com/htmx-ext-path-params@2"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css"/>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { padding: 3rem 1.5rem; }
+        .home { max-width: 720px; margin: 0 auto; }
+        h1 { font-size: 1.75rem; margin-bottom: .5rem; }
+        .subtitle { color: #6b7280; margin-bottom: 2rem; }
+        .route-form { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .route-form input, .route-form select {
+            padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: 6px;
+            font-size: .875rem;
+        }
+        .route-form .btn-send {
+            padding: .45rem .9rem; background: #111827; color: #fff; border: none;
+            border-radius: 6px; cursor: pointer; font-size: .8rem; font-weight: 600;
+        }
+        .route-result {
+            background: #0f172a; color: #a5f3fc; border-radius: 6px;
+            padding: .75rem; font-size: .75rem; overflow-x: auto; white-space: pre;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .route-link { color: #2563eb; font-weight: 600; }
+        .method-badge {
+            display: inline-block; padding: .2rem .5rem; border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: .7rem; font-weight: 700; color: #fff; margin-right: .5rem;
+        }
+        .method-get { background: #2563eb; }
+        .method-post { background: #059669; }
+        .method-put { background: #d97706; }
+        .method-delete { background: #dc2626; }
+        .todolist-section { margin-top: 3rem; }
+        .todolist-section h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+        .todo-form { display: flex; gap: .5rem; margin-bottom: 1rem; }
+        .todo-form input {
+            flex: 1; padding: .5rem .75rem; border: 1px solid #d1d5db; border-radius: 6px;
+            font-size: .875rem;
+        }
+        .todo-form button {
+            padding: .5rem 1rem; background: #111827; color: #fff; border: none;
+            border-radius: 6px; cursor: pointer; font-size: .875rem;
+        }
+        .todo-items { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+        .todo-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fff; padding: .6rem .9rem; border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.06);
+        }
+        .todo-done { text-decoration: line-through; color: #9ca3af; }
+        .todo-actions { display: flex; gap: .4rem; }
+        .btn { padding: .25rem .6rem; border: none; border-radius: 4px; cursor: pointer; font-size: .75rem; font-weight: 600; color: #fff; }
+        .btn-done { background: #059669; }
+        .btn-undo { background: #6b7280; }
+        .btn-delete { background: #dc2626; }
+        .remaining { color: #6b7280; font-size: .8rem; margin-bottom: .5rem; }
+        .todo-empty { color: #9ca3af; font-size: .875rem; }
+    </style>
+</head>
+<body>
+<div class="home">
+    <h1>Todo API</h1>
+    <p class="subtitle">Available routes — open a route and hit it</p>
+    <div class="join join-vertical bg-base-100 w-full" th:each="row : ${vm.routes}">
+        <div class="collapse collapse-arrow join-item border border-base-300 bg-base-100">
+            <input type="checkbox" th:id="'acc-' + ${row.resultId}">
+            <div class="collapse-title font-semibold">
+                <span class="method-badge" th:classappend="${row.methodClass}" th:text="${row.method}">GET</span>
+                <code th:text="${row.path}">/api/todos</code>
+            </div>
+            <div class="collapse-content text-sm">
+                <p class="route-desc mb-2" th:text="${row.description}">Description</p>
+                <div th:replace="~{components/route-forms :: ${row.formFragment}(row=${row})}"></div>
+                <pre class="route-result" th:id="'result-' + ${row.resultId}">—</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="todolist-section">
+        <h2>Your todos</h2>
+        <form class="todo-form" hx-post="/todos" hx-target="#todo-list" hx-swap="innerHTML">
+            <input type="text" name="title" placeholder="What needs doing?" required>
+            <button type="submit">Add</button>
+        </form>
+        <div id="todo-list" hx-get="/todos" hx-trigger="load, todosChanged from:body" hx-swap="innerHTML">
+            <p class="todo-empty">Loading…</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

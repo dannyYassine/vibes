@@ -1,0 +1,21 @@
+<div class="todolist" th:fragment="todolist">
+    <p class="remaining" th:text="${vm.remainingLabel} + ' remaining'">0 remaining</p>
+    <ul class="todo-items">
+        <li class="todo-item" th:each="item : ${vm.items}">
+            <span class="todo-title" th:classappend="${item.titleClass}" th:text="${item.title}">Title</span>
+            <span class="todo-actions">
+                <button class="btn"
+                        th:classappend="${item.toggleClass}"
+                        th:hx-put="|/todos/${item.id}/toggle|"
+                        hx-target="#todo-list"
+                        hx-swap="innerHTML"
+                        th:text="${item.toggleLabel}">Done</button>
+                <button class="btn btn-delete"
+                        th:hx-delete="|/todos/${item.id}|"
+                        hx-target="#todo-list"
+                        hx-swap="innerHTML">Delete</button>
+            </span>
+        </li>
+    </ul>
+    <p class="todo-empty" th:if="${vm.items.isEmpty()}">No todos yet. Add one above.</p>
+</div>

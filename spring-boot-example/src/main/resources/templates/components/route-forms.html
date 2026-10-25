@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="route-form-link(row)">
+    <a class="route-link" th:href="${row.path}">Open page</a>
+</div>
+
+<div th:fragment="route-form-get(row)">
+    <form class="route-form" th:attr="hx-get=${row.path}, hx-target='#result-' + ${row.resultId}" hx-swap="innerHTML">
+        <button type="submit" class="btn btn-send">Send GET</button>
+    </form>
+</div>
+
+<div th:fragment="route-form-get-id(row)" hx-ext="path-params">
+    <form class="route-form" th:attr="hx-get=${row.path}, hx-target='#result-' + ${row.resultId}" hx-swap="innerHTML">
+        <input type="number" name="id" placeholder="id" required>
+        <button type="submit" class="btn btn-send">Send GET</button>
+    </form>
+</div>
+
+<div th:fragment="route-form-post-json(row)" hx-ext="json-enc">
+    <form class="route-form" th:attr="hx-post=${row.path}, hx-target='#result-' + ${row.resultId}" hx-swap="innerHTML">
+        <input type="text" name="title" placeholder="title" required>
+        <button type="submit" class="btn btn-send">Send POST</button>
+    </form>
+</div>
+
+<div th:fragment="route-form-post-html(row)">
+    <form class="route-form" th:attr="hx-post=${row.path}, hx-target='#result-' + ${row.resultId}" hx-swap="innerHTML">
+        <input type="text" name="title" placeholder="title" required>
+        <button type="submit" class="btn btn-send">Send POST</button>
+    </form>
+</div>
+
+<div th:fragment="route-form-put-json(row)" hx-ext="path-params json-enc">
+    <form class="route-form" th:attr="hx-put=${row.path}, hx-target='#result-' + ${row.resultId}" hx-swap="innerHTML">
+        <input type="number" name="id" placeholder="id" required>
+        <input type="text" name="title" placeholder="title" required>
+        <select name="completed" required>
+            <option value="true">completed</option>
+            <option value="false">not completed</option>
+        </select>
+        <button type="submit" class="btn btn-send">Send PUT</button>
+    </form>
+</div>
+
+<div th:fragment="route-form-toggle(row)">
+    <form class="route-form" th:attr="hx-put=${row.path}, hx-target='#result-' + ${row.resultId}" hx-swap="innerHTML">
+        <button type="submit" class="btn btn-send">Send PUT</button>
+    </form>
+</div>
+
+<div th:fragment="route-form-delete(row)" hx-ext="path-params">
+    <form class="route-form" th:attr="hx-delete=${row.path}, hx-target='#result-' + ${row.resultId}" hx-swap="innerHTML">
+        <input type="number" name="id" placeholder="id" required>
+        <button type="submit" class="btn btn-send">Send DELETE</button>
+    </form>
+</div>
+</body>
+</html>
