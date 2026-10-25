@@ -84,6 +84,23 @@ must have parseable frontmatter with non-empty `type`.
 
 ## Projects
 
+### [PARALLAX GB/04 Groovebox (one shot prompt excercise)](groovebox/kmi-k3-1-pro/)
+
+A four-voice browser groovebox built with React, TypeScript, and the Web Audio API. Features synchronized 16-step sequencers for drums, bass, pads, and lead, three original patches, live sound controls, swing, and patch switching during playback.
+
+<table>
+  <tr>
+    <td>
+      <img src="groovebox/assets/kimi.png" alt="PARALLAX GB/04 Groovebox built with Kimi K3.1 Pro" width="480"><br>
+      <sub>Built with <strong>Kimi K3.1 Pro</strong></sub>
+    </td>
+    <td>
+      <img src="groovebox/assets/deepseek.png" alt="VOLTAGE GB-04 Groovebox built with DeepSeek 4.1 Flash 1017" width="480"><br>
+      <sub>Built with <strong>DeepSeek 4.1 Flash 1017</strong></sub>
+    </td>
+  </tr>
+</table>
+
 ### [Weather App](weather-app-copilot-claude-code/)
 
 A modern, cross-platform desktop weather application built with Tauri, Angular, and Rust. Features real-time weather information with hourly and daily forecasts, location search, weather-themed UI, and smooth animations.

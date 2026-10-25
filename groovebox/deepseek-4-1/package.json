@@ -1,0 +1,24 @@
+{
+  "name": "voltage-gb04",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "VOLTAGE GB-04 — a four-unit hardware-style groovebox",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@fontsource/share-tech-mono": "^5.2.5",
+    "@fontsource/space-grotesk": "^5.2.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.5"
+  }
+}

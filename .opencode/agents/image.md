@@ -4,7 +4,7 @@ description: Use this agent to read and retrieve information from images and fil
 mode: subagent
 # model: openrouter/google/gemini-3.5-flash
 # model: openrouter/minimax/minimax-m3
-model: openrouter/xiaomi/mimo-v2.5
+model: openrouter/xiaomi/mimo-v2.6-pro
 permission:
   edit: deny
   bash: deny

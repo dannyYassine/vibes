@@ -52,6 +52,17 @@
           "interleaved": {
             "field": "reasoning_content"
           }
+        },
+        "xiaomi/mimo-v2.6-pro": {
+          "name": "MiMo-V2.6-Pro",
+          "attachment": true,
+          "reasoning": true,
+          "tool_call": true,
+          "temperature": true,
+          "modalities": {
+            "input": ["text", "image", "audio", "video"],
+            "output": ["text"]
+          }
         }
       }
     }
